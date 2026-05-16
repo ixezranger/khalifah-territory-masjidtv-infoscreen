@@ -4,7 +4,7 @@ const InfoTicker = memo(function InfoTicker({ messages = [], speed = 50 }) {
   const active = messages.filter(Boolean);
   if (!active.length) return null;
 
-  const duration = `${(110 - speed) * 0.3}s`;
+  const duration = `${(110 - speed) * 0.5}s`;
   const text = [...active, ...active, ...active].join('     ·     ');
 
   return (

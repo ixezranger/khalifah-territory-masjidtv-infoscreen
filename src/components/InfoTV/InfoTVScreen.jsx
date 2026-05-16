@@ -83,8 +83,8 @@ function MasjidBrandingPanel({ prof }) {
         backgroundSize: '40px 40px',
       }} />
 
-      {/* Top: Logo + Admin link */}
-      <div style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      {/* Top: Logo only */}
+      <div style={{ position: 'relative', zIndex: 10 }}>
         <div style={{
           width: 'clamp(48px,5vw,72px)', height: 'clamp(48px,5vw,72px)',
           borderRadius: 'var(--radius-lg)',
@@ -96,12 +96,6 @@ function MasjidBrandingPanel({ prof }) {
         }}>
           <CrescentIcon size={36} color="white" />
         </div>
-        <Link to="/admin" style={{
-          color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem',
-          textDecoration: 'none', marginTop: 4,
-        }}>
-          Admin →
-        </Link>
       </div>
 
       {/* Bottom: Masjid info */}
@@ -295,11 +289,11 @@ export default function InfoTVScreen() {
     return (
       <div style={{
         height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0B1437 0%, #1B2D6B 50%, #1A3A8A 100%)',
+        background: 'linear-gradient(155deg, #C8D8F0 0%, #D6CCE8 35%, #E8E4F2 70%, #F4F0FC 100%)',
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-          <CrescentIcon size={56} color="rgba(147,197,253,0.8)" animated />
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', letterSpacing: '0.1em' }}>
+          <CrescentIcon size={56} color="rgba(37,99,235,0.7)" animated />
+          <div style={{ color: 'rgba(15,23,42,0.55)', fontSize: '0.9rem', letterSpacing: '0.1em' }}>
             Memuatkan InfoTV...
           </div>
         </div>
@@ -313,11 +307,36 @@ export default function InfoTVScreen() {
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
-      background: 'linear-gradient(135deg, #0B1437 0%, #1B2D6B 40%, #1A3A8A 100%)',
+      background: 'linear-gradient(155deg, #C8D8F0 0%, #D6CCE8 35%, #E8E4F2 70%, #F4F0FC 100%)',
       paddingTop: isDemoMode ? 32 : 0,
       boxSizing: 'border-box',
     }}>
       {blastToast && <BlastToast notification={blastToast} onDismiss={() => setBlastToast(null)} />}
+
+      {/* ── TOP-RIGHT ADMIN LINK ── */}
+      <div style={{
+        position: 'absolute',
+        top: isDemoMode ? 36 : 8,
+        right: 12,
+        zIndex: 100,
+        display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2,
+      }}>
+        <Link to="/admin" style={{
+          color: 'rgba(37,99,235,0.75)',
+          fontSize: '0.68rem', fontWeight: 600,
+          textDecoration: 'none',
+          background: 'rgba(255,255,255,0.55)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(37,99,235,0.2)',
+          borderRadius: 8, padding: '3px 10px',
+          letterSpacing: '0.03em',
+        }}>
+          Admin →
+        </Link>
+        <span style={{ fontSize: '0.58rem', color: 'rgba(15,23,42,0.35)' }}>
+          Setup Guide: .env → Supabase
+        </span>
+      </div>
 
       {/* ── MAIN 3-COLUMN CONTENT ── */}
       <div style={{
