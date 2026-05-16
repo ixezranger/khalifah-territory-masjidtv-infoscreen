@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { gsap } from 'gsap';
 import useWaktuSolat, { ZONE_LABELS } from '../../hooks/useWaktuSolat';
 import GlassCard from '../shared/GlassCard';
@@ -24,7 +24,7 @@ function SkeletonRow() {
   );
 }
 
-export default function WaktuSolatWidget({ zone = 'WLY01' }) {
+const WaktuSolatWidget = memo(function WaktuSolatWidget({ zone = 'WLY01' }) {
   const containerRef = useRef(null);
   const { times, nextSolat, loading, error } = useWaktuSolat(zone);
 
@@ -135,4 +135,6 @@ export default function WaktuSolatWidget({ zone = 'WLY01' }) {
       </div>
     </GlassCard>
   );
-}
+});
+
+export default WaktuSolatWidget;

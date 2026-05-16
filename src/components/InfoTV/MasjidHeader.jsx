@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { gsap } from 'gsap';
 import CrescentIcon from '../shared/CrescentIcon';
 import OttomanDivider from '../shared/OttomanDivider';
 
 const ARABESQUE = `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C9A84C' fill-opacity='0.04'%3E%3Cpath d='M20 0l4 8h8l-6 6 2 9-8-5-8 5 2-9-6-6h8z'/%3E%3C/g%3E%3C/svg%3E")`;
 
-export default function MasjidHeader({ masjidName = 'Masjid', description = '' }) {
+const MasjidHeader = memo(function MasjidHeader({ masjidName = 'Masjid', description = '' }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -70,4 +70,6 @@ export default function MasjidHeader({ masjidName = 'Masjid', description = '' }
       )}
     </div>
   );
-}
+});
+
+export default MasjidHeader;

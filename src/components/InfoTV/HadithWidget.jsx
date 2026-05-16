@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, memo } from 'react';
 import { gsap } from 'gsap';
 import GlassCard from '../shared/GlassCard';
 import OttomanDivider from '../shared/OttomanDivider';
@@ -11,7 +11,7 @@ const FALLBACK = [
   },
 ];
 
-export default function HadithWidget({ hadithItems = [], rotationMinutes = 5 }) {
+const HadithWidget = memo(function HadithWidget({ hadithItems = [], rotationMinutes = 5 }) {
   const containerRef = useRef(null);
   const contentRef = useRef(null);
   const items = hadithItems.length ? hadithItems : FALLBACK;
@@ -119,4 +119,6 @@ export default function HadithWidget({ hadithItems = [], rotationMinutes = 5 }) 
       </div>
     </GlassCard>
   );
-}
+});
+
+export default HadithWidget;

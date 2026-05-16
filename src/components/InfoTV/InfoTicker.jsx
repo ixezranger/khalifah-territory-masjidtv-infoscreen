@@ -1,4 +1,6 @@
-export default function InfoTicker({ messages = [], speed = 50 }) {
+import { memo } from 'react';
+
+const InfoTicker = memo(function InfoTicker({ messages = [], speed = 50 }) {
   const active = messages.filter(Boolean);
   if (!active.length) return null;
 
@@ -32,4 +34,6 @@ export default function InfoTicker({ messages = [], speed = 50 }) {
       </div>
     </div>
   );
-}
+});
+
+export default InfoTicker;

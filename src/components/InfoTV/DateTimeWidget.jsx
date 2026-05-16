@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { gsap } from 'gsap';
 import useDateTime from '../../hooks/useDateTime';
 import GlassCard from '../shared/GlassCard';
 import OttomanDivider from '../shared/OttomanDivider';
 import CrescentIcon from '../shared/CrescentIcon';
 
-export default function DateTimeWidget() {
+const DateTimeWidget = memo(function DateTimeWidget() {
   const containerRef = useRef(null);
   const { time, gregorianDate, hijriDate } = useDateTime();
 
@@ -71,4 +71,6 @@ export default function DateTimeWidget() {
       </div>
     </GlassCard>
   );
-}
+});
+
+export default DateTimeWidget;
