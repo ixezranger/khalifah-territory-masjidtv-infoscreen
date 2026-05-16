@@ -1,14 +1,21 @@
+import useStore from '../store/useStore';
+import AdminLayout from '../components/Admin/AdminLayout';
+
 export default function AdminPage() {
+  const { adminCurrentPage, setAdminCurrentPage, setUser, setSession } = useStore();
+
+  const handleLogout = async () => {
+    const { supabase } = await import('../lib/supabase');
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+  };
+
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-navy)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="glass-card" style={{ padding: '48px', textAlign: 'center' }}>
-        <h1 style={{ fontFamily: 'Cinzel Decorative', color: 'var(--color-gold)',
-          fontSize: '2rem', marginBottom: '16px' }}>
-          ⚙ Admin CMS
-        </h1>
-        <p style={{ color: 'var(--color-ivory)' }}>Admin panel — coming in Prompt 8</p>
-      </div>
-    </div>
+    <AdminLayout
+      currentPage={adminCurrentPage}
+      onNavigate={setAdminCurrentPage}
+      onLogout={handleLogout}
+    />
   );
 }
