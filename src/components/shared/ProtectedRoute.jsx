@@ -1,13 +1,15 @@
 import { Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase, isDemoMode } from '../../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
 
 export default function ProtectedRoute({ children }) {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isDemoMode);
   const [session, setSession] = useState(null);
 
   useEffect(() => {
+    if (isDemoMode) return; // skip auth check in demo mode
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
@@ -17,6 +19,9 @@ export default function ProtectedRoute({ children }) {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Demo mode: allow access without auth
+  if (isDemoMode) return children;
 
   if (loading) return (
     <div style={{

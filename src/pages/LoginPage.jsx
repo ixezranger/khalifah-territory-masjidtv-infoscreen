@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, isDemoMode } from '../lib/supabase';
 import GlassCard from '../components/shared/GlassCard';
 import CrescentIcon from '../components/shared/CrescentIcon';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
@@ -40,6 +40,11 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
+      if (isDemoMode) {
+        // Demo mode: bypass auth, go straight to admin
+        navigate('/admin');
+        return;
+      }
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) {
         setError(authError.message || 'Log masuk gagal. Sila semak e-mel dan kata laluan.');

@@ -1,9 +1,10 @@
 import React, { useEffect, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { supabase, getProfile } from './lib/supabase';
 import useStore from './store/useStore';
 import ProtectedRoute from './components/shared/ProtectedRoute';
 import LoadingSpinner from './components/shared/LoadingSpinner';
+import DemoBanner from './components/shared/DemoBanner';
 import InfoTVPage from './pages/InfoTVPage';
 import LoginPage from './pages/LoginPage';
 
@@ -52,7 +53,9 @@ export default function App() {
   }, [setUser, setSession, setProfile]);
 
   return (
-    <BrowserRouter>
+    <>
+    <DemoBanner />
+    <HashRouter>
       <Routes>
         <Route path="/" element={<InfoTVPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -67,6 +70,7 @@ export default function App() {
           }
         />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
+    </>
   );
 }

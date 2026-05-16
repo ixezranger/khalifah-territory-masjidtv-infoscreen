@@ -17,7 +17,7 @@ import CrescentIcon from '../shared/CrescentIcon';
 
 import useWaktuSolat from '../../hooks/useWaktuSolat';
 import useStore from '../../store/useStore';
-import { supabase } from '../../lib/supabase';
+import { supabase, isDemoMode } from '../../lib/supabase';
 import {
   getSliderItems,
   getAudioItems,
@@ -197,6 +197,25 @@ export default function InfoTVScreen() {
     let isMounted = true;
 
     async function init() {
+      // Demo mode: load demo data directly, skip all Supabase calls
+      if (isDemoMode) {
+        if (!isMounted) return;
+        const [tickerRes, hadithRes, settingsRes] = await Promise.all([
+          getTickerMessages('demo'),
+          getHadithItems('demo'),
+          getFeatureSettings('demo'),
+        ]);
+        setActiveProfile(DEMO_PROFILE);
+        if (tickerRes.data) setTickerMessages(tickerRes.data);
+        if (hadithRes.data) setHadithItems(hadithRes.data);
+        if (settingsRes.data) {
+          setFeatureSettings({ ...DEFAULT_SETTINGS, ...settingsRes.data });
+          setActiveSettings({ ...DEFAULT_SETTINGS, ...settingsRes.data });
+        }
+        if (isMounted) setLoading(false);
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!isMounted) return;
@@ -216,7 +235,7 @@ export default function InfoTVScreen() {
         }
         await loadData(session.user.id);
       } else {
-        // Demo mode — no user
+        // No user, no Supabase — show defaults
         setActiveProfile(DEMO_PROFILE);
         setActiveSettings(DEFAULT_SETTINGS);
       }
@@ -246,8 +265,10 @@ export default function InfoTVScreen() {
     return () => gsapCtxRef.current?.revert();
   }, [loading]);
 
-  // ── Supabase realtime ──────────────────────────────────────────────────
+  // ── Supabase realtime (skipped in demo mode) ───────────────────────────
   useEffect(() => {
+    if (isDemoMode) return;
+
     const session = supabase.auth.getSession();
     let userId = null;
     session.then(({ data: { session: s } }) => { userId = s?.user?.id; });
@@ -343,7 +364,7 @@ export default function InfoTVScreen() {
       {/* Top nav bar */}
       <div style={{
         position: 'fixed',
-        top: 0,
+        top: isDemoMode ? '32px' : 0,
         left: 0,
         right: 0,
         zIndex: 1000,
@@ -388,7 +409,7 @@ export default function InfoTVScreen() {
       )}
 
       {/* Viewport wrapper */}
-      <div style={{ position: 'relative', zIndex: 3, paddingTop: '40px' }}>
+      <div style={{ position: 'relative', zIndex: 3, paddingTop: isDemoMode ? '72px' : '40px' }}>
         <div style={VIEWPORT_STYLES[viewportMode] || VIEWPORT_STYLES.tv}>
 
           {/* Content grid */}
