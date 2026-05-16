@@ -5,10 +5,10 @@ import LoadingSpinner from './LoadingSpinner';
 
 export default function ProtectedRoute({ children }) {
   const [loading, setLoading] = useState(!isDemoMode);
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState(isDemoMode ? 'demo' : null);
 
   useEffect(() => {
-    if (isDemoMode) return; // skip auth check in demo mode
+    if (isDemoMode) return;
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -20,7 +20,6 @@ export default function ProtectedRoute({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Demo mode: allow access without auth
   if (isDemoMode) return children;
 
   if (loading) return (

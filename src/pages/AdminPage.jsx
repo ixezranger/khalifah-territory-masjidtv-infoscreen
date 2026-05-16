@@ -6,7 +6,7 @@ export default function AdminPage() {
 
   const handleLogout = async () => {
     const { supabase } = await import('../lib/supabase');
-    await supabase.auth.signOut();
+    if (supabase) await supabase.auth.signOut();
     setUser(null);
     setSession(null);
   };

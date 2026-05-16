@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import { supabase, getProfile } from './lib/supabase';
+import { supabase, getProfile, isDemoMode } from './lib/supabase';
 import useStore from './store/useStore';
 import ProtectedRoute from './components/shared/ProtectedRoute';
 import LoadingSpinner from './components/shared/LoadingSpinner';
@@ -29,6 +29,16 @@ export default function App() {
   const { setUser, setSession, setProfile } = useStore();
 
   useEffect(() => {
+    if (isDemoMode) {
+      setProfile({
+        id: 'demo', full_name: 'Admin Demo', role: 'admin',
+        masjid_name: 'Masjid Demo — MasjidTV',
+        masjid_description: 'Sistem InfoTV Islamik oleh Khalifah Territory',
+        zone_code: 'WLY01', background_image_url: null, is_active: true,
+      });
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);

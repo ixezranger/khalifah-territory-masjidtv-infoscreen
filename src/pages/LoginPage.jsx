@@ -41,8 +41,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       if (isDemoMode) {
-        // Demo mode: bypass auth, go straight to admin
-        navigate('/admin');
+        setError('Demo Mode: Supabase belum dikonfigurasi. Sila setup .env untuk log masuk.');
+        setLoading(false);
         return;
       }
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
