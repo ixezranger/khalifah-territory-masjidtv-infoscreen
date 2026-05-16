@@ -21,18 +21,6 @@ import BlastNotification from './BlastNotification';
 import FeatureToggle from './FeatureToggle';
 import UserManagement from './UserManagement';
 
-const inputStyle = {
-  width: '100%', padding: '10px 12px', borderRadius: '8px',
-  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(201,168,76,0.3)',
-  color: '#F5EDD6', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px',
-  outline: 'none', boxSizing: 'border-box',
-};
-const btnPrimary = {
-  background: '#C9A84C', color: '#050E1A', border: 'none',
-  borderRadius: '8px', padding: '10px 20px', cursor: 'pointer',
-  fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: '14px',
-};
-
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { divider: true },
@@ -71,8 +59,12 @@ function ZonePage() {
 
   return (
     <GlassCard style={{ maxWidth: 480 }}>
-      <label style={{ color: '#C9A84C', fontSize: 13, display: 'block', marginBottom: 8, fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600 }}>Pilih Zon</label>
-      <select value={zone} onChange={e => setZone(e.target.value)} style={{ ...inputStyle, marginBottom: 16 }}>
+      <label style={{
+        display: 'block', marginBottom: 6, fontSize: '0.8rem', fontWeight: 600,
+        color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em',
+      }}>Pilih Zon</label>
+      <select value={zone} onChange={(e) => setZone(e.target.value)}
+        className="ms-input" style={{ marginBottom: 16 }}>
         {Object.entries(ZONES).map(([state, zones]) => (
           <optgroup key={state} label={state}>
             {Object.entries(zones).map(([code, label]) => (
@@ -81,14 +73,16 @@ function ZonePage() {
           </optgroup>
         ))}
       </select>
-      <button onClick={handleSave} style={btnPrimary}>{saved ? 'Tersimpan ✓' : 'Simpan Zon'}</button>
+      <button onClick={handleSave} className="ms-btn">
+        {saved ? 'Tersimpan ✓' : 'Simpan Zon'}
+      </button>
     </GlassCard>
   );
 }
 
 export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onLogout }) {
   const getPageLabel = () => {
-    const found = NAV_ITEMS.find(item => !item.divider && item.id === currentPage);
+    const found = NAV_ITEMS.find((item) => !item.divider && item.id === currentPage);
     return found ? found.label : 'Dashboard';
   };
 
@@ -112,53 +106,59 @@ export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onL
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
       {/* Sidebar */}
       <div style={{
         position: 'fixed',
         top: 0, left: 0, bottom: 0,
-        width: '260px',
-        background: 'rgba(5,14,26,0.95)',
-        borderRight: '1px solid rgba(201,168,76,0.15)',
+        width: 260,
+        background: 'rgba(15,17,23,0.95)',
+        backdropFilter: 'var(--glass-blur-heavy)',
+        WebkitBackdropFilter: 'var(--glass-blur-heavy)',
+        borderRight: '1px solid var(--glass-border)',
         overflowY: 'auto',
         zIndex: 100,
         display: 'flex',
         flexDirection: 'column',
       }}>
-        {/* Logo */}
-        <div style={{ padding: '24px 20px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <CrescentIcon size={24} />
+        {/* Logo area */}
+        <div style={{
+          height: 56, padding: '0 20px',
+          borderBottom: '1px solid var(--glass-border)',
+          display: 'flex', alignItems: 'center', gap: 10,
+          flexShrink: 0,
+        }}>
+          <CrescentIcon size={20} color="var(--ms-blue)" />
+          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+            MasjidTV
+          </span>
           <span style={{
-            fontFamily: "'Cinzel Decorative', serif",
-            color: '#C9A84C',
-            fontSize: '13px',
-            fontWeight: 700,
-            lineHeight: 1.2,
+            background: 'rgba(0,120,212,0.2)', color: 'var(--ms-blue)',
+            fontSize: '0.65rem', padding: '2px 6px', borderRadius: 10,
+            fontWeight: 600,
           }}>
-            MasjidTV CMS
+            CMS
           </span>
         </div>
 
-        <div style={{ height: '1px', background: 'rgba(201,168,76,0.2)', margin: '0 16px 8px' }} />
-
-        {/* Nav items */}
-        <nav style={{ flex: 1, padding: '4px 8px' }}>
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: '8px' }}>
           {NAV_ITEMS.map((item, index) => {
             if (item.divider) {
-              return <div key={`div-${index}`} style={{ height: '1px', background: 'rgba(201,168,76,0.1)', margin: '6px 8px' }} />;
+              return (
+                <div key={`div-${index}`} style={{
+                  height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 12px',
+                }} />
+              );
             }
 
             const Icon = item.icon;
             const isActive = currentPage === item.id && !item.isExternal && !item.isDanger;
 
             const handleClick = () => {
-              if (item.isExternal) {
-                window.open('/', '_blank');
-              } else if (item.isDanger) {
-                onLogout && onLogout();
-              } else {
-                onNavigate && onNavigate(item.id);
-              }
+              if (item.isExternal) window.open('/', '_blank');
+              else if (item.isDanger) onLogout?.();
+              else onNavigate?.(item.id);
             };
 
             return (
@@ -166,27 +166,34 @@ export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onL
                 key={item.id}
                 onClick={handleClick}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '10px 16px',
-                  paddingLeft: '13px',
-                  cursor: 'pointer',
-                  borderRadius: '8px',
-                  marginBottom: '2px',
-                  fontSize: '14px',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  borderLeft: isActive ? '3px solid #C9A84C' : '3px solid transparent',
-                  background: isActive ? 'rgba(201,168,76,0.1)' : 'transparent',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+                  marginBottom: 2, cursor: 'pointer',
+                  fontSize: '0.875rem', fontWeight: isActive ? 600 : 500,
+                  background: isActive ? 'rgba(0,120,212,0.15)' : 'transparent',
                   color: item.isDanger
-                    ? 'rgba(239,68,68,0.8)'
+                    ? 'rgba(255,255,255,0.5)'
                     : isActive
-                      ? '#C9A84C'
-                      : 'rgba(245,237,214,0.7)',
-                  transition: 'all 0.15s ease',
+                      ? 'var(--ms-blue)'
+                      : 'var(--text-secondary)',
+                  transition: 'background 0.15s, color 0.15s',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                    e.currentTarget.style.color = item.isDanger ? 'var(--ms-red)' : 'var(--text-primary)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = item.isDanger
+                      ? 'rgba(255,255,255,0.5)'
+                      : 'var(--text-secondary)';
+                  }
                 }}
               >
-                <Icon size={16} />
+                <Icon size={18} />
                 <span>{item.label}</span>
               </div>
             );
@@ -196,20 +203,21 @@ export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onL
 
       {/* Main content */}
       <div style={{
-        marginLeft: '260px',
+        marginLeft: 260,
         minHeight: '100vh',
-        background: 'var(--color-navy, #050E1A)',
-        padding: '32px',
+        background: 'var(--bg-secondary)',
+        padding: 32,
         flex: 1,
       }}>
-        <h2 style={{
-          fontFamily: "'Cinzel Decorative', serif",
-          color: '#C9A84C',
-          fontSize: '1.4rem',
-          margin: '0 0 28px 0',
-        }}>
-          {getPageLabel()}
-        </h2>
+        {/* Page header */}
+        <div style={{ marginBottom: 24 }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            {getPageLabel()}
+          </h2>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+            CMS / {getPageLabel()}
+          </p>
+        </div>
         {renderPage()}
       </div>
     </div>

@@ -9,31 +9,28 @@ export default function DemoBanner() {
       left: 0,
       right: 0,
       zIndex: 99999,
-      background: 'rgba(201,168,76,0.15)',
-      borderBottom: '1px solid rgba(201,168,76,0.4)',
-      padding: '6px 16px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '12px',
-      fontSize: '0.75rem',
-      fontFamily: "'Plus Jakarta Sans', sans-serif",
-      color: '#C9A84C',
+      background: 'rgba(0,120,212,0.12)',
+      borderBottom: '1px solid rgba(0,120,212,0.3)',
       backdropFilter: 'blur(10px)',
       WebkitBackdropFilter: 'blur(10px)',
+      padding: '0 24px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       height: '32px',
       boxSizing: 'border-box',
+      fontSize: '0.75rem',
+      fontFamily: "'Segoe UI', 'Plus Jakarta Sans', sans-serif",
     }}>
-      <span>🔔</span>
-      <span>
-        <strong>Demo Mode</strong> — Supabase & Cloudflare R2 belum dikonfigurasi.
-        Data adalah contoh sahaja.
+      <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ color: 'var(--ms-blue)', fontSize: '14px' }}>ℹ</span>
+        Demo Mode — Supabase belum dikonfigurasi
       </span>
       <a
         href="https://github.com/ixezranger/khalifah-territory-masjidtv-infoscreen#-setup"
         target="_blank"
         rel="noreferrer"
-        style={{ color: '#C9A84C', textDecoration: 'underline', marginLeft: '8px' }}
+        style={{ color: 'var(--ms-blue)', textDecoration: 'none', fontSize: '0.75rem' }}
       >
         Setup Guide →
       </a>

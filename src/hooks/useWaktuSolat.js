@@ -102,6 +102,53 @@ const PRAYER_NAMES = {
 };
 const SKIP_FOR_NEXT = ['syuruk'];
 
+const FALLBACK_TIMES = {
+  imsak: '05:40',
+  subuh: '05:50',
+  syuruk: '07:05',
+  zohor: '13:15',
+  asar: '16:30',
+  maghrib: '19:25',
+  isyak: '20:35',
+};
+
+const BASE_URL = 'https://www.e-solat.gov.my/index.php?r=esolatApi/takwimsolat&period=today&zone=';
+
+const PROXY_OPTIONS = [
+  (zone) => `https://api.allorigins.win/get?url=${encodeURIComponent(BASE_URL + zone)}`,
+  (zone) => `https://corsproxy.io/?${encodeURIComponent(BASE_URL + zone)}`,
+  (zone) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(BASE_URL + zone)}`,
+];
+
+async function fetchSolatWithFallback(zone) {
+  for (let i = 0; i < PROXY_OPTIONS.length; i++) {
+    try {
+      const url = PROXY_OPTIONS[i](zone);
+      const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!response.ok) continue;
+
+      const raw = await response.json();
+
+      // allorigins wraps response in { contents: "..." }
+      let data;
+      if (raw.contents) {
+        data = JSON.parse(raw.contents);
+      } else {
+        data = raw;
+      }
+
+      if (data?.prayerTime?.[0]) {
+        return { prayerTime: data.prayerTime[0], usingFallback: false };
+      }
+    } catch (err) {
+      console.warn(`Waktu solat proxy ${i + 1} failed:`, err.message);
+    }
+  }
+
+  console.warn('All waktu solat proxies failed, using demo times');
+  return { prayerTime: FALLBACK_TIMES, usingFallback: true };
+}
+
 function getCacheKey(zone) {
   const today = new Date().toISOString().slice(0, 10);
   return `solat_${zone}_${today}`;
@@ -126,7 +173,6 @@ function findNextSolat(times) {
       return { nextSolat: times[key], nextSolatName: PRAYER_NAMES[key] };
     }
   }
-  // Past Isyak — next is Imsak (tomorrow)
   return { nextSolat: times.imsak, nextSolatName: PRAYER_NAMES.imsak };
 }
 
@@ -137,6 +183,7 @@ export default function useWaktuSolat(initialZone = 'WLY01') {
   const [nextSolatName, setNextSolatName] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [usingFallback, setUsingFallback] = useState(false);
 
   const updateNextSolat = useCallback((prayerTimes) => {
     const { nextSolat: ns, nextSolatName: nsn } = findNextSolat(prayerTimes);
@@ -147,6 +194,7 @@ export default function useWaktuSolat(initialZone = 'WLY01') {
   const fetchTimes = useCallback(async (zoneCode, forceRefresh = false) => {
     const cacheKey = getCacheKey(zoneCode);
 
+    // Serve from cache immediately
     if (!forceRefresh) {
       try {
         const cached = localStorage.getItem(cacheKey);
@@ -155,46 +203,45 @@ export default function useWaktuSolat(initialZone = 'WLY01') {
           setTimes(parsed);
           updateNextSolat(parsed);
           setLoading(false);
-          // Still fetch fresh in background
         }
       } catch {
-        // Ignore cache read errors
+        // ignore cache errors
       }
     }
 
     try {
-      const res = await fetch(
-        `https://www.e-solat.gov.my/index.php?r=esolatApi/takwimsolat&period=today&zone=${zoneCode}`
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
+      const { prayerTime, usingFallback: isFallback } = await fetchSolatWithFallback(zoneCode);
 
-      if (json.status !== 'OK' || !json.prayerTime?.length) {
-        throw new Error('Invalid API response');
-      }
-
-      const raw = json.prayerTime[0];
       const parsed = {};
       PRAYER_KEYS.forEach((k) => {
-        if (raw[k]) parsed[k] = raw[k].slice(0, 5); // HH:mm
+        if (prayerTime[k]) parsed[k] = String(prayerTime[k]).slice(0, 5);
       });
 
-      localStorage.setItem(cacheKey, JSON.stringify(parsed));
+      if (!isFallback) {
+        localStorage.setItem(cacheKey, JSON.stringify(parsed));
+      }
+
       setTimes(parsed);
       updateNextSolat(parsed);
-      setError(null);
+      setUsingFallback(isFallback);
+      setError(isFallback ? 'Menggunakan waktu anggaran' : null);
     } catch (err) {
       setError(err.message);
-      // Fall back to cache if not already loaded
+      setUsingFallback(true);
+      // Last-resort: load stale cache
       try {
-        const cached = localStorage.getItem(getCacheKey(zoneCode));
-        if (cached && !times) {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
           const parsed = JSON.parse(cached);
           setTimes(parsed);
           updateNextSolat(parsed);
+        } else {
+          setTimes(FALLBACK_TIMES);
+          updateNextSolat(FALLBACK_TIMES);
         }
       } catch {
-        // Ignore
+        setTimes(FALLBACK_TIMES);
+        updateNextSolat(FALLBACK_TIMES);
       }
     } finally {
       setLoading(false);
@@ -206,7 +253,7 @@ export default function useWaktuSolat(initialZone = 'WLY01') {
     fetchTimes(zone);
   }, [zone, fetchTimes]);
 
-  // Midnight refresh — check every minute, re-fetch when date changes
+  // Midnight refresh and per-minute nextSolat update
   useEffect(() => {
     let lastDate = new Date().toISOString().slice(0, 10);
     const interval = setInterval(() => {
@@ -215,7 +262,6 @@ export default function useWaktuSolat(initialZone = 'WLY01') {
         lastDate = today;
         fetchTimes(zone, true);
       }
-      // Also update nextSolat every minute
       if (times) updateNextSolat(times);
     }, 60_000);
 
@@ -228,6 +274,7 @@ export default function useWaktuSolat(initialZone = 'WLY01') {
     nextSolatName,
     loading,
     error,
+    usingFallback,
     zone,
     setZone,
     ZONES,

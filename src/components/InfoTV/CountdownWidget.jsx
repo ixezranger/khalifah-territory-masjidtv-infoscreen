@@ -1,50 +1,42 @@
-import { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
 import useCountdown from '../../hooks/useCountdown';
 import GlassCard from '../shared/GlassCard';
 
-function pad(n) {
-  return String(n).padStart(2, '0');
+function DigitBox({ digit, isImminent }) {
+  return (
+    <div style={{
+      background: 'rgba(0,0,0,0.3)',
+      border: `1px solid ${isImminent ? 'var(--ms-amber)' : 'var(--glass-border)'}`,
+      borderRadius: 'var(--radius-md)',
+      width: 56,
+      height: 64,
+      fontFamily: "'Segoe UI', monospace",
+      fontSize: '2rem',
+      fontWeight: 300,
+      color: isImminent ? 'var(--ms-amber)' : 'var(--text-primary)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      animation: 'flipDown 0.3s ease',
+      transition: 'border-color 0.3s, color 0.3s',
+    }}>
+      {digit}
+    </div>
+  );
 }
 
 function DigitGroup({ value, label, isImminent }) {
-  const tens = String(value).padStart(2, '0')[0];
-  const units = String(value).padStart(2, '0')[1];
-  const digitColor = isImminent ? '#FF6B35' : '#C9A84C';
-  const digitStyle = {
-    background: 'rgba(0,0,0,0.4)',
-    border: '1px solid rgba(201,168,76,0.2)',
-    borderRadius: '8px',
-    width: '48px',
-    height: '56px',
-    fontFamily: 'monospace',
-    fontSize: '2rem',
-    color: digitColor,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    animation: isImminent ? 'glowPulse 2s ease-in-out infinite' : 'none',
-  };
-
+  const str = String(value).padStart(2, '0');
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-      <div style={{ display: 'flex', gap: '4px' }}>
-        <div key={`t-${tens}`} style={{ ...digitStyle, animation: `flipDown 0.3s ease-out, ${isImminent ? 'glowPulse 2s ease-in-out infinite' : 'none'}` }}>
-          {tens}
-        </div>
-        <div key={`u-${units}`} style={{ ...digitStyle, animation: `flipDown 0.3s ease-out, ${isImminent ? 'glowPulse 2s ease-in-out infinite' : 'none'}` }}>
-          {units}
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <DigitBox digit={str[0]} isImminent={isImminent} />
+        <DigitBox digit={str[1]} isImminent={isImminent} />
       </div>
-      <span
-        style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          color: '#F5EDD6',
-          fontSize: '0.65rem',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-        }}
-      >
+      <span style={{
+        fontSize: '0.6rem', color: 'var(--text-muted)',
+        letterSpacing: '0.1em', textTransform: 'uppercase',
+        textAlign: 'center',
+      }}>
         {label}
       </span>
     </div>
@@ -53,71 +45,38 @@ function DigitGroup({ value, label, isImminent }) {
 
 function Colon({ isImminent }) {
   return (
-    <span
-      style={{
-        fontFamily: 'monospace',
-        fontSize: '2rem',
-        color: isImminent ? '#FF6B35' : '#C9A84C',
-        marginBottom: '20px',
-        lineHeight: 1,
-        alignSelf: 'center',
-      }}
-    >
+    <span style={{
+      fontSize: '1.5rem',
+      color: isImminent ? 'var(--ms-amber)' : 'var(--ms-blue)',
+      opacity: 0.6,
+      margin: '0 8px',
+      alignSelf: 'center',
+      marginBottom: 20,
+    }}>
       :
     </span>
   );
 }
 
 export default function CountdownWidget({ nextSolatTime, nextSolatName }) {
-  const containerRef = useRef(null);
   const { hours, minutes, seconds, isImminent } = useCountdown(nextSolatTime, nextSolatName);
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from(containerRef.current, {
-        opacity: 0, y: 30, duration: 0.8, ease: 'power2.out',
-      });
-    }, containerRef);
-    return () => ctx.revert();
-  }, []);
-
   return (
-    <GlassCard variant={isImminent ? 'active' : 'default'} style={{ padding: '20px' }}>
-      <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        {/* Title */}
-        <div style={{ textAlign: 'center' }}>
-          <div
-            style={{
-              fontFamily: "'Cinzel Decorative', serif",
-              color: '#F5EDD6',
-              fontSize: '0.7rem',
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-            }}
-          >
-            Seterusnya
-          </div>
-          <div
-            style={{
-              fontFamily: "'Cinzel Decorative', serif",
-              color: '#C9A84C',
-              fontSize: '1.1rem',
-              letterSpacing: '0.08em',
-              marginTop: '2px',
-            }}
-          >
-            {nextSolatName || '—'}
-          </div>
-        </div>
+    <GlassCard variant="blue" padding="20px">
+      <div style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em',
+        textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 }}>
+        Masa Sehingga
+      </div>
+      <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--ms-blue)', marginBottom: 16 }}>
+        {nextSolatName || '—'}
+      </div>
 
-        {/* Flip groups */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
-          <DigitGroup value={hours} label="Jam" isImminent={isImminent} />
-          <Colon isImminent={isImminent} />
-          <DigitGroup value={minutes} label="Minit" isImminent={isImminent} />
-          <Colon isImminent={isImminent} />
-          <DigitGroup value={seconds} label="Saat" isImminent={isImminent} />
-        </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+        <DigitGroup value={hours} label="JAM" isImminent={isImminent} />
+        <Colon isImminent={isImminent} />
+        <DigitGroup value={minutes} label="MIN" isImminent={isImminent} />
+        <Colon isImminent={isImminent} />
+        <DigitGroup value={seconds} label="SAAT" isImminent={isImminent} />
       </div>
     </GlassCard>
   );

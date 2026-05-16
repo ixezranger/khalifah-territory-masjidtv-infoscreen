@@ -1,42 +1,62 @@
-const VARIANTS = {
-  default: {
-    background: 'rgba(255,255,255,0.06)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    border: '1px solid rgba(201,168,76,0.25)',
-    borderRadius: '16px',
-  },
-  active: {
-    background: 'rgba(201,168,76,0.08)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    border: '1px solid rgba(201,168,76,0.5)',
-    borderRadius: '16px',
-    animation: 'glowPulse 2s ease-in-out infinite',
-  },
-  dark: {
-    background: 'rgba(5,14,26,0.7)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    border: '1px solid rgba(201,168,76,0.15)',
-    borderRadius: '16px',
-  },
-};
-
 export default function GlassCard({
   children,
   className = '',
   variant = 'default',
   style = {},
   onClick,
+  padding = '20px',
 }) {
-  const base = VARIANTS[variant] || VARIANTS.default;
+  const variants = {
+    default: {
+      background: 'var(--bg-card)',
+      backdropFilter: 'var(--glass-blur)',
+      WebkitBackdropFilter: 'var(--glass-blur)',
+      border: '1px solid var(--glass-border)',
+      borderRadius: 'var(--radius-lg)',
+      boxShadow: 'var(--shadow-md)',
+    },
+    active: {
+      background: 'var(--gradient-active)',
+      backdropFilter: 'var(--glass-blur)',
+      WebkitBackdropFilter: 'var(--glass-blur)',
+      border: '1px solid var(--glass-border-active)',
+      borderRadius: 'var(--radius-lg)',
+      boxShadow: 'var(--shadow-active)',
+      animation: 'msGlowPulse 3s ease-in-out infinite',
+    },
+    blue: {
+      background: 'linear-gradient(135deg, rgba(0,120,212,0.15), rgba(0,120,212,0.05))',
+      backdropFilter: 'var(--glass-blur)',
+      WebkitBackdropFilter: 'var(--glass-blur)',
+      border: '1px solid var(--glass-border-blue)',
+      borderRadius: 'var(--radius-lg)',
+    },
+    dark: {
+      background: 'rgba(15,17,23,0.8)',
+      backdropFilter: 'var(--glass-blur-heavy)',
+      WebkitBackdropFilter: 'var(--glass-blur-heavy)',
+      border: '1px solid var(--glass-border)',
+      borderRadius: 'var(--radius-lg)',
+    },
+    purple: {
+      background: 'linear-gradient(135deg, rgba(119,25,170,0.15), rgba(119,25,170,0.05))',
+      backdropFilter: 'var(--glass-blur)',
+      WebkitBackdropFilter: 'var(--glass-blur)',
+      border: '1px solid rgba(119,25,170,0.4)',
+      borderRadius: 'var(--radius-lg)',
+    },
+  };
 
   return (
     <div
-      className={className}
-      style={{ padding: '24px', ...base, ...style }}
       onClick={onClick}
+      style={{
+        ...(variants[variant] || variants.default),
+        padding,
+        overflow: 'hidden',
+        ...style,
+      }}
+      className={className}
     >
       {children}
     </div>

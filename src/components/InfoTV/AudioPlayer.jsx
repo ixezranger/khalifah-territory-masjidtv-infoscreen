@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { gsap } from 'gsap';
 import useAudioPlayer from '../../hooks/useAudioPlayer';
 import GlassCard from '../shared/GlassCard';
 import AudioVisualizer from '../shared/AudioVisualizer';
@@ -15,48 +14,39 @@ function formatTime(sec) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-function CoverArt({ src, size = 72 }) {
+function CoverArt({ src, size = 64 }) {
   const [err, setErr] = useState(false);
   if (!src || err) {
     return (
       <div style={{
-        width: size, height: size, borderRadius: '8px',
-        background: 'rgba(13,79,79,0.6)',
+        width: size, height: size, borderRadius: 'var(--radius-md)',
+        background: 'linear-gradient(135deg, var(--ms-blue), var(--ms-purple))',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        border: '1px solid rgba(201,168,76,0.2)',
         flexShrink: 0,
       }}>
-        <CrescentIcon size={36} color="#C9A84C" />
+        <CrescentIcon size={size * 0.5} color="rgba(255,255,255,0.8)" />
       </div>
     );
   }
   return (
-    <img
-      src={src}
-      alt=""
-      onError={() => setErr(true)}
-      style={{ width: size, height: size, borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
-    />
+    <img src={src} alt="" onError={() => setErr(true)}
+      style={{ width: size, height: size, borderRadius: 'var(--radius-md)', objectFit: 'cover', flexShrink: 0 }} />
   );
 }
 
-const CTRL_BTN = {
-  background: 'transparent',
-  border: '1px solid rgba(201,168,76,0.3)',
-  borderRadius: '9999px',
-  width: '32px',
-  height: '32px',
-  color: '#C9A84C',
+const ctrlBtn = (active = false) => ({
+  background: active ? 'var(--ms-blue)' : 'transparent',
+  border: '1px solid var(--glass-border)',
+  borderRadius: '50%',
+  width: 32, height: 32,
+  color: active ? 'white' : 'var(--text-secondary)',
   cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '14px',
-  padding: 0,
-};
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  fontSize: 13, padding: 0,
+  transition: 'background 0.2s, color 0.2s',
+});
 
 export default function AudioPlayer({ audioItems = [], featureSettings = {} }) {
-  const containerRef = useRef(null);
   const [activeCategory, setActiveCategory] = useState(featureSettings.audio_default_category || 'zikir');
 
   const filtered = audioItems.filter((a) => a.category === activeCategory);
@@ -65,21 +55,10 @@ export default function AudioPlayer({ audioItems = [], featureSettings = {} }) {
 
   const player = useAudioPlayer(filtered, vol, autoplay);
 
-  // Reload when category changes
   useEffect(() => {
     const list = audioItems.filter((a) => a.category === activeCategory);
     if (list.length) player.load(list);
   }, [activeCategory]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Entrance animation
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from(containerRef.current, {
-        opacity: 0, y: 30, duration: 0.8, ease: 'power2.out',
-      });
-    }, containerRef);
-    return () => ctx.revert();
-  }, []);
 
   const handleSeek = useCallback((e) => {
     const pct = Number(e.target.value);
@@ -88,133 +67,101 @@ export default function AudioPlayer({ audioItems = [], featureSettings = {} }) {
 
   if (!audioItems.length) {
     return (
-      <GlassCard style={{ padding: '20px', textAlign: 'center' }}>
-        <span style={{ color: '#F5EDD6', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '0.9rem', opacity: 0.6 }}>
-          Tiada audio ditambah
-        </span>
+      <GlassCard padding="20px" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Tiada audio ditambah</span>
       </GlassCard>
     );
   }
 
   return (
-    <GlassCard style={{ padding: '16px' }}>
-      <div ref={containerRef}>
-        {/* Main row */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {/* Cover art */}
-          <CoverArt src={player.currentTrack?.thumbnail_url} />
+    <GlassCard padding="16px" style={{ height: '100%', boxSizing: 'border-box' }}>
+      <div style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em',
+        textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>
+        Audio Player
+      </div>
 
-          {/* Center info */}
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              color: '#F5EDD6',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}>
-              {player.currentTrack?.title || 'No track'}
-            </div>
+      {/* Main row */}
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+        <CoverArt src={player.currentTrack?.thumbnail_url} />
 
-            <div style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              color: 'rgba(245,237,214,0.6)',
-              fontSize: '0.8rem',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}>
-              {player.currentTrack?.artist_reciter || ''}
-            </div>
-
-            {player.currentTrack?.category && (
-              <span style={{
-                display: 'inline-block',
-                border: '1px solid #C9A84C',
-                color: '#C9A84C',
-                fontSize: '0.7rem',
-                borderRadius: '12px',
-                padding: '1px 8px',
-                alignSelf: 'flex-start',
-                textTransform: 'capitalize',
-              }}>
-                {player.currentTrack.category}
-              </span>
-            )}
-
-            <AudioVisualizer isPlaying={player.isPlaying} color="#C9A84C" height={24} barCount={10} />
+        {/* Track info */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{
+            fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {player.currentTrack?.title || 'Tiada track'}
           </div>
+          <div style={{
+            fontSize: '0.8rem', color: 'var(--text-secondary)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {player.currentTrack?.artist_reciter || ''}
+          </div>
+          <AudioVisualizer isPlaying={player.isPlaying} color="var(--ms-blue)" height={20} barCount={16} />
+        </div>
 
-          {/* Controls */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-              <button style={CTRL_BTN} onClick={player.prev} title="Previous">◄◄</button>
-              <button
-                style={{ ...CTRL_BTN, width: '38px', height: '38px', fontSize: '16px', background: 'rgba(201,168,76,0.15)' }}
-                onClick={player.isPlaying ? player.pause : player.resume}
-                title={player.isPlaying ? 'Pause' : 'Play'}
-              >
-                {player.isPlaying ? '⏸' : '▶'}
-              </button>
-              <button style={CTRL_BTN} onClick={player.next} title="Next">►►</button>
-            </div>
-
-            <input
-              type="range"
-              min={0} max={1} step={0.01}
+        {/* Controls */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <button style={ctrlBtn()} onClick={player.prev} title="Previous">◄◄</button>
+            <button style={{ ...ctrlBtn(true), width: 36, height: 36, fontSize: 16 }}
+              onClick={player.isPlaying ? player.pause : player.resume}
+              title={player.isPlaying ? 'Pause' : 'Play'}>
+              {player.isPlaying ? '⏸' : '▶'}
+            </button>
+            <button style={ctrlBtn()} onClick={player.next} title="Next">►►</button>
+          </div>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>🔊</span>
+            <input type="range" min={0} max={1} step={0.01}
               value={player.volume}
               onChange={(e) => player.setVolume(Number(e.target.value))}
-              style={{ width: '64px', accentColor: '#C9A84C' }}
-              title="Volume"
-            />
-
-            <span style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              color: 'rgba(245,237,214,0.6)',
-              fontSize: '0.7rem',
-            }}>
-              {formatTime(player.currentTime)} / {formatTime(player.duration)}
-            </span>
+              style={{ width: 72, accentColor: 'var(--ms-blue)' }} />
           </div>
         </div>
+      </div>
 
-        {/* Seek bar */}
-        <input
-          type="range"
-          min={0} max={100} step={0.1}
-          value={player.progress}
-          onChange={handleSeek}
-          style={{ width: '100%', accentColor: '#C9A84C', marginTop: '10px', cursor: 'pointer' }}
-        />
-
-        {/* Category tabs */}
-        <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
-          {CATEGORIES.map((cat) => {
-            const isActive = activeCategory === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                style={{
-                  padding: '4px 14px',
-                  borderRadius: '9999px',
-                  border: `1px solid ${isActive ? '#C9A84C' : 'rgba(201,168,76,0.3)'}`,
-                  background: isActive ? '#C9A84C' : 'transparent',
-                  color: isActive ? '#050E1A' : '#C9A84C',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: isActive ? 600 : 400,
-                  transition: 'all 0.2s',
-                }}
-              >
-                {CAT_LABEL[cat]}
-              </button>
-            );
-          })}
+      {/* Progress bar */}
+      <div style={{ marginTop: 12, position: 'relative' }}>
+        <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
+          <div style={{
+            height: '100%', background: 'var(--ms-blue)', borderRadius: 2,
+            width: `${player.progress || 0}%`, transition: 'width 0.5s linear',
+          }} />
         </div>
+        <input type="range" min={0} max={100} step={0.1}
+          value={player.progress || 0}
+          onChange={handleSeek}
+          style={{
+            position: 'absolute', top: -6, left: 0, width: '100%',
+            opacity: 0, cursor: 'pointer', height: 16,
+          }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between',
+        fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>
+        <span>{formatTime(player.currentTime)}</span>
+        <span>{formatTime(player.duration)}</span>
+      </div>
+
+      {/* Category tabs */}
+      <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+        {CATEGORIES.map((cat) => {
+          const isActive = activeCategory === cat;
+          return (
+            <button key={cat} onClick={() => setActiveCategory(cat)} style={{
+              padding: '4px 14px', borderRadius: 9999,
+              border: `1px solid ${isActive ? 'var(--ms-blue)' : 'var(--glass-border)'}`,
+              background: isActive ? 'var(--ms-blue)' : 'transparent',
+              color: isActive ? 'white' : 'var(--text-muted)',
+              fontSize: '0.75rem', cursor: 'pointer',
+              fontFamily: 'inherit', fontWeight: isActive ? 600 : 400,
+              transition: 'all 0.2s',
+            }}>
+              {CAT_LABEL[cat]}
+            </button>
+          );
+        })}
       </div>
     </GlassCard>
   );

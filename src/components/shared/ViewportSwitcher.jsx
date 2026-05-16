@@ -1,50 +1,49 @@
 const VIEWS = [
-  { id: 'tv', label: '📺 TV' },
-  { id: 'tablet', label: '📱 Tablet' },
-  { id: 'mobile', label: '📲 Mobile' },
+  { id: 'tv', icon: '📺', title: 'TV Mode' },
+  { id: 'tablet', icon: '⬜', title: 'Tablet Mode' },
+  { id: 'mobile', icon: '📱', title: 'Mobile Mode' },
 ];
 
 export default function ViewportSwitcher({ currentView, onViewChange }) {
   return (
-    <div
-      style={{
-        position: 'fixed',
-        right: '24px',
-        bottom: '80px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '6px',
-        zIndex: 1000,
-      }}
-    >
-      {VIEWS.map(({ id, label }) => {
+    <div style={{
+      position: 'fixed',
+      right: 20,
+      bottom: 20,
+      zIndex: 1000,
+      background: 'rgba(15,17,23,0.8)',
+      backdropFilter: 'var(--glass-blur-heavy)',
+      WebkitBackdropFilter: 'var(--glass-blur-heavy)',
+      border: '1px solid var(--glass-border)',
+      borderRadius: 20,
+      padding: '6px',
+      display: 'flex',
+      flexDirection: 'row',
+      gap: 2,
+    }}>
+      {VIEWS.map(({ id, icon, title }) => {
         const isActive = currentView === id;
         return (
           <button
             key={id}
             onClick={() => onViewChange(id)}
+            title={title}
             style={{
-              fontSize: '12px',
-              borderRadius: '9999px',
-              paddingLeft: '12px',
-              paddingRight: '12px',
-              paddingTop: '6px',
-              paddingBottom: '6px',
-              border: `1px solid ${isActive ? '#C9A84C' : 'rgba(201,168,76,0.25)'}`,
-              background: isActive
-                ? '#C9A84C'
-                : 'rgba(255,255,255,0.06)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              color: isActive ? '#050E1A' : '#C9A84C',
+              width: 36,
+              height: 28,
+              borderRadius: 14,
+              border: 'none',
+              background: isActive ? 'var(--ms-blue)' : 'transparent',
+              color: isActive ? 'white' : 'var(--text-muted)',
+              fontSize: '0.75rem',
               cursor: 'pointer',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: isActive ? 600 : 400,
-              whiteSpace: 'nowrap',
-              transition: 'all 0.2s ease',
+              transition: 'background 0.2s, color 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            {label}
+            {icon}
           </button>
         );
       })}

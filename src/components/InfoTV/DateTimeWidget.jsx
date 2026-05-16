@@ -1,73 +1,65 @@
-import { useEffect, useRef, memo } from 'react';
-import { gsap } from 'gsap';
+import { useState, useEffect, memo } from 'react';
 import useDateTime from '../../hooks/useDateTime';
 import GlassCard from '../shared/GlassCard';
 import OttomanDivider from '../shared/OttomanDivider';
-import CrescentIcon from '../shared/CrescentIcon';
 
 const DateTimeWidget = memo(function DateTimeWidget() {
-  const containerRef = useRef(null);
   const { time, gregorianDate, hijriDate } = useDateTime();
+  const [colonVisible, setColonVisible] = useState(true);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from(containerRef.current, {
-        opacity: 0, y: 30, duration: 0.8, ease: 'power2.out',
-      });
-    }, containerRef);
-    return () => ctx.revert();
+    const interval = setInterval(() => setColonVisible((v) => !v), 1000);
+    return () => clearInterval(interval);
   }, []);
 
+  const [hh, mm, ss] = time ? time.split(':') : ['--', '--', '--'];
+
   return (
-    <GlassCard
-      style={{ position: 'relative', padding: '20px 24px', overflow: 'hidden' }}
-    >
-      <div ref={containerRef} style={{ position: 'relative', zIndex: 1 }}>
-        {/* Clock */}
-        <div
-          style={{
-            fontFamily: 'monospace',
-            fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-            color: '#C9A84C',
-            fontWeight: 700,
-            letterSpacing: '0.05em',
-            lineHeight: 1,
-          }}
-        >
-          {time}
-        </div>
-
-        {/* Gregorian date */}
-        <div
-          style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            color: '#F5EDD6',
-            fontSize: '1rem',
-            marginTop: '8px',
-          }}
-        >
-          {gregorianDate}
-        </div>
-
-        <div style={{ marginTop: '8px', marginBottom: '8px' }}>
-          <OttomanDivider size="sm" />
-        </div>
-
-        {/* Hijri date */}
-        <div
-          style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            color: '#C9A84C',
-            fontSize: '0.9rem',
-          }}
-        >
-          {hijriDate}
-        </div>
+    <GlassCard variant="blue" padding="20px">
+      <div style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em',
+        textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>
+        Tarikh &amp; Masa
       </div>
 
-      {/* Watermark */}
-      <div style={{ position: 'absolute', bottom: '8px', right: '8px', zIndex: 0 }}>
-        <CrescentIcon size={48} color="rgba(201,168,76,0.08)" />
+      {/* Large time display */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, lineHeight: 1 }}>
+        {[hh, mm, ss].map((part, i) => (
+          <span key={i} style={{ display: 'flex', alignItems: 'baseline' }}>
+            <span style={{
+              fontFamily: "'Segoe UI', monospace",
+              fontSize: 'clamp(2.5rem,5vw,3.8rem)',
+              fontWeight: 300,
+              color: 'var(--text-primary)',
+              letterSpacing: '-0.02em',
+            }}>
+              {part}
+            </span>
+            {i < 2 && (
+              <span style={{
+                color: 'var(--ms-blue)',
+                fontSize: 'clamp(2rem,4vw,3rem)',
+                fontWeight: 300,
+                opacity: colonVisible ? 1 : 0.2,
+                transition: 'opacity 0.1s',
+                margin: '0 2px',
+              }}>
+                :
+              </span>
+            )}
+          </span>
+        ))}
+      </div>
+
+      <OttomanDivider />
+
+      {/* Date row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+          {gregorianDate}
+        </span>
+        <span style={{ fontSize: '0.85rem', color: 'var(--ms-blue)' }}>
+          {hijriDate}
+        </span>
       </div>
     </GlassCard>
   );
