@@ -10,7 +10,7 @@ export default function ViewportSwitcher({ currentView, onViewChange }) {
       style={{
         position: 'fixed',
         right: '24px',
-        bottom: '80px',
+        bottom: '10px',
         display: 'flex',
         flexDirection: 'column',
         gap: '6px',
