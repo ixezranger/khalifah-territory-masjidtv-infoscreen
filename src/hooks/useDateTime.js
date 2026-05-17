@@ -12,28 +12,36 @@ const HIJRI_MONTHS = [
 ];
 
 function toHijri(gDate) {
-  const JD = Math.floor((14 + 12 * (gDate.getFullYear() + 4800 +
-    Math.floor((gDate.getMonth() + 1 - 3) / 12)) -
-    Math.floor((Math.floor((gDate.getMonth() + 1 - 3) / 12) + 1) / 3) +
-    gDate.getDate() - 32075) +
-    Math.floor(gDate.getMonth() / (gDate.getMonth() + 0.5)) *
-    (1461 * (gDate.getFullYear() + 4800 +
-    Math.floor((gDate.getMonth()) / 12)) / 4 -
-    Math.floor((Math.floor((gDate.getMonth()) / 12) + 1) / 3) +
-    gDate.getDate() - 32083) -
-    Math.floor(gDate.getMonth() / (gDate.getMonth() + 0.5)) *
-    (1461 * (gDate.getFullYear() + 4800 +
-    Math.floor((gDate.getMonth()) / 12)) / 4));
-  const l = JD - 1948440 + 10632;
-  const n = Math.floor((l - 1) / 10631);
-  const ll = l - 10631 * n + 354;
-  const j = Math.floor((10985 - ll) / 5316) * Math.floor((50 * ll) / 17719) +
-    Math.floor(ll / 5670) * Math.floor((43 * ll) / 15238);
-  const lll = ll - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) -
-    Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
-  const month = Math.floor((24 * lll) / 709);
-  const day = lll - Math.floor((709 * month) / 24);
-  const year = 30 * n + j - 30;
+  const Y = gDate.getFullYear();
+  const M = gDate.getMonth() + 1; // 1-based
+  const D = gDate.getDate();
+
+  // Gregorian → Julian Day Number
+  const a = Math.floor((14 - M) / 12);
+  const y = Y + 4800 - a;
+  const m = M + 12 * a - 3;
+  const JDN = D +
+    Math.floor((153 * m + 2) / 5) +
+    365 * y +
+    Math.floor(y / 4) -
+    Math.floor(y / 100) +
+    Math.floor(y / 400) -
+    32045;
+
+  // JDN → Hijri (Tabular Islamic calendar)
+  const l  = JDN - 1948440 + 10632;
+  const n  = Math.floor((l - 1) / 10631);
+  const l2 = l - 10631 * n + 354;
+  const j  = Math.floor((10985 - l2) / 5316) * Math.floor((50 * l2) / 17719) +
+             Math.floor(l2 / 5670) * Math.floor((43 * l2) / 15238);
+  const l3 = l2 -
+    Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) -
+    Math.floor(j / 16) * Math.floor((15238 * j) / 43) +
+    29;
+  const month = Math.floor((24 * l3) / 709);
+  const day   = l3 - Math.floor((709 * month) / 24);
+  const year  = 30 * n + j - 30;
+
   return { day, month, year };
 }
 
