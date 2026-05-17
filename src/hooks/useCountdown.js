@@ -1,57 +1,52 @@
 import { useState, useEffect } from 'react';
 
-function parseHHMM(hhmm) {
+function parseTime(hhmm) {
+  if (!hhmm) return new Date();
   const [h, m] = hhmm.split(':').map(Number);
-  return { h, m };
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d;
 }
 
-function secondsUntil(hhmm) {
-  const now = new Date();
-  const { h, m } = parseHHMM(hhmm);
-
-  const target = new Date(now);
-  target.setHours(h, m, 0, 0);
-
-  let diff = Math.floor((target - now) / 1000);
-  if (diff < 0) diff += 24 * 3600; // overnight: add 24 hours
-  return diff;
-}
-
-export default function useCountdown(nextSolatTime, nextSolatName) {
+export default function useCountdown(nextSolatTime, nextSolatName, prevSolatTime) {
   const [totalSeconds, setTotalSeconds] = useState(0);
-  const [isPassed, setIsPassed] = useState(false);
+  const [progressPct, setProgressPct] = useState(0);
 
   useEffect(() => {
     if (!nextSolatTime) return;
 
-    setTotalSeconds(secondsUntil(nextSolatTime));
-    setIsPassed(false);
+    function tick() {
+      const now = new Date();
+      let nextTime = parseTime(nextSolatTime);
 
-    const interval = setInterval(() => {
-      setTotalSeconds((prev) => {
-        if (prev <= 1) {
-          setIsPassed(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      // Overnight wrap: if next prayer already passed today, it's tomorrow
+      if (nextTime <= now) nextTime.setDate(nextTime.getDate() + 1);
 
+      const remain = Math.max(0, Math.floor((nextTime - now) / 1000));
+      setTotalSeconds(remain);
+
+      // Progress bar: elapsed fraction of [prevSolat → nextSolat]
+      if (prevSolatTime) {
+        let prevTime = parseTime(prevSolatTime);
+        // If prev is after next (crossed midnight), push prev back a day
+        if (prevTime >= nextTime) prevTime.setDate(prevTime.getDate() - 1);
+        const total = Math.max(1, nextTime - prevTime);
+        const elapsed = Math.max(0, now - prevTime);
+        setProgressPct(Math.min(100, Math.max(0, (elapsed / total) * 100)));
+      } else {
+        setProgressPct(0);
+      }
+    }
+
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [nextSolatTime]);
+  }, [nextSolatTime, prevSolatTime]);
 
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
   const isImminent = totalSeconds > 0 && totalSeconds <= 15 * 60;
 
-  return {
-    hours,
-    minutes,
-    seconds,
-    nextSolatName,
-    isImminent,
-    isPassed,
-    totalSeconds,
-  };
+  return { hours, minutes, seconds, isImminent, progressPct, totalSeconds };
 }

@@ -55,7 +55,7 @@ const PRAYER_KEYS = [
   { key: 'imsak',   name: 'Imsak',   ico: '☼' },
   { key: 'subuh',   name: 'Subuh',   ico: '◒' },
   { key: 'syuruk',  name: 'Syuruk',  ico: '☀' },
-  { key: 'zohor',   name: 'Zuhur',   ico: '☼' },
+  { key: 'zohor',   name: 'Zohor',   ico: '☼' },
   { key: 'asar',    name: 'Asar',    ico: '♧' },
   { key: 'maghrib', name: 'Maghrib', ico: '◉' },
   { key: 'isyak',   name: 'Isyak',   ico: '☾' },
@@ -79,8 +79,8 @@ export default function InfoTVScreen() {
   } = useStore();
 
   const zone = profile?.zone_code || currentZone || 'WLY01';
-  const { times, nextSolat, nextSolatName, loading: solatLoading, usingFallback } = useWaktuSolat(zone);
-  const { hours, minutes, seconds, isImminent, totalSeconds } = useCountdown(nextSolat, nextSolatName);
+  const { times, nextSolat, nextSolatName, prevSolat, loading: solatLoading, apiStatus } = useWaktuSolat(zone);
+  const { hours, minutes, seconds, isImminent, progressPct } = useCountdown(nextSolat, nextSolatName, prevSolat);
   const { time, gregorianDate, hijriDate, dayName } = useDateTime();
 
   const [slideIndex, setSlideIndex] = useState(0);
@@ -133,9 +133,6 @@ export default function InfoTVScreen() {
     setSlideIndex(i => (i + 1) % slides.length);
   };
 
-  const progressPct = totalSeconds > 0
-    ? Math.max(0, Math.min(100, 100 - (totalSeconds / (6 * 3600)) * 100))
-    : 0;
 
   const currentSlide = slides[slideIndex] || DEFAULT_SLIDES[0];
   const timeHH = parseInt(time.substring(0, 2), 10);
@@ -201,7 +198,9 @@ export default function InfoTVScreen() {
               borderRadius: 10, margin: '10px 0',
             }} />
             <p style={{ fontSize: 'clamp(11px,.85vw,16px)', color: 'var(--muted)', margin: 0 }}>
-              {usingFallback ? '⚠ Menggunakan waktu anggaran' : '✓ Data waktu solat rasmi JAKIM'}
+              {apiStatus === 'online'   && '✓ Data waktu solat rasmi JAKIM dikemaskini'}
+              {apiStatus === 'cached'   && '◷ Menggunakan data cache hari ini'}
+              {apiStatus === 'fallback' && '⚠ Waktu anggaran — semak sambungan internet'}
             </p>
           </div>
         </header>

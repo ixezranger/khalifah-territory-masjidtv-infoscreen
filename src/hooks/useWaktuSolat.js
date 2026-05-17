@@ -86,94 +86,129 @@ export const ZONES = {
   },
 };
 
-export const ZONE_LABELS = Object.values(ZONES).reduce((acc, group) => {
-  return { ...acc, ...group };
-}, {});
+export const ZONE_LABELS = Object.values(ZONES).reduce((acc, group) => ({ ...acc, ...group }), {});
 
-const PRAYER_KEYS = ['imsak', 'subuh', 'syuruk', 'zohor', 'asar', 'maghrib', 'isyak'];
+// Malay names used for nextSolatName — must match PRAYER_KEYS in InfoTVScreen
 const PRAYER_NAMES = {
-  imsak: 'Imsak',
-  subuh: 'Subuh',
-  syuruk: 'Syuruk',
-  zohor: 'Zohor',
-  asar: 'Asar',
+  imsak:   'Imsak',
+  subuh:   'Subuh',
+  syuruk:  'Syuruk',
+  zohor:   'Zohor',
+  asar:    'Asar',
   maghrib: 'Maghrib',
-  isyak: 'Isyak',
+  isyak:   'Isyak',
 };
-const SKIP_FOR_NEXT = ['syuruk'];
+
+// Order used for "next prayer" detection (syuruk excluded — it's not a solat)
+const NEXT_ORDER = ['subuh', 'syuruk', 'zohor', 'asar', 'maghrib', 'isyak'];
 
 const FALLBACK_TIMES = {
-  imsak: '05:40',
-  subuh: '05:50',
-  syuruk: '07:05',
-  zohor: '13:15',
-  asar: '16:30',
-  maghrib: '19:25',
-  isyak: '20:35',
+  imsak:   '05:40',
+  subuh:   '05:50',
+  syuruk:  '07:01',
+  zohor:   '13:12',
+  asar:    '16:35',
+  maghrib: '19:20',
+  isyak:   '20:34',
 };
 
 const BASE_URL = 'https://www.e-solat.gov.my/index.php?r=esolatApi/takwimsolat&period=today&zone=';
 
-const PROXY_OPTIONS = [
+const PROXIES = [
   (zone) => `https://api.allorigins.win/get?url=${encodeURIComponent(BASE_URL + zone)}`,
   (zone) => `https://corsproxy.io/?${encodeURIComponent(BASE_URL + zone)}`,
   (zone) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(BASE_URL + zone)}`,
 ];
 
-async function fetchSolatWithFallback(zone) {
-  for (let i = 0; i < PROXY_OPTIONS.length; i++) {
-    try {
-      const url = PROXY_OPTIONS[i](zone);
-      const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
-      if (!response.ok) continue;
+// Mirror exact key-fallback logic from the original working HTML template
+function parsePrayerTimes(raw) {
+  let data = raw;
+  if (raw?.contents) {
+    try { data = JSON.parse(raw.contents); } catch { return null; }
+  }
+  const p = data?.prayerTime?.[0];
+  if (!p) return null;
 
-      const raw = await response.json();
+  const result = {
+    imsak:   p.imsak                  || '',
+    subuh:   p.fajr    || p.subuh     || '',
+    syuruk:  p.syuruk                 || '',
+    zohor:   p.dhuhr   || p.zohor     || '',
+    asar:    p.asr     || p.asar      || '',
+    maghrib: p.maghrib                || '',
+    isyak:   p.isha    || p.isyak     || '',
+  };
 
-      // allorigins wraps response in { contents: "..." }
-      let data;
-      if (raw.contents) {
-        data = JSON.parse(raw.contents);
-      } else {
-        data = raw;
+  // Normalise to HH:MM (drop seconds if present)
+  Object.keys(result).forEach(k => {
+    if (result[k]) result[k] = String(result[k]).slice(0, 5);
+  });
+
+  console.log('[MasjidTV] Raw API response:', p);
+  console.log('[MasjidTV] Parsed prayer times:', result);
+  return result;
+}
+
+function parseTime(hhmm) {
+  if (!hhmm) return new Date();
+  const [h, m] = hhmm.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+function findNextAndPrev(times) {
+  const now = new Date();
+
+  let nextKey = null;
+  let prevKey = null;
+
+  for (let i = 0; i < NEXT_ORDER.length; i++) {
+    const key = NEXT_ORDER[i];
+    if (!times[key]) continue;
+    if (parseTime(times[key]) > now) {
+      nextKey = key;
+      // previous = the prayer before this one, excluding syuruk
+      for (let j = i - 1; j >= 0; j--) {
+        const pk = NEXT_ORDER[j];
+        if (pk !== 'syuruk' && times[pk]) { prevKey = pk; break; }
       }
-
-      if (data?.prayerTime?.[0]) {
-        return { prayerTime: data.prayerTime[0], usingFallback: false };
-      }
-    } catch (err) {
-      console.warn(`Waktu solat proxy ${i + 1} failed:`, err.message);
+      break;
     }
+    if (key !== 'syuruk') prevKey = key;
   }
 
-  console.warn('All waktu solat proxies failed, using demo times');
-  return { prayerTime: FALLBACK_TIMES, usingFallback: true };
+  // All prayers have passed → next is subuh (tomorrow)
+  if (!nextKey) {
+    nextKey = 'subuh';
+    prevKey = 'isyak';
+  }
+
+  return {
+    nextSolat:     times[nextKey] || null,
+    nextSolatName: PRAYER_NAMES[nextKey] || '',
+    prevSolat:     prevKey ? (times[prevKey] || null) : null,
+    prevSolatName: prevKey ? (PRAYER_NAMES[prevKey] || '') : '',
+  };
 }
 
 function getCacheKey(zone) {
-  const today = new Date().toISOString().slice(0, 10);
-  return `solat_${zone}_${today}`;
+  return `esolat_${zone}_${new Date().toDateString()}`;
 }
 
-function timeToMinutes(hhmm) {
-  const [h, m] = hhmm.split(':').map(Number);
-  return h * 60 + m;
-}
-
-function getCurrentHHMM() {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-}
-
-function findNextSolat(times) {
-  const nowMinutes = timeToMinutes(getCurrentHHMM());
-  for (const key of PRAYER_KEYS) {
-    if (SKIP_FOR_NEXT.includes(key)) continue;
-    if (!times[key]) continue;
-    if (timeToMinutes(times[key]) > nowMinutes) {
-      return { nextSolat: times[key], nextSolatName: PRAYER_NAMES[key] };
+async function fetchFromNetwork(zone) {
+  for (let i = 0; i < PROXIES.length; i++) {
+    try {
+      const res = await fetch(PROXIES[i](zone), { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) continue;
+      const raw = await res.json();
+      const parsed = parsePrayerTimes(raw);
+      if (parsed) return { times: parsed, apiStatus: 'online' };
+    } catch (err) {
+      console.warn(`[MasjidTV] Proxy ${i + 1} failed:`, err.message);
     }
   }
-  return { nextSolat: times.imsak, nextSolatName: PRAYER_NAMES.imsak };
+  return null;
 }
 
 export default function useWaktuSolat(initialZone = 'WLY01') {
@@ -181,100 +216,86 @@ export default function useWaktuSolat(initialZone = 'WLY01') {
   const [times, setTimes] = useState(null);
   const [nextSolat, setNextSolat] = useState(null);
   const [nextSolatName, setNextSolatName] = useState(null);
+  const [prevSolat, setPrevSolat] = useState(null);
+  const [prevSolatName, setPrevSolatName] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [apiStatus, setApiStatus] = useState('fallback'); // 'online' | 'cached' | 'fallback'
 
-  const updateNextSolat = useCallback((prayerTimes) => {
-    const { nextSolat: ns, nextSolatName: nsn } = findNextSolat(prayerTimes);
+  const applyTimes = useCallback((t) => {
+    setTimes(t);
+    const { nextSolat: ns, nextSolatName: nsn, prevSolat: ps, prevSolatName: psn } = findNextAndPrev(t);
     setNextSolat(ns);
     setNextSolatName(nsn);
+    setPrevSolat(ps);
+    setPrevSolatName(psn);
   }, []);
 
-  const fetchTimes = useCallback(async (zoneCode, forceRefresh = false) => {
-    const cacheKey = getCacheKey(zoneCode);
-
-    // Serve from cache immediately
-    if (!forceRefresh) {
-      try {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          setTimes(parsed);
-          updateNextSolat(parsed);
-          setLoading(false);
-        }
-      } catch {
-        // ignore cache errors
-      }
-    }
-
-    try {
-      const { prayerTime, usingFallback: isFallback } = await fetchSolatWithFallback(zoneCode);
-
-      const parsed = {};
-      PRAYER_KEYS.forEach((k) => {
-        if (prayerTime[k]) parsed[k] = String(prayerTime[k]).slice(0, 5);
-      });
-
-      if (!isFallback) {
-        localStorage.setItem(cacheKey, JSON.stringify(parsed));
-      }
-
-      setTimes(parsed);
-      updateNextSolat(parsed);
-      setUsingFallback(isFallback);
-      setError(isFallback ? 'Menggunakan waktu anggaran' : null);
-    } catch (err) {
-      setError(err.message);
-      setUsingFallback(true);
-      // Last-resort: load stale cache
-      try {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          setTimes(parsed);
-          updateNextSolat(parsed);
-        } else {
-          setTimes(FALLBACK_TIMES);
-          updateNextSolat(FALLBACK_TIMES);
-        }
-      } catch {
-        setTimes(FALLBACK_TIMES);
-        updateNextSolat(FALLBACK_TIMES);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [updateNextSolat]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
+  const loadTimes = useCallback(async (zoneCode) => {
     setLoading(true);
-    fetchTimes(zone);
-  }, [zone, fetchTimes]);
 
-  // Midnight refresh and per-minute nextSolat update
+    // 1. Serve cache immediately so UI isn't blank
+    const cacheKey = getCacheKey(zoneCode);
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const t = JSON.parse(cached);
+        applyTimes(t);
+        setApiStatus('cached');
+        setLoading(false);
+      }
+    } catch { /* ignore */ }
+
+    // 2. Fetch fresh from network
+    const result = await fetchFromNetwork(zoneCode);
+
+    if (result) {
+      localStorage.setItem(getCacheKey(zoneCode), JSON.stringify(result.times));
+      applyTimes(result.times);
+      setApiStatus('online');
+      setError(null);
+    } else {
+      // Network failed — if no cache was set above, use hardcoded fallback
+      if (!times) {
+        applyTimes(FALLBACK_TIMES);
+      }
+      setApiStatus('fallback');
+      setError('Waktu anggaran — semak sambungan internet');
+      console.warn('[MasjidTV] All proxies failed, using fallback times');
+    }
+
+    setLoading(false);
+  }, [applyTimes]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Initial load and zone changes
   useEffect(() => {
-    let lastDate = new Date().toISOString().slice(0, 10);
+    loadTimes(zone);
+  }, [zone]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-compute next/prev every minute; refresh at midnight
+  useEffect(() => {
+    let lastDate = new Date().toDateString();
     const interval = setInterval(() => {
-      const today = new Date().toISOString().slice(0, 10);
+      if (times) applyTimes(times);
+      const today = new Date().toDateString();
       if (today !== lastDate) {
         lastDate = today;
-        fetchTimes(zone, true);
+        loadTimes(zone);
       }
-      if (times) updateNextSolat(times);
     }, 60_000);
-
     return () => clearInterval(interval);
-  }, [zone, times, fetchTimes, updateNextSolat]);
+  }, [zone, times, applyTimes, loadTimes]);
 
   return {
     times,
     nextSolat,
     nextSolatName,
+    prevSolat,
+    prevSolatName,
     loading,
     error,
-    usingFallback,
+    apiStatus,
+    usingFallback: apiStatus === 'fallback',
     zone,
     setZone,
     ZONES,
