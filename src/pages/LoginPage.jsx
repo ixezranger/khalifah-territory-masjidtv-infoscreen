@@ -39,9 +39,6 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--bg-primary)',
-      backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0)',
-      backgroundSize: '32px 32px',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -51,25 +48,34 @@ export default function LoginPage() {
     }}>
       {/* Logo */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-        <CrescentIcon size={48} color="var(--ms-blue)" animated />
+        <CrescentIcon size={52} color="#1174ff" animated />
         <h1 style={{
-          fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)',
-          margin: 0, letterSpacing: '-0.02em',
+          fontSize: '2rem', fontWeight: 800, color: '#071942',
+          margin: 0, letterSpacing: '-0.03em',
         }}>
           MasjidTV
         </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0 }}>
+        <p style={{ fontSize: '0.875rem', color: '#3f568d', margin: 0 }}>
           Sistem InfoTV Islamik
         </p>
       </div>
 
       {/* Login card */}
-      <GlassCard style={{ width: '100%', maxWidth: 400 }} padding="40px">
+      <div style={{
+        width: '100%', maxWidth: 400,
+        background: 'rgba(255,255,255,0.6)',
+        backdropFilter: 'blur(26px)',
+        WebkitBackdropFilter: 'blur(26px)',
+        border: '1px solid rgba(255,255,255,0.7)',
+        borderRadius: 32,
+        boxShadow: '0 24px 80px rgba(18,40,91,.20)',
+        padding: 40,
+      }}>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{
               display: 'block', marginBottom: 6, fontSize: '0.8rem', fontWeight: 600,
-              color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em',
+              color: '#3f568d', textTransform: 'uppercase', letterSpacing: '0.05em',
             }}>
               E-Mel
             </label>
@@ -87,7 +93,7 @@ export default function LoginPage() {
           <div>
             <label style={{
               display: 'block', marginBottom: 6, fontSize: '0.8rem', fontWeight: 600,
-              color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em',
+              color: '#3f568d', textTransform: 'uppercase', letterSpacing: '0.05em',
             }}>
               Kata Laluan
             </label>
@@ -108,7 +114,7 @@ export default function LoginPage() {
                 style={{
                   position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                   background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--text-muted)', fontSize: 16, padding: 4,
+                  color: '#3f568d', fontSize: 16, padding: 4,
                 }}
                 title={showPassword ? 'Sembunyikan' : 'Tunjukkan'}
               >
@@ -119,26 +125,29 @@ export default function LoginPage() {
 
           {error && (
             <div style={{
-              color: 'var(--ms-red)', fontSize: '0.85rem',
-              padding: '8px 12px', background: 'rgba(209,52,56,0.1)',
-              borderRadius: 'var(--radius-sm)', border: '1px solid rgba(209,52,56,0.3)',
+              color: '#DC2626', fontSize: '0.85rem',
+              padding: '8px 12px', background: 'rgba(220,38,38,0.08)',
+              borderRadius: 10, border: '1px solid rgba(220,38,38,0.2)',
             }}>
               {error}
             </div>
           )}
 
-          <button type="submit" disabled={loading} className="ms-btn" style={{
-            height: 48, opacity: loading ? 0.6 : 1, cursor: loading ? 'not-allowed' : 'pointer',
+          <button type="submit" disabled={loading} style={{
+            width: '100%', height: 48,
+            background: 'linear-gradient(135deg,#1174ff,#7547ff)',
+            color: 'white', border: 'none', borderRadius: 16,
+            fontSize: '0.875rem', fontWeight: 700, fontFamily: 'inherit',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.6 : 1,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
             {loading ? <LoadingSpinner size="sm" /> : 'Log Masuk'}
           </button>
         </form>
-      </GlassCard>
+      </div>
 
-      <Link to="/" style={{
-        color: 'var(--ms-blue)', fontSize: '0.85rem', textDecoration: 'none',
-      }}>
+      <Link to="/" style={{ color: '#1174ff', fontSize: '0.85rem', textDecoration: 'none' }}>
         ← Kembali ke InfoTV
       </Link>
     </div>

@@ -106,16 +106,17 @@ export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onL
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f0f5ff' }}>
       {/* Sidebar */}
       <div style={{
         position: 'fixed',
         top: 0, left: 0, bottom: 0,
         width: 260,
-        background: 'rgba(15,17,23,0.95)',
-        backdropFilter: 'var(--glass-blur-heavy)',
-        WebkitBackdropFilter: 'var(--glass-blur-heavy)',
-        borderRight: '1px solid var(--glass-border)',
+        background: 'rgba(255,255,255,0.7)',
+        backdropFilter: 'blur(26px)',
+        WebkitBackdropFilter: 'blur(26px)',
+        borderRight: '1px solid rgba(17,116,255,0.15)',
+        boxShadow: '4px 0 24px rgba(18,40,91,0.08)',
         overflowY: 'auto',
         zIndex: 100,
         display: 'flex',
@@ -124,16 +125,16 @@ export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onL
         {/* Logo area */}
         <div style={{
           height: 56, padding: '0 20px',
-          borderBottom: '1px solid var(--glass-border)',
+          borderBottom: '1px solid rgba(17,116,255,0.12)',
           display: 'flex', alignItems: 'center', gap: 10,
           flexShrink: 0,
         }}>
-          <CrescentIcon size={20} color="var(--ms-blue)" />
-          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+          <CrescentIcon size={20} color="#1174ff" />
+          <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#071942' }}>
             MasjidTV
           </span>
           <span style={{
-            background: 'rgba(0,120,212,0.2)', color: 'var(--ms-blue)',
+            background: 'rgba(17,116,255,0.1)', color: '#1174ff',
             fontSize: '0.65rem', padding: '2px 6px', borderRadius: 10,
             fontWeight: 600,
           }}>
@@ -147,7 +148,7 @@ export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onL
             if (item.divider) {
               return (
                 <div key={`div-${index}`} style={{
-                  height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 12px',
+                  height: 1, background: 'rgba(17,116,255,0.08)', margin: '4px 12px',
                 }} />
               );
             }
@@ -170,26 +171,24 @@ export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onL
                   padding: '8px 12px', borderRadius: 'var(--radius-sm)',
                   marginBottom: 2, cursor: 'pointer',
                   fontSize: '0.875rem', fontWeight: isActive ? 600 : 500,
-                  background: isActive ? 'rgba(0,120,212,0.15)' : 'transparent',
+                  background: isActive ? 'rgba(17,116,255,0.1)' : 'transparent',
                   color: item.isDanger
-                    ? 'rgba(255,255,255,0.5)'
+                    ? '#DC2626'
                     : isActive
-                      ? 'var(--ms-blue)'
-                      : 'var(--text-secondary)',
+                      ? '#1174ff'
+                      : '#3f568d',
                   transition: 'background 0.15s, color 0.15s',
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-                    e.currentTarget.style.color = item.isDanger ? 'var(--ms-red)' : 'var(--text-primary)';
+                    e.currentTarget.style.background = 'rgba(17,116,255,0.06)';
+                    e.currentTarget.style.color = item.isDanger ? '#DC2626' : '#071942';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = item.isDanger
-                      ? 'rgba(255,255,255,0.5)'
-                      : 'var(--text-secondary)';
+                    e.currentTarget.style.color = item.isDanger ? '#DC2626' : '#3f568d';
                   }
                 }}
               >
@@ -205,7 +204,7 @@ export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onL
       <div style={{
         marginLeft: 260,
         minHeight: '100vh',
-        background: 'var(--bg-secondary)',
+        background: '#eef3ff',
         padding: 32,
         flex: 1,
       }}>
