@@ -3,25 +3,38 @@ import { isDemoMode } from '../../lib/supabase';
 export default function DemoBanner() {
   if (!isDemoMode) return null;
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
-      background: 'rgba(17,116,255,0.1)',
-      borderBottom: '1px solid rgba(17,116,255,0.25)',
-      backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)',
-      padding: '5px 16px',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-      fontSize: '0.75rem', color: '#1174ff', height: 32,
-    }}>
-      <span>🔔</span>
-      <span><strong>Demo Mode</strong> — Supabase belum dikonfigurasi. Data adalah contoh sahaja.</span>
-      <a
-        href="https://github.com/ixezranger/khalifah-territory-masjidtv-infoscreen#setup"
-        target="_blank" rel="noreferrer"
-        style={{ color: '#1174ff', textDecoration: 'underline', marginLeft: 8 }}
-      >
-        Setup Guide →
-      </a>
-    </div>
+    <a
+      href="https://github.com/ixezranger/khalifah-territory-masjidtv-infoscreen#setup"
+      target="_blank"
+      rel="noreferrer"
+      title="Demo Mode — Supabase belum dikonfigurasi. Klik untuk Setup Guide."
+      style={{
+        position: 'fixed',
+        top: 12,
+        right: 12,
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 5,
+        padding: '5px 10px',
+        borderRadius: 20,
+        background: 'rgba(201,168,76,0.15)',
+        border: '1px solid rgba(201,168,76,0.5)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        color: '#C9A84C',
+        fontSize: '0.7rem',
+        fontWeight: 600,
+        textDecoration: 'none',
+        letterSpacing: '0.03em',
+        cursor: 'pointer',
+        transition: 'background 0.2s',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.3)'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.15)'; }}
+    >
+      <span style={{ fontSize: '0.85rem' }}>⚙️</span>
+      <span>Setup</span>
+    </a>
   );
 }

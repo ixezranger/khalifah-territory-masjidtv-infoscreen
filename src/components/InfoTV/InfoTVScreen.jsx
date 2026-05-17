@@ -151,8 +151,7 @@ export default function InfoTVScreen() {
       <div style={{
         position: 'relative',
         width: '100%',
-        height: isDemoMode ? 'calc(100vh - 32px)' : '100vh',
-        marginTop: isDemoMode ? 32 : 0,
+        height: '100vh',
         padding: '1.2vh 1.2vw',
         display: 'grid',
         gridTemplateColumns: 'minmax(0,1.36fr) minmax(360px,.84fr)',
