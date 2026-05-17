@@ -276,16 +276,8 @@ export default function InfoTVScreen() {
             }} />
 
             {/* Prev/Next */}
-            <button onClick={prevSlide} style={{
-              position: 'absolute', top: '50%', left: -29, transform: 'translateY(-50%)',
-              width: 58, height: 58, borderRadius: '50%', border: 0,
-              color: '#fff', background: 'rgba(20,45,96,.5)', fontSize: 34, cursor: 'pointer', zIndex: 10,
-            }}>‹</button>
-            <button onClick={nextSlide} style={{
-              position: 'absolute', top: '50%', right: -29, transform: 'translateY(-50%)',
-              width: 58, height: 58, borderRadius: '50%', border: 0,
-              color: '#fff', background: 'rgba(20,45,96,.5)', fontSize: 34, cursor: 'pointer', zIndex: 10,
-            }}>›</button>
+            <button onClick={prevSlide} style={{ display: 'none' }}>‹</button>
+            <button onClick={nextSlide} style={{ display: 'none' }}>›</button>
 
             {/* Pill */}
             <div style={{

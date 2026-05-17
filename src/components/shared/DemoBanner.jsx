@@ -10,28 +10,26 @@ export default function DemoBanner() {
       title="Demo Mode — Supabase belum dikonfigurasi. Klik untuk Setup Guide."
       style={{
         position: 'fixed',
-        top: 12,
-        right: 12,
+        top: '12px',
+        right: '12px',
         zIndex: 99999,
         display: 'flex',
         alignItems: 'center',
-        gap: 5,
-        padding: '5px 10px',
-        borderRadius: 20,
-        background: 'rgba(201,168,76,0.15)',
-        border: '1px solid rgba(201,168,76,0.5)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        color: '#C9A84C',
+        gap: '5px',
+        padding: '4px 8px',
+        borderRadius: '20px',
+        background: 'transparent',
+        border: 'none',
+        color: 'rgba(255,255,255,0.75)',
         fontSize: '0.7rem',
         fontWeight: 600,
         textDecoration: 'none',
         letterSpacing: '0.03em',
         cursor: 'pointer',
-        transition: 'background 0.2s',
+        transition: 'color 0.2s',
       }}
-      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.3)'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.15)'; }}
+      onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,1)'; }}
+      onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
     >
       <span style={{ fontSize: '0.85rem' }}>⚙️</span>
       <span>Setup</span>
