@@ -9,6 +9,7 @@ import {
 } from '../../lib/supabase';
 import ViewportSwitcher from '../shared/ViewportSwitcher';
 import DemoBanner from '../shared/DemoBanner';
+import ZoneSelectorPanel from './ZoneSelectorPanel';
 
 // ── Default content ───────────────────────────────────────────────────────────
 const DEFAULT_SLIDES = [
@@ -73,7 +74,7 @@ function fmt12(t) {
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function InfoTVScreen() {
   const {
-    profile, currentZone,
+    profile, currentZone, setZone,
     hadithItems, tickerMessages, sliderItems,
     viewportMode, setViewportMode,
   } = useStore();
@@ -161,6 +162,12 @@ export default function InfoTVScreen() {
         overflow: 'hidden',
         boxSizing: 'border-box',
       }}>
+
+        {/* Zone selector — fixed top right */}
+        <ZoneSelectorPanel
+          currentZone={zone}
+          onZoneChange={(code) => setZone(code)}
+        />
 
         {/* ── HEADER: Masjid branding ── */}
         <header style={{
