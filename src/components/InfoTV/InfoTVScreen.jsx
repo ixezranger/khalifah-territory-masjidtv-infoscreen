@@ -79,7 +79,13 @@ export default function InfoTVScreen() {
     viewportMode, setViewportMode,
   } = useStore();
 
-  const zone = profile?.zone_code || currentZone || 'WLY01';
+  // manualZone: tracks user's manual zone pick; persisted via setZone in store.
+  // If currentZone in store differs from profile.zone_code, the user had previously picked a different zone.
+  const [manualZone, setManualZone] = useState(() => {
+    const profileZone = profile?.zone_code || 'WLY01';
+    return currentZone && currentZone !== profileZone ? currentZone : null;
+  });
+  const zone = manualZone || currentZone || profile?.zone_code || 'WLY01';
   const { times, nextSolat, nextSolatName, prevSolat, loading: solatLoading, apiStatus } = useWaktuSolat(zone);
   const { hours, minutes, seconds, isImminent, progressPct } = useCountdown(nextSolat, nextSolatName, prevSolat);
   const { time, gregorianDate, hijriDate, dayName } = useDateTime();
@@ -166,7 +172,10 @@ export default function InfoTVScreen() {
         {/* Zone selector — fixed top right */}
         <ZoneSelectorPanel
           currentZone={zone}
-          onZoneChange={(code) => setZone(code)}
+          onZoneChange={(code) => {
+            setManualZone(code);
+            setZone(code);
+          }}
         />
 
         {/* ── HEADER: Masjid branding ── */}
