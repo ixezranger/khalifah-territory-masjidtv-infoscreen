@@ -96,6 +96,9 @@ export default function InfoTVScreen() {
 
   const masjidName = profile?.masjid_name || 'MasjidTV';
   const masjidDesc = profile?.masjid_description || 'Sistem InfoTV Islamik — Khalifah Territory';
+  const bgImage     = profile?.background_image_url || null;
+  const masjidIcon  = profile?.icon_url || null;
+  const bgOverlay   = profile?.bg_overlay_opacity ?? 40;
 
   // Derive slides: use real slider items if available, else defaults
   const slides = sliderItems?.length ? sliderItems.map(s => ({
@@ -149,14 +152,34 @@ export default function InfoTVScreen() {
     <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       <DemoBanner />
 
-      {/* Background orbs */}
-      <div className="orb" style={{ width:'34vw', height:'34vw', background:'#4aa3ff', right:'-8vw', top:'-8vh' }} />
-      <div className="orb" style={{ width:'25vw', height:'25vw', background:'#ffcfb1', left:0, top:'6vh' }} />
-      <div className="orb" style={{ width:'20vw', height:'20vw', background:'#8c5bff', right:'18vw', bottom:0 }} />
+      {/* ── Background: custom image OR default orbs ── */}
+      {bgImage ? (
+        <>
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 0,
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }} />
+          {/* Dark overlay for readability */}
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 1,
+            background: `rgba(0,0,0,${bgOverlay / 100})`,
+          }} />
+        </>
+      ) : (
+        <>
+          <div className="orb" style={{ width:'34vw', height:'34vw', background:'#4aa3ff', right:'-8vw', top:'-8vh' }} />
+          <div className="orb" style={{ width:'25vw', height:'25vw', background:'#ffcfb1', left:0, top:'6vh' }} />
+          <div className="orb" style={{ width:'20vw', height:'20vw', background:'#8c5bff', right:'18vw', bottom:0 }} />
+        </>
+      )}
 
       {/* Main grid */}
       <div style={{
         position: 'relative',
+        zIndex: 2,
         width: '100%',
         height: '100vh',
         padding: '1.2vh 1.2vw',
@@ -193,11 +216,15 @@ export default function InfoTVScreen() {
             borderRadius: 26,
             display: 'grid',
             placeItems: 'center',
-            background: 'linear-gradient(145deg,#1678ff,#7360ff)',
-            boxShadow: '0 18px 45px rgba(32,98,230,.35)',
-            color: '#fff',
-            fontSize: 'clamp(36px,3.1vw,56px)',
-          }}>🕌</div>
+            background: masjidIcon ? 'transparent' : 'linear-gradient(145deg,#1678ff,#7360ff)',
+            boxShadow: masjidIcon ? 'none' : '0 18px 45px rgba(32,98,230,.35)',
+            overflow: 'hidden',
+          }}>
+            {masjidIcon
+              ? <img src={masjidIcon} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => { e.target.style.display='none'; }} />
+              : <span style={{ color: '#fff', fontSize: 'clamp(36px,3.1vw,56px)' }}>🕌</span>
+            }
+          </div>
 
           <div>
             <h1 style={{

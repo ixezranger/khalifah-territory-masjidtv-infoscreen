@@ -61,6 +61,8 @@ export default function SliderManager() {
   const [newTitle, setNewTitle] = useState('');
   const [newDuration, setNewDuration] = useState(8);
   const [newYoutubeUrl, setNewYoutubeUrl] = useState('');
+  const [newExternalUrl, setNewExternalUrl] = useState('');
+  const [newExternalType, setNewExternalType] = useState('image');
   const [pendingMedia, setPendingMedia] = useState(null);
   const [sliderLimit, setSliderLimit] = useState(featureSettings?.slider_limit || 10);
   const [savingLimit, setSavingLimit] = useState(false);
@@ -86,6 +88,7 @@ export default function SliderManager() {
     if (!user?.id) return;
     if (addTab === 'upload' && !pendingMedia) return;
     if (addTab === 'youtube' && !newYoutubeUrl.trim()) return;
+    if (addTab === 'url' && !newExternalUrl.trim()) return;
 
     setAdding(true);
     let item = {
@@ -104,6 +107,9 @@ export default function SliderManager() {
       item.media_url = newYoutubeUrl;
       item.media_type = 'youtube';
       item.youtube_id = ytId;
+    } else if (addTab === 'url') {
+      item.media_url = newExternalUrl.trim();
+      item.media_type = newExternalType;
     }
 
     const { data } = await upsertSliderItem(item);
@@ -111,6 +117,7 @@ export default function SliderManager() {
       setNewTitle('');
       setNewDuration(8);
       setNewYoutubeUrl('');
+      setNewExternalUrl('');
       setPendingMedia(null);
       await loadItems();
     }
@@ -171,6 +178,7 @@ export default function SliderManager() {
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', padding: '4px' }}>
           <button onClick={() => setAddTab('upload')} style={tabStyle(addTab === 'upload')}>📁 Muat Naik</button>
           <button onClick={() => setAddTab('youtube')} style={tabStyle(addTab === 'youtube')}>▶ YouTube URL</button>
+          <button onClick={() => setAddTab('url')} style={tabStyle(addTab === 'url')}>🔗 URL Luar</button>
         </div>
 
         {addTab === 'upload' && (
@@ -194,6 +202,37 @@ export default function SliderManager() {
               placeholder="https://www.youtube.com/watch?v=..."
               style={{ ...inputStyle, marginBottom: '12px' }}
             />
+          </div>
+        )}
+
+        {addTab === 'url' && (
+          <div style={{ marginBottom: '16px' }}>
+            <label style={labelStyle}>URL Imej / Video dari Hosting Anda</label>
+            <input
+              type="url"
+              value={newExternalUrl}
+              onChange={(e) => setNewExternalUrl(e.target.value)}
+              placeholder="https://yourdomain.com/images/slide1.jpg"
+              style={{ ...inputStyle, marginBottom: '12px' }}
+            />
+            {/* Live preview */}
+            {newExternalUrl.trim() && (
+              <img
+                src={newExternalUrl.trim()}
+                alt="Preview"
+                style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '8px', border: '1px solid rgba(201,168,76,0.3)', marginBottom: '12px' }}
+                onError={(e) => { e.target.style.display = 'none'; }}
+                onLoad={(e) => { e.target.style.display = 'block'; }}
+              />
+            )}
+            <label style={labelStyle}>Jenis Media</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {['image', 'video'].map(t => (
+                <button key={t} onClick={() => setNewExternalType(t)} style={tabStyle(newExternalType === t)}>
+                  {t === 'image' ? '🖼 Imej' : '🎬 Video'}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
