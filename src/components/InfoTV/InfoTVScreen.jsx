@@ -5,6 +5,7 @@ import { gsap } from 'gsap';
 import MasjidHeader from './MasjidHeader';
 import DateTimeWidget from './DateTimeWidget';
 import WaktuSolatWidget from './WaktuSolatWidget';
+import ZoneSelectorPanel from './ZoneSelectorPanel';
 import CountdownWidget from './CountdownWidget';
 import HadithWidget from './HadithWidget';
 import InfoTicker from './InfoTicker';
@@ -354,29 +355,43 @@ export default function InfoTVScreen() {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0 16px',
+        gap: '12px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <CrescentIcon size={16} color="#C9A84C" />
-          <span style={{
-            fontFamily: "'Cinzel Decorative', serif",
-            color: '#C9A84C',
-            fontSize: '0.75rem',
-            letterSpacing: '0.08em',
-          }}>
-            MasjidTV
-          </span>
+        {/* Left: brand + admin link */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <CrescentIcon size={16} color="#C9A84C" />
+            <span style={{
+              fontFamily: "'Cinzel Decorative', serif",
+              color: '#C9A84C',
+              fontSize: '0.75rem',
+              letterSpacing: '0.08em',
+            }}>
+              MasjidTV
+            </span>
+          </div>
+          <Link
+            to="/admin"
+            style={{
+              color: 'rgba(201,168,76,0.6)',
+              fontSize: '0.75rem',
+              textDecoration: 'none',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              flexShrink: 0,
+            }}
+          >
+            CMS Admin →
+          </Link>
         </div>
-        <Link
-          to="/admin"
-          style={{
-            color: '#C9A84C',
-            fontSize: '0.8rem',
-            textDecoration: 'none',
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+
+        {/* Right: Zone selector */}
+        <ZoneSelectorPanel
+          currentZone={prof.zone_code || currentZone || 'WLY01'}
+          onZoneChange={(code) => {
+            setZone(code);
+            setActiveProfile((prev) => ({ ...prev, zone_code: code }));
           }}
-        >
-          CMS Admin →
-        </Link>
+        />
       </div>
 
       {/* Blast toast */}

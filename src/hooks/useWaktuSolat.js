@@ -27,7 +27,7 @@ export const ZONES = {
   },
   'Kelantan': {
     KTN01: 'Bachok, Kota Bharu, Machang, Pasir Mas, Pasir Puteh, Tanah Merah, Tumpat, Kuala Krai, Mukim Chiku',
-    KTN03: 'Gua Musang',
+    KTN02: 'Gua Musang (Daerah Galas Dan Bertam), Jeli, Jajahan Kecil Lojing',
   },
   'Melaka': {
     MLK01: 'Seluruh Negeri Melaka',
