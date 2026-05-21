@@ -7,6 +7,19 @@
     <meta name="description" content="Islamic InfoTV for Masjid, Surau & Home — Khalifah Territory" />
     <meta name="theme-color" content="#0D4F4F" />
     <title>MasjidTV — Khalifah Territory</title>
+    <!-- GitHub Pages SPA routing fix: restore path encoded by 404.html -->
+    <script>
+      (function() {
+        var p = window.location.search.match(/[?&]p=([^&]+)/);
+        if (p) {
+          var path = decodeURIComponent(p[1]);
+          var url = window.location.pathname + path +
+                    window.location.search.replace(/[?&]p=[^&]+/, '').replace(/^&/, '?') +
+                    window.location.hash;
+          window.history.replaceState(null, '', url);
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
