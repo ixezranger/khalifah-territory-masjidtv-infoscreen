@@ -1,320 +1,140 @@
 import { useState, useEffect } from 'react';
-import GlassCard from '../shared/GlassCard';
+import { Music, Plus, Trash2, FolderOpen } from 'lucide-react';
+import { Card, Btn, Badge, TabBar, Empty, Row, C } from './ui';
 import MediaUploader from '../shared/MediaUploader';
 import CrescentIcon from '../shared/CrescentIcon';
 import useStore from '../../store/useStore';
 import { getAudioItems, upsertAudioItem, deleteAudioItem } from '../../lib/supabase';
 import GoogleDriveImporter from './GoogleDriveImporter';
 
-const inputStyle = {
-  width: '100%', padding: '10px 12px', borderRadius: '8px',
-  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(201,168,76,0.3)',
-  color: '#F5EDD6', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px',
-  outline: 'none', boxSizing: 'border-box',
-};
-const btnPrimary = {
-  background: '#C9A84C', color: '#050E1A', border: 'none',
-  borderRadius: '8px', padding: '10px 20px', cursor: 'pointer',
-  fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: '14px',
-};
-const btnSecondary = {
-  background: 'transparent', color: '#C9A84C',
-  border: '1px solid rgba(201,168,76,0.4)',
-  borderRadius: '8px', padding: '10px 20px', cursor: 'pointer',
-  fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px',
-};
-const labelStyle = {
-  color: '#C9A84C', fontSize: '13px', display: 'block',
-  marginBottom: '6px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600,
-};
+const CATS = ['Zikir','Quran','Nasheed'];
+const CAT_COLOR = { zikir: C.amber, quran: C.blue, nasheed: C.green };
 
-const CATEGORIES = ['Zikir', 'Quran', 'Nasheed'];
-const CATEGORY_COLORS = {
-  zikir: 'rgba(201,168,76,0.2)',
-  quran: 'rgba(13,79,79,0.4)',
-  nasheed: 'rgba(26,122,94,0.3)',
-};
+function CoverThumb({ item, size=44 }) {
+  if (item.cover_image_url) return (
+    <img src={item.cover_image_url} alt="" style={{ width:size, height:size, objectFit:'cover', borderRadius:10, flexShrink:0 }} />
+  );
+  const bg = CAT_COLOR[item.category] || C.blue;
+  return (
+    <div style={{ width:size, height:size, borderRadius:10, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:`${bg}18`, border:`1px solid ${bg}33` }}>
+      <CrescentIcon size={size*0.5} color={bg} />
+    </div>
+  );
+}
 
 export default function AudioLibraryManager() {
   const { user, audioItems, setAudioItems } = useStore();
-  const [items, setItems] = useState([]);
-  const [activeCategory, setActiveCategory] = useState('zikir');
-  const [newTitle, setNewTitle] = useState('');
-  const [newArtist, setNewArtist] = useState('');
-  const [newCategory, setNewCategory] = useState('zikir');
-  const [adding, setAdding] = useState(false);
-  const [showDriveImporter, setShowDriveImporter] = useState(false);
-  const [pendingAudio, setPendingAudio] = useState(null);
+  const [items,          setItems]          = useState([]);
+  const [activeCat,      setActiveCat]      = useState('zikir');
+  const [newTitle,       setNewTitle]       = useState('');
+  const [newArtist,      setNewArtist]      = useState('');
+  const [newCategory,    setNewCategory]    = useState('zikir');
+  const [pendingAudio,   setPendingAudio]   = useState(null);
+  const [adding,         setAdding]         = useState(false);
+  const [showDrive,      setShowDrive]      = useState(false);
 
-  const loadItems = async () => {
+  const load = async () => {
     if (!user?.id) return;
     const { data } = await getAudioItems(user.id);
-    if (data) {
-      setItems(data);
-      setAudioItems(data);
-    }
+    if (data) { setItems(data); setAudioItems(data); }
   };
+  useEffect(() => { load(); }, [user?.id]); // eslint-disable-line
 
-  useEffect(() => { loadItems(); }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleAudioUpload = ({ url }) => {
-    setPendingAudio(url);
-  };
-
-  const handleAddAudio = async () => {
+  const handleAdd = async () => {
     if (!user?.id || !pendingAudio) return;
     setAdding(true);
-    const { data } = await upsertAudioItem({
-      user_id: user.id,
-      title: newTitle.trim() || 'Audio Baharu',
-      artist: newArtist.trim() || '',
-      category: newCategory,
-      audio_url: pendingAudio,
-      display_order: items.length,
-      is_active: true,
-      storage_provider: 'r2',
-    });
-    if (data) {
-      setNewTitle('');
-      setNewArtist('');
-      setPendingAudio(null);
-      await loadItems();
-    }
+    await upsertAudioItem({ user_id:user.id, title:newTitle.trim()||'Audio Baharu', artist:newArtist.trim()||'', category:newCategory, audio_url:pendingAudio, display_order:items.length, is_active:true, storage_provider:'r2' });
+    setNewTitle(''); setNewArtist(''); setPendingAudio(null); await load();
     setAdding(false);
   };
+  const handleDelete = async id => { await deleteAudioItem(id); await load(); };
+  const handleToggle = async item => { await upsertAudioItem({ ...item, is_active: !item.is_active }); await load(); };
 
-  const handleDelete = async (id) => {
-    await deleteAudioItem(id);
-    await loadItems();
-  };
-
-  const handleToggleActive = async (item) => {
-    await upsertAudioItem({ ...item, is_active: !item.is_active });
-    await loadItems();
-  };
-
-  const handleDriveImport = async () => {
-    await loadItems();
-    setShowDriveImporter(false);
-  };
-
-  const tabStyle = (active) => ({
-    padding: '8px 16px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
-    fontSize: '13px',
-    border: 'none',
-    background: active ? '#C9A84C' : 'transparent',
-    color: active ? '#050E1A' : 'rgba(245,237,214,0.6)',
-    fontWeight: active ? 600 : 400,
-  });
-
-  const filteredItems = items.filter(item => item.category === activeCategory);
+  const CAT_TABS = CATS.map(c => ({ id: c.toLowerCase(), label: c, icon: c==='Quran'?'📖':c==='Nasheed'?'🎶':'📿' }));
+  const filtered = items.filter(i => i.category === activeCat);
 
   return (
-    <div>
-      {/* Category tabs */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', padding: '4px', width: 'fit-content' }}>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat.toLowerCase())}
-            style={tabStyle(activeCategory === cat.toLowerCase())}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
+    <div style={{ maxWidth: 760 }}>
 
-      {/* Add Audio */}
-      <GlassCard>
-        <h3 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#C9A84C', fontSize: '1rem', margin: '0 0 16px 0' }}>
-          Tambah Audio
-        </h3>
-
-        <div style={{ marginBottom: '16px' }}>
-          <MediaUploader
-            accept="audio"
-            userId={user?.id}
-            uploadPath="audio"
-            onUploadComplete={handleAudioUpload}
-          />
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-          <div>
-            <label style={labelStyle}>Tajuk</label>
-            <input
-              type="text"
-              value={newTitle}
-              onChange={e => setNewTitle(e.target.value)}
-              placeholder="Tajuk audio"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Artis / Qari</label>
-            <input
-              type="text"
-              value={newArtist}
-              onChange={e => setNewArtist(e.target.value)}
-              placeholder="Nama artis"
-              style={inputStyle}
-            />
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={labelStyle}>Kategori</label>
-          <select
-            value={newCategory}
-            onChange={e => setNewCategory(e.target.value)}
-            style={inputStyle}
-          >
-            <option value="zikir">Zikir</option>
-            <option value="quran">Quran</option>
-            <option value="nasheed">Nasheed</option>
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handleAddAudio} disabled={adding || !pendingAudio} style={{ ...btnPrimary, opacity: adding || !pendingAudio ? 0.6 : 1 }}>
-            {adding ? 'Menambah...' : '+ Tambah Audio'}
-          </button>
-          <button onClick={() => setShowDriveImporter(true)} style={btnSecondary}>
-            📁 Import Google Drive
-          </button>
-        </div>
-      </GlassCard>
-
-      {/* Google Drive Importer */}
-      {showDriveImporter && (
-        <div style={{ marginTop: '16px' }}>
-          <GlassCard>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#C9A84C', fontSize: '1rem', margin: 0 }}>
-                Import dari Google Drive
-              </h3>
-              <button
-                onClick={() => setShowDriveImporter(false)}
-                style={{ ...btnSecondary, padding: '6px 12px' }}
-              >
-                ✕ Tutup
-              </button>
+      {/* Add audio */}
+      <Card title="Tambah Audio Baharu" icon={Music} accent={C.amber}>
+        <div style={{ marginBottom: 16 }}>
+          {pendingAudio && (
+            <div style={{ marginBottom:10, padding:'8px 12px', background:`${C.green}12`, border:`1px solid ${C.green}30`, borderRadius:10, fontSize:'0.82rem', color:C.green, fontWeight:600 }}>
+              ✓ Audio berjaya dimuat naik
             </div>
-            <GoogleDriveImporter onImportComplete={handleDriveImport} />
-          </GlassCard>
+          )}
+          <MediaUploader accept="audio" userId={user?.id} uploadPath="audio" onUploadComplete={({url})=>setPendingAudio(url)} />
         </div>
+
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:12, marginBottom:16 }}>
+          <div>
+            <label style={{ fontSize:'0.78rem', fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.06em', display:'block', marginBottom:6 }}>Tajuk</label>
+            <input type="text" value={newTitle} onChange={e=>setNewTitle(e.target.value)} placeholder="Tajuk audio" className="ms-input" />
+          </div>
+          <div>
+            <label style={{ fontSize:'0.78rem', fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.06em', display:'block', marginBottom:6 }}>Artis / Qari</label>
+            <input type="text" value={newArtist} onChange={e=>setNewArtist(e.target.value)} placeholder="Nama artis" className="ms-input" />
+          </div>
+          <div>
+            <label style={{ fontSize:'0.78rem', fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.06em', display:'block', marginBottom:6 }}>Kategori</label>
+            <select value={newCategory} onChange={e=>setNewCategory(e.target.value)} className="ms-input">
+              <option value="zikir">Zikir</option>
+              <option value="quran">Quran</option>
+              <option value="nasheed">Nasheed</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display:'flex', gap:8 }}>
+          <Btn onClick={handleAdd} disabled={adding || !pendingAudio}>
+            <Plus size={14} />
+            {adding ? 'Menambah...' : 'Tambah Audio'}
+          </Btn>
+          <Btn variant="ghost" onClick={() => setShowDrive(v=>!v)}>
+            <FolderOpen size={14} />
+            Import Google Drive
+          </Btn>
+        </div>
+      </Card>
+
+      {/* Google Drive importer */}
+      {showDrive && (
+        <Card title="Import dari Google Drive" icon={FolderOpen} accent={C.blue}
+          action={<Btn variant="ghost" size="sm" onClick={()=>setShowDrive(false)}>✕ Tutup</Btn>}
+        >
+          <GoogleDriveImporter onImportComplete={async()=>{ await load(); setShowDrive(false); }} />
+        </Card>
       )}
 
-      {/* Items list */}
-      <GlassCard style={{ marginTop: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-          <h3 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#C9A84C', fontSize: '1rem', margin: 0 }}>
-            {CATEGORIES.find(c => c.toLowerCase() === activeCategory)} ({filteredItems.length})
-          </h3>
-        </div>
+      {/* Audio list with category tabs */}
+      <Card title="Pustaka Audio" icon={Music} accent={C.cyan}
+        action={<Badge color={C.blue}>{items.length}</Badge>}
+      >
+        <TabBar tabs={CAT_TABS} active={activeCat} onChange={setActiveCat} />
 
-        {filteredItems.length === 0 && (
-          <p style={{ color: 'rgba(245,237,214,0.5)', fontSize: '14px', fontFamily: "'Plus Jakarta Sans', sans-serif", textAlign: 'center', padding: '24px 0' }}>
-            Tiada audio dalam kategori ini
-          </p>
-        )}
-
-        {filteredItems.map((item) => (
-          <div
-            key={item.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px',
-              marginBottom: '8px',
-              borderRadius: '8px',
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(201,168,76,0.1)',
-            }}
-          >
-            {/* Cover / icon */}
-            {item.cover_image_url ? (
-              <img
-                src={item.cover_image_url}
-                alt=""
-                style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '6px', flexShrink: 0 }}
-              />
-            ) : (
-              <div style={{
-                width: '48px', height: '48px', borderRadius: '6px', flexShrink: 0,
-                background: CATEGORY_COLORS[item.category] || 'rgba(201,168,76,0.1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <CrescentIcon size={24} />
-              </div>
-            )}
-
-            {/* Title & artist */}
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <div style={{
-                color: '#F5EDD6', fontSize: '14px', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
+        {filtered.length === 0 ? (
+          <Empty icon="🎵" text={`Tiada audio dalam kategori ${activeCat}`} />
+        ) : filtered.map((item, i) => (
+          <Row key={item.id} last={i===filtered.length-1}>
+            <CoverThumb item={item} />
+            <div style={{ flex:1, overflow:'hidden' }}>
+              <div style={{ fontWeight:600, fontSize:'0.875rem', color:C.ink, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                 {item.title}
               </div>
-              {item.artist && (
-                <div style={{ color: 'rgba(245,237,214,0.5)', fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  {item.artist}
-                </div>
-              )}
+              {item.artist && <div style={{ fontSize:'0.75rem', color:C.faint }}>{item.artist}</div>}
             </div>
-
-            {/* Category badge */}
-            <span style={{
-              background: CATEGORY_COLORS[item.category] || 'rgba(201,168,76,0.1)',
-              color: '#C9A84C', borderRadius: '4px', padding: '2px 8px',
-              fontSize: '11px', fontFamily: "'Plus Jakarta Sans', sans-serif", flexShrink: 0,
-            }}>
-              {item.category}
-            </span>
-
-            {/* Duration */}
-            {item.duration && (
-              <span style={{ color: 'rgba(245,237,214,0.4)', fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif", flexShrink: 0 }}>
-                {item.duration}s
-              </span>
-            )}
-
-            {/* Active toggle */}
-            <div
-              onClick={() => handleToggleActive(item)}
-              style={{
-                width: '36px', height: '20px', borderRadius: '10px', cursor: 'pointer',
-                background: item.is_active ? '#C9A84C' : 'rgba(255,255,255,0.15)',
-                position: 'relative', transition: 'background 0.2s', flexShrink: 0,
-              }}
-            >
-              <div style={{
-                position: 'absolute', top: '3px',
-                left: item.is_active ? '19px' : '3px',
-                width: '14px', height: '14px', borderRadius: '7px',
-                background: item.is_active ? '#050E1A' : '#F5EDD6',
-                transition: 'left 0.2s',
-              }} />
-            </div>
-
-            {/* Delete */}
-            <button
-              onClick={() => handleDelete(item.id)}
-              style={{
-                background: 'transparent', border: 'none', cursor: 'pointer',
-                color: 'rgba(239,68,68,0.7)', fontSize: '16px', padding: '4px', flexShrink: 0,
-              }}
-            >
-              🗑
-            </button>
-          </div>
+            <Badge color={CAT_COLOR[item.category]||C.blue}>{item.category}</Badge>
+            {item.duration && <span style={{ fontSize:'0.75rem', color:C.faint, flexShrink:0 }}>{item.duration}s</span>}
+            <Btn variant="ghost" size="sm" onClick={()=>handleToggle(item)}>
+              {item.is_active ? 'Sembunyi' : 'Aktif'}
+            </Btn>
+            <Btn variant="danger" size="sm" onClick={()=>handleDelete(item.id)}>
+              <Trash2 size={12} />
+            </Btn>
+          </Row>
         ))}
-      </GlassCard>
+      </Card>
     </div>
   );
 }

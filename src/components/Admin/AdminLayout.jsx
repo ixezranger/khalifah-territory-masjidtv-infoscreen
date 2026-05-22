@@ -425,15 +425,36 @@ export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onL
               onClick={() => window.open('/', '_blank')}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                padding: '6px 12px', borderRadius: 10,
-                background: 'rgba(17,116,255,0.08)',
-                border: '1px solid rgba(17,116,255,0.15)',
-                color: '#1174ff', fontSize: '0.78rem', fontWeight: 600,
+                padding: '6px 14px', borderRadius: 10,
+                background: 'linear-gradient(135deg,rgba(17,116,255,0.12),rgba(117,71,255,0.08))',
+                border: '1px solid rgba(17,116,255,0.2)',
+                color: '#1174ff', fontSize: '0.78rem', fontWeight: 700,
                 cursor: 'pointer', whiteSpace: 'nowrap',
+                boxShadow: '0 2px 8px rgba(17,116,255,0.12)',
+                transition: 'all 0.15s',
               }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow='0 4px 16px rgba(17,116,255,0.22)'; e.currentTarget.style.transform='translateY(-1px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow='0 2px 8px rgba(17,116,255,0.12)'; e.currentTarget.style.transform='none'; }}
             >
               <Monitor size={13} />
-              {!isMobile && 'Pratonton'}
+              {!isMobile && 'Pratonton InfoTV'}
+            </button>
+            <button
+              onClick={onLogout}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '6px 12px', borderRadius: 10,
+                background: 'rgba(220,38,38,0.07)',
+                border: '1px solid rgba(220,38,38,0.15)',
+                color: '#dc2626', fontSize: '0.78rem', fontWeight: 600,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background='rgba(220,38,38,0.13)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background='rgba(220,38,38,0.07)'; }}
+            >
+              <LogOut size={13} />
+              {!isMobile && 'Keluar'}
             </button>
           </div>
         </div>

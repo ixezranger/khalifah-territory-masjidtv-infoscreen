@@ -1,79 +1,38 @@
 import { useState, useEffect } from 'react';
-import GlassCard from '../shared/GlassCard';
+import { Users, RefreshCw, ChevronDown, ChevronUp, ShieldCheck, UserX, UserCheck, Shield } from 'lucide-react';
+import { Card, Btn, Badge, Alert, Empty, Row, C } from './ui';
 import useStore from '../../store/useStore';
 import { getAllProfiles, supabase } from '../../lib/supabase';
 
-const inputStyle = {
-  width: '100%', padding: '10px 12px', borderRadius: '8px',
-  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(201,168,76,0.3)',
-  color: '#F5EDD6', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px',
-  outline: 'none', boxSizing: 'border-box',
-};
-const btnPrimary = {
-  background: '#C9A84C', color: '#050E1A', border: 'none',
-  borderRadius: '8px', padding: '10px 20px', cursor: 'pointer',
-  fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: '14px',
-};
-const btnSecondary = {
-  background: 'transparent', color: '#C9A84C',
-  border: '1px solid rgba(201,168,76,0.4)',
-  borderRadius: '8px', padding: '6px 12px', cursor: 'pointer',
-  fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px',
-};
-const labelStyle = {
-  color: '#C9A84C', fontSize: '13px', display: 'block',
-  marginBottom: '6px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600,
-};
-
-const thStyle = {
-  color: '#C9A84C', fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif",
-  fontWeight: 600, padding: '10px 12px', textAlign: 'left',
-  borderBottom: '1px solid rgba(201,168,76,0.3)',
-};
-const tdStyle = {
-  color: '#F5EDD6', fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif",
-  padding: '10px 12px', borderBottom: '1px solid rgba(201,168,76,0.08)',
-  verticalAlign: 'middle',
-};
-
-function RoleBadge({ role }) {
-  const isAdmin = role === 'admin';
+function Avatar({ name, size = 36 }) {
+  const letter = (name || 'A')[0].toUpperCase();
+  const colors = ['#1174ff','#7547ff','#0ea5e9','#10b981','#f59e0b','#ef4444'];
+  const bg = colors[letter.charCodeAt(0) % colors.length];
   return (
-    <span style={{
-      background: isAdmin ? 'rgba(201,168,76,0.2)' : 'rgba(13,79,79,0.4)',
-      color: isAdmin ? '#C9A84C' : '#5eead4',
-      borderRadius: '4px', padding: '2px 8px', fontSize: '11px',
-      fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600,
-    }}>
-      {role || 'user'}
-    </span>
-  );
-}
-
-function StatusBadge({ isActive }) {
-  return (
-    <span style={{
-      background: isActive ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)',
-      color: isActive ? '#4ade80' : '#f87171',
-      borderRadius: '4px', padding: '2px 8px', fontSize: '11px',
-      fontFamily: "'Plus Jakarta Sans', sans-serif",
-    }}>
-      {isActive ? 'Aktif' : 'Tidak Aktif'}
-    </span>
+    <div style={{
+      width: size, height: size, borderRadius: size/3, flexShrink: 0,
+      background: `linear-gradient(135deg,${bg},${bg}aa)`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: 'white', fontWeight: 700, fontSize: size * 0.38,
+      boxShadow: `0 2px 8px ${bg}44`,
+    }}>{letter}</div>
   );
 }
 
 export default function UserManagement() {
   const { user } = useStore();
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [users,      setUsers]      = useState([]);
+  const [loading,    setLoading]    = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState('user');
-  const [creating, setCreating] = useState(false);
-  const [createMsg, setCreateMsg] = useState('');
+  const [email,      setEmail]      = useState('');
+  const [pass,       setPass]       = useState('');
+  const [fullName,   setFullName]   = useState('');
+  const [role,       setRole]       = useState('user');
+  const [creating,   setCreating]   = useState(false);
+  const [msg,        setMsg]        = useState('');
+  const [msgType,    setMsgType]    = useState('info');
+
+  const flash = (text, type = 'success') => { setMsg(text); setMsgType(type); setTimeout(() => setMsg(''), 3000); };
 
   const loadUsers = async () => {
     setLoading(true);
@@ -81,98 +40,124 @@ export default function UserManagement() {
     if (data) setUsers(data);
     setLoading(false);
   };
-
   useEffect(() => { loadUsers(); }, []);
 
-  const handleToggleActive = async (u) => {
-    await supabase.from('profiles')
-      .update({ is_active: !u.is_active })
-      .eq('id', u.id);
+  const handleToggleActive = async u => {
+    await supabase.from('profiles').update({ is_active: !u.is_active }).eq('id', u.id);
     await loadUsers();
+    flash(`${u.full_name || 'Pengguna'} ${!u.is_active ? 'diaktifkan' : 'dinyahaktifkan'}`);
   };
 
-  const handleToggleRole = async (u) => {
-    const newRole = u.role === 'admin' ? 'user' : 'admin';
-    await supabase.from('profiles')
-      .update({ role: newRole })
-      .eq('id', u.id);
+  const handleToggleRole = async u => {
+    const nr = u.role === 'admin' ? 'user' : 'admin';
+    await supabase.from('profiles').update({ role: nr }).eq('id', u.id);
     await loadUsers();
+    flash(`Peranan ${u.full_name || 'pengguna'} ditukar ke ${nr}`);
   };
 
-  const handleCreateUser = async () => {
+  const handleCreateUser = () => {
     setCreating(true);
-    setCreateMsg('');
-    // Note: supabase.auth.admin.createUser() requires the service_role key,
-    // which cannot be used from a browser client. This feature requires
-    // a server-side endpoint or Supabase Edge Function.
-    setCreateMsg('Untuk mencipta pengguna baharu, sila gunakan Supabase Dashboard atau Edge Function dengan service_role key.');
+    flash('Untuk mencipta pengguna, gunakan Supabase Dashboard → Authentication → Users.', 'warning');
     setCreating(false);
   };
 
   return (
-    <div>
-      {/* Users Table */}
-      <GlassCard>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#C9A84C', fontSize: '1rem', margin: 0 }}>
-            Senarai Pengguna ({users.length})
-          </h3>
-          <button onClick={loadUsers} style={btnSecondary}>
-            🔄 Muat Semula
-          </button>
-        </div>
+    <div style={{ maxWidth: 860 }}>
+      {msg && <Alert type={msgType}>{msg}</Alert>}
 
+      {/* Users table */}
+      <Card title={`Senarai Pengguna (${users.length})`} icon={Users} accent={C.blue}
+        action={
+          <Btn variant="ghost" size="sm" onClick={loadUsers}>
+            <RefreshCw size={13} />
+            Muat Semula
+          </Btn>
+        }
+      >
         {loading ? (
-          <p style={{ color: 'rgba(245,237,214,0.5)', fontSize: '14px', fontFamily: "'Plus Jakarta Sans', sans-serif", textAlign: 'center', padding: '24px 0' }}>
-            Memuatkan...
-          </p>
+          <Empty icon="⏳" text="Memuatkan..." />
         ) : users.length === 0 ? (
-          <p style={{ color: 'rgba(245,237,214,0.5)', fontSize: '14px', fontFamily: "'Plus Jakarta Sans', sans-serif", textAlign: 'center', padding: '24px 0' }}>
-            Tiada pengguna dijumpai
-          </p>
+          <Empty icon="👥" text="Tiada pengguna dijumpai" />
         ) : (
           <div style={{ overflowX: 'auto' }}>
+            {/* Mobile: cards; Desktop: table */}
+            <div style={{ display: 'none' }} className="user-cards">
+              {users.map(u => (
+                <div key={u.id} style={{
+                  padding: '14px', marginBottom: 10, borderRadius: 12,
+                  background: 'rgba(17,116,255,0.04)', border: `1px solid ${C.line}`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <Avatar name={u.full_name || u.email} />
+                    <div>
+                      <div style={{ fontWeight: 700, color: C.ink, fontSize: '0.875rem' }}>{u.full_name || '—'}</div>
+                      <div style={{ fontSize: '0.75rem', color: C.muted }}>{u.email || '—'}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <Badge color={u.role==='admin' ? C.blue : C.muted}>{u.role||'user'}</Badge>
+                    <Badge color={u.is_active!==false ? C.green : C.red}>
+                      {u.is_active!==false ? 'Aktif' : 'Tidak Aktif'}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr>
-                  <th style={thStyle}>Nama</th>
-                  <th style={thStyle}>E-mel</th>
-                  <th style={thStyle}>Peranan</th>
-                  <th style={thStyle}>Masjid</th>
-                  <th style={thStyle}>Status</th>
-                  <th style={thStyle}>Tindakan</th>
+                <tr style={{ borderBottom: `2px solid ${C.line}` }}>
+                  {['Pengguna','Peranan','Masjid','Status','Tindakan'].map(h => (
+                    <th key={h} style={{ padding: '10px 12px', fontSize: '0.75rem', fontWeight: 700,
+                      color: C.muted, textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {users.map(u => (
-                  <tr key={u.id}>
-                    <td style={tdStyle}>{u.full_name || u.display_name || '—'}</td>
-                    <td style={tdStyle}>{u.email || '—'}</td>
-                    <td style={tdStyle}><RoleBadge role={u.role} /></td>
-                    <td style={tdStyle} title={u.masjid_name}>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', maxWidth: '120px' }}>
-                        {u.masjid_name || '—'}
+                  <tr key={u.id} style={{ borderBottom: `1px solid ${C.line}` }}
+                    onMouseEnter={e => e.currentTarget.style.background='rgba(17,116,255,0.03)'}
+                    onMouseLeave={e => e.currentTarget.style.background='transparent'}
+                  >
+                    <td style={{ padding: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Avatar name={u.full_name || u.email} size={32} />
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '0.855rem', color: C.ink }}>{u.full_name||'—'}</div>
+                          <div style={{ fontSize: '0.75rem', color: C.faint }}>{u.email||'—'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px' }}>
+                      <Badge color={u.role==='admin' ? C.blue : C.muted}>{u.role||'user'}</Badge>
+                    </td>
+                    <td style={{ padding: '12px', fontSize: '0.82rem', color: C.muted, maxWidth: 130 }}>
+                      <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>
+                        {u.masjid_name||'—'}
                       </span>
                     </td>
-                    <td style={tdStyle}><StatusBadge isActive={u.is_active !== false} /></td>
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        {u.id !== user?.id && (
-                          <>
-                            <button onClick={() => handleToggleActive(u)} style={btnSecondary}>
-                              {u.is_active !== false ? 'Nyahaktif' : 'Aktifkan'}
-                            </button>
-                            <button onClick={() => handleToggleRole(u)} style={btnSecondary}>
-                              {u.role === 'admin' ? '→ User' : '→ Admin'}
-                            </button>
-                          </>
-                        )}
-                        {u.id === user?.id && (
-                          <span style={{ color: 'rgba(245,237,214,0.35)', fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                            (Anda)
-                          </span>
-                        )}
-                      </div>
+                    <td style={{ padding: '12px' }}>
+                      <Badge color={u.is_active!==false ? C.green : C.red}>
+                        {u.is_active!==false ? '● Aktif' : '○ Tidak Aktif'}
+                      </Badge>
+                    </td>
+                    <td style={{ padding: '12px' }}>
+                      {u.id === user?.id ? (
+                        <span style={{ fontSize: '0.75rem', color: C.faint }}>Anda</span>
+                      ) : (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <Btn variant="ghost" size="sm" onClick={() => handleToggleActive(u)}>
+                            {u.is_active!==false ? <UserX size={12}/> : <UserCheck size={12}/>}
+                            {u.is_active!==false ? 'Nyahaktif' : 'Aktif'}
+                          </Btn>
+                          <Btn variant="secondary" size="sm" onClick={() => handleToggleRole(u)}>
+                            {u.role==='admin' ? <Shield size={12}/> : <ShieldCheck size={12}/>}
+                            {u.role==='admin' ? '→ User' : '→ Admin'}
+                          </Btn>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -180,61 +165,41 @@ export default function UserManagement() {
             </table>
           </div>
         )}
-      </GlassCard>
+      </Card>
 
-      {/* Create User */}
-      <GlassCard style={{ marginTop: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showCreate ? '16px' : 0 }}>
-          <h3 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#C9A84C', fontSize: '1rem', margin: 0 }}>
-            Cipta Akaun Baharu
-          </h3>
-          <button onClick={() => setShowCreate(!showCreate)} style={btnSecondary}>
-            {showCreate ? '▲ Sembunyikan' : '▼ Tunjukkan'}
-          </button>
-        </div>
-
-        {showCreate && (
-          <div>
-            <div style={{ padding: '12px 16px', marginBottom: '16px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px' }}>
-              <p style={{ color: 'rgba(245,237,214,0.7)', fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif", margin: 0 }}>
-                ⚠️ Nota: Mencipta pengguna memerlukan <code style={{ color: '#C9A84C' }}>service_role</code> key Supabase yang tidak boleh digunakan dari browser. Sila gunakan Supabase Dashboard atau Edge Function.
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-              <div>
-                <label style={labelStyle}>E-mel</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="pengguna@email.com" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Kata Laluan</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Nama Penuh</label>
-                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nama penuh" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Peranan</label>
-                <select value={role} onChange={e => setRole(e.target.value)} style={inputStyle}>
+      {/* Create user */}
+      <Card title="Cipta Akaun Baharu" icon={Users} accent={C.violet}
+        action={
+          <Btn variant="ghost" size="sm" onClick={() => setShowCreate(v => !v)}>
+            {showCreate ? <ChevronUp size={13}/> : <ChevronDown size={13}/>}
+            {showCreate ? 'Tutup' : 'Tunjuk'}
+          </Btn>
+        }
+      >
+        {!showCreate ? (
+          <p style={{ color: C.faint, fontSize: '0.82rem' }}>Klik "Tunjuk" untuk mencipta akaun baharu.</p>
+        ) : (
+          <>
+            <Alert type="warning">
+              ⚠️ Mencipta pengguna memerlukan <code>service_role</code> key — sila gunakan <strong>Supabase Dashboard → Authentication → Users</strong>.
+            </Alert>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 16 }}>
+              <div><label style={{ fontSize:'0.78rem', fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.06em', display:'block', marginBottom:6 }}>E-mel</label>
+                <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="pengguna@email.com" className="ms-input" /></div>
+              <div><label style={{ fontSize:'0.78rem', fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.06em', display:'block', marginBottom:6 }}>Kata Laluan</label>
+                <input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="••••••••" className="ms-input" /></div>
+              <div><label style={{ fontSize:'0.78rem', fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.06em', display:'block', marginBottom:6 }}>Nama Penuh</label>
+                <input type="text" value={fullName} onChange={e=>setFullName(e.target.value)} placeholder="Nama penuh" className="ms-input" /></div>
+              <div><label style={{ fontSize:'0.78rem', fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.06em', display:'block', marginBottom:6 }}>Peranan</label>
+                <select value={role} onChange={e=>setRole(e.target.value)} className="ms-input">
                   <option value="user">Pengguna</option>
                   <option value="admin">Admin</option>
-                </select>
-              </div>
+                </select></div>
             </div>
-
-            {createMsg && (
-              <div style={{ color: 'rgba(245,237,214,0.7)', fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: '12px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
-                {createMsg}
-              </div>
-            )}
-
-            <button onClick={handleCreateUser} disabled={creating} style={{ ...btnPrimary, opacity: creating ? 0.7 : 1 }}>
-              {creating ? 'Mencipta...' : 'Cipta Akaun'}
-            </button>
-          </div>
+            <Btn onClick={handleCreateUser} disabled={creating}>{creating ? 'Mencipta...' : 'Cipta Akaun'}</Btn>
+          </>
         )}
-      </GlassCard>
+      </Card>
     </div>
   );
 }

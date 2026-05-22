@@ -1,225 +1,105 @@
 import { useState, useEffect } from 'react';
-import GlassCard from '../shared/GlassCard';
+import { Bell, Send, X } from 'lucide-react';
+import { Card, Field, Btn, Badge, Alert, Empty, Row, C } from './ui';
 import useStore from '../../store/useStore';
 import { getActiveBlastNotifications, upsertBlastNotification } from '../../lib/supabase';
 
-const inputStyle = {
-  width: '100%', padding: '10px 12px', borderRadius: '8px',
-  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(201,168,76,0.3)',
-  color: '#F5EDD6', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px',
-  outline: 'none', boxSizing: 'border-box',
-};
-const btnPrimary = {
-  background: '#C9A84C', color: '#050E1A', border: 'none',
-  borderRadius: '8px', padding: '10px 20px', cursor: 'pointer',
-  fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: '14px',
-  width: '100%',
-};
-const btnSecondary = {
-  background: 'transparent', color: '#C9A84C',
-  border: '1px solid rgba(201,168,76,0.4)',
-  borderRadius: '8px', padding: '6px 14px', cursor: 'pointer',
-  fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px',
-};
-const labelStyle = {
-  color: '#C9A84C', fontSize: '13px', display: 'block',
-  marginBottom: '6px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600,
-};
-
 export default function BlastNotification() {
-  const { user, blastNotifications, setBlastNotifications } = useStore();
-  const [blasts, setBlasts] = useState([]);
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
-  const [target, setTarget] = useState('all');
-  const [expiresAt, setExpiresAt] = useState('');
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState('');
+  const { user, setBlastNotifications } = useStore();
+  const [blasts,    setBlasts]    = useState([]);
+  const [title,     setTitle]     = useState('');
+  const [message,   setMessage]   = useState('');
+  const [target,    setTarget]    = useState('all');
+  const [expires,   setExpires]   = useState('');
+  const [sending,   setSending]   = useState(false);
+  const [sent,      setSent]      = useState(false);
+  const [error,     setError]     = useState('');
 
-  const loadBlasts = async () => {
+  const load = async () => {
     const { data } = await getActiveBlastNotifications();
-    if (data) {
-      setBlasts(data);
-      setBlastNotifications(data);
-    }
+    if (data) { setBlasts(data); setBlastNotifications(data); }
   };
-
-  useEffect(() => { loadBlasts(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []); // eslint-disable-line
 
   const handleSend = async () => {
-    if (!user?.id || !title.trim() || !message.trim()) {
-      setError('Tajuk dan mesej diperlukan.');
-      return;
-    }
-    setSending(true);
-    setError('');
-    const { data, error: sendErr } = await upsertBlastNotification({
-      title: title.trim(),
-      message: message.trim(),
-      target,
-      expires_at: expiresAt || null,
-      created_by: user.id,
-      is_active: true,
+    if (!title.trim() || !message.trim()) { setError('Tajuk dan mesej diperlukan.'); return; }
+    setSending(true); setError('');
+    const { data, error: e } = await upsertBlastNotification({
+      title: title.trim(), message: message.trim(), target,
+      expires_at: expires || null, created_by: user?.id, is_active: true,
     });
-    if (sendErr) {
-      setError(sendErr.message || 'Gagal menghantar pemberitahuan.');
-    } else if (data) {
-      setTitle('');
-      setMessage('');
-      setTarget('all');
-      setExpiresAt('');
-      setSent(true);
-      setTimeout(() => setSent(false), 3000);
-      await loadBlasts();
-    }
+    if (e) setError(e.message || 'Gagal menghantar.');
+    else if (data) { setTitle(''); setMessage(''); setTarget('all'); setExpires(''); setSent(true); setTimeout(()=>setSent(false),3000); await load(); }
     setSending(false);
   };
 
-  const handleDeactivate = async (blast) => {
-    await upsertBlastNotification({ ...blast, is_active: false });
-    await loadBlasts();
-  };
+  const handleDeactivate = async blast => { await upsertBlastNotification({ ...blast, is_active: false }); await load(); };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'Tiada had';
-    return new Date(dateStr).toLocaleString('ms-MY', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    });
-  };
+  const fmt = d => d ? new Date(d).toLocaleString('ms-MY',{ day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit' }) : 'Tiada had';
 
   return (
-    <div>
-      {/* Create form */}
-      <GlassCard>
-        <h3 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#C9A84C', fontSize: '1rem', margin: '0 0 20px 0' }}>
-          Hantar Pemberitahuan Baharu
-        </h3>
+    <div style={{ maxWidth: 680 }}>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={labelStyle}>Tajuk *</label>
-          <input
-            type="text"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder="Tajuk pemberitahuan"
-            style={inputStyle}
-          />
-        </div>
+      {/* Compose */}
+      <Card title="Hantar Pemberitahuan Baharu" icon={Bell} accent={C.purple}>
+        {error && <Alert type="error">{error}</Alert>}
+        {sent  && <Alert type="success">✓ Pemberitahuan berjaya dihantar</Alert>}
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={labelStyle}>Mesej *</label>
-          <textarea
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            placeholder="Kandungan pemberitahuan..."
-            rows={3}
-            style={{ ...inputStyle, resize: 'vertical' }}
-          />
-        </div>
+        <Field label="Tajuk" required>
+          <input type="text" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Tajuk pemberitahuan" className="ms-input" />
+        </Field>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={labelStyle}>Sasaran</label>
-          <div style={{ display: 'flex', gap: '20px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#F5EDD6', fontSize: '14px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              <input
-                type="radio"
-                value="all"
-                checked={target === 'all'}
-                onChange={() => setTarget('all')}
-                style={{ accentColor: '#C9A84C' }}
-              />
-              Semua Pengguna
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#F5EDD6', fontSize: '14px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              <input
-                type="radio"
-                value="specific"
-                checked={target === 'specific'}
-                onChange={() => setTarget('specific')}
-                style={{ accentColor: '#C9A84C' }}
-              />
-              Pengguna Tertentu
-            </label>
+        <Field label="Mesej" required>
+          <textarea value={message} onChange={e=>setMessage(e.target.value)} placeholder="Kandungan pemberitahuan..." rows={3}
+            className="ms-input" style={{ resize:'vertical', width:'100%' }} />
+        </Field>
+
+        <Field label="Sasaran">
+          <div style={{ display:'flex', gap:16 }}>
+            {[['all','Semua Pengguna'],['specific','Pengguna Tertentu']].map(([v,l]) => (
+              <label key={v} style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:'0.875rem', color: C.ink, fontWeight: target===v ? 600 : 400 }}>
+                <input type="radio" value={v} checked={target===v} onChange={()=>setTarget(v)} style={{ accentColor: C.blue }} />
+                {l}
+              </label>
+            ))}
           </div>
-        </div>
+        </Field>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label style={labelStyle}>Tamat Tempoh (pilihan)</label>
-          <input
-            type="datetime-local"
-            value={expiresAt}
-            onChange={e => setExpiresAt(e.target.value)}
-            style={{ ...inputStyle, colorScheme: 'dark' }}
-          />
-        </div>
+        <Field label="Tamat Tempoh (pilihan)">
+          <input type="datetime-local" value={expires} onChange={e=>setExpires(e.target.value)} className="ms-input" style={{ colorScheme:'light' }} />
+        </Field>
 
-        {error && (
-          <div style={{ color: '#f87171', fontSize: '13px', marginBottom: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            {error}
-          </div>
-        )}
+        <Btn onClick={handleSend} disabled={sending || !title.trim() || !message.trim()} style={{ marginTop: 4 }}>
+          <Send size={14} />
+          {sending ? 'Menghantar...' : 'Hantar Pemberitahuan'}
+        </Btn>
+      </Card>
 
-        {sent && (
-          <div style={{
-            marginBottom: '12px', padding: '10px 16px',
-            background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)',
-            borderRadius: '8px', color: '#4ade80', fontSize: '13px',
-            fontFamily: "'Plus Jakarta Sans', sans-serif", textAlign: 'center',
-          }}>
-            Pemberitahuan dihantar ✓
-          </div>
-        )}
-
-        <button onClick={handleSend} disabled={sending || !title.trim() || !message.trim()} style={{ ...btnPrimary, opacity: sending || !title.trim() || !message.trim() ? 0.6 : 1 }}>
-          {sending ? 'Menghantar...' : '🔔 Hantar Pemberitahuan'}
-        </button>
-      </GlassCard>
-
-      {/* Active blasts list */}
+      {/* Active blasts */}
       {blasts.length > 0 && (
-        <div style={{ marginTop: '24px' }}>
-          <h3 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#C9A84C', fontSize: '1rem', margin: '0 0 16px 0' }}>
-            Pemberitahuan Aktif ({blasts.length})
-          </h3>
-          {blasts.map(blast => (
-            <GlassCard key={blast.id} style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <div style={{
-                    color: '#C9A84C', fontWeight: 700, fontSize: '15px',
-                    fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: '6px',
-                  }}>
-                    {blast.title}
-                  </div>
-                  <div style={{
-                    color: '#F5EDD6', fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    marginBottom: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
-                    {blast.message?.length > 100 ? blast.message.slice(0, 100) + '...' : blast.message}
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{
-                      background: blast.target === 'all' ? 'rgba(13,79,79,0.4)' : 'rgba(201,168,76,0.15)',
-                      color: blast.target === 'all' ? '#5eead4' : '#C9A84C',
-                      borderRadius: '4px', padding: '2px 8px', fontSize: '11px',
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    }}>
-                      {blast.target === 'all' ? 'Semua' : 'Tertentu'}
-                    </span>
-                    <span style={{ color: 'rgba(245,237,214,0.45)', fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                      Tamat: {formatDate(blast.expires_at)}
-                    </span>
-                  </div>
+        <Card title={`Pemberitahuan Aktif`} icon={Bell} accent={C.red}
+          action={<Badge color={C.red}>{blasts.length}</Badge>}
+        >
+          {blasts.map((b, i) => (
+            <Row key={b.id} last={i===blasts.length-1}>
+              <div style={{ flex: 1, overflow: 'hidden' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: C.ink, marginBottom: 3 }}>{b.title}</div>
+                <div style={{ fontSize: '0.8rem', color: C.muted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom: 4 }}>
+                  {b.message?.slice(0, 90)}{b.message?.length > 90 ? '…' : ''}
                 </div>
-                <button onClick={() => handleDeactivate(blast)} style={btnSecondary}>
-                  Nyahaktif
-                </button>
+                <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                  <Badge color={b.target==='all' ? C.cyan : C.amber}>
+                    {b.target==='all' ? 'Semua' : 'Tertentu'}
+                  </Badge>
+                  <span style={{ fontSize:'0.72rem', color: C.faint }}>Tamat: {fmt(b.expires_at)}</span>
+                </div>
               </div>
-            </GlassCard>
+              <Btn variant="danger" size="sm" onClick={() => handleDeactivate(b)}>
+                <X size={12} /> Nyahaktif
+              </Btn>
+            </Row>
           ))}
-        </div>
+        </Card>
       )}
     </div>
   );
