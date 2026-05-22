@@ -1,400 +1,312 @@
 import { useState, useRef, useCallback } from 'react';
+import { Upload, FolderOpen, RefreshCw, Home, CheckCircle, X, ArrowLeft } from 'lucide-react';
+import { C } from '../Admin/ui';
 import { uploadToR2, buildR2Key } from '../../lib/r2';
 import useGoogleDrive from '../../hooks/useGoogleDrive';
-import LoadingSpinner from './LoadingSpinner';
 
-const ACCEPT_MAP = {
-  image: 'image/*',
-  video: 'video/*',
-  audio: 'audio/*',
-};
+const ACCEPT_MAP = { image:'image/*', video:'video/*', audio:'audio/*' };
+const MIME_ICON  = { image:'🖼️', video:'🎬', audio:'🎵' };
 
-const MIME_ICONS = {
-  image: '🖼️',
-  video: '🎬',
-  audio: '🎵',
-};
-
-function formatBytes(bytes) {
-  if (!bytes) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function fmtBytes(b) {
+  if (!b) return '';
+  if (b < 1024)    return `${b} B`;
+  if (b < 1048576) return `${(b/1024).toFixed(1)} KB`;
+  return `${(b/1048576).toFixed(1)} MB`;
 }
 
-// ── Upload state machine ──────────────────────────────────────────
-// idle → selected → uploading → done → error
+/* ── Progress ring ── */
+function Ring({ pct, size=56 }) {
+  const r = (size-6)/2, circ = 2*Math.PI*r;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform:'rotate(-90deg)' }}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={`${C.blue}22`} strokeWidth={4}/>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.blue} strokeWidth={4}
+        strokeDasharray={circ} strokeDashoffset={circ*(1-pct/100)} strokeLinecap="round"
+        style={{ transition:'stroke-dashoffset 0.2s' }}/>
+    </svg>
+  );
+}
 
-export default function MediaUploader({
-  accept = 'image',
-  userId,
-  uploadPath,
-  onUploadComplete,
-  onProgress,
-  maxSizeMB = 100,
-}) {
-  const [uploadState, setUploadState] = useState('idle'); // idle|selected|uploading|done|error
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [progressPct, setProgressPct] = useState(0);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [showDriveModal, setShowDriveModal] = useState(false);
+/* ── Drive browser modal ── */
+function DriveModal({ drive, accept, onSelect, onClose }) {
+  const [activeType, setActiveType] = useState(null);
+  const filtered = activeType ? drive.files.filter(f=>f.mimeType?.includes(activeType)) : drive.files;
 
-  const fileInputRef = useRef(null);
-
-  const drive = useGoogleDrive();
-
-  const handleFile = useCallback((file) => {
-    if (!file) return;
-    const maxBytes = maxSizeMB * 1024 * 1024;
-    if (file.size > maxBytes) {
-      setErrorMsg(`File exceeds ${maxSizeMB} MB limit`);
-      setUploadState('error');
-      return;
-    }
-    setSelectedFile(file);
-    setUploadState('selected');
-    setErrorMsg('');
-  }, [maxSizeMB]);
-
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleFile(file);
-  }, [handleFile]);
-
-  const handleInputChange = useCallback((e) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
-  }, [handleFile]);
-
-  const handleUpload = useCallback(async () => {
-    if (!selectedFile || !userId) return;
-    setUploadState('uploading');
-    setProgressPct(0);
-
-    try {
-      const key = buildR2Key(userId, uploadPath || accept, selectedFile.name);
-      const url = await uploadToR2(selectedFile, key, (pct) => {
-        setProgressPct(pct);
-        onProgress?.(pct);
-      });
-      setUploadState('done');
-      onUploadComplete?.({ url, key, filename: selectedFile.name, type: accept });
-    } catch (err) {
-      setErrorMsg(err.message || 'Upload failed');
-      setUploadState('error');
-    }
-  }, [selectedFile, userId, uploadPath, accept, onProgress, onUploadComplete]);
-
-  const handleReset = useCallback(() => {
-    setUploadState('idle');
-    setSelectedFile(null);
-    setProgressPct(0);
-    setErrorMsg('');
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  }, []);
-
-  const openDriveModal = useCallback(async () => {
-    setShowDriveModal(true);
-    if (drive.isConnected && !drive.files.length) {
-      await drive.browseRoot();
-    }
-  }, [drive]);
-
-  const handleDriveFileSelect = useCallback((file) => {
-    setShowDriveModal(false);
-    const url = `https://drive.google.com/uc?id=${file.id}&export=download`;
-    onUploadComplete?.({
-      url,
-      key: null,
-      filename: file.name,
-      type: accept,
-      gdriveId: file.id,
-    });
-  }, [accept, onUploadComplete]);
-
-  const isError = uploadState === 'error';
-  const borderColor = isError ? '#ef4444' : isDragOver ? '#C9A84C' : 'rgba(201,168,76,0.4)';
+  const connectAndBrowse = async () => { await drive.connect(); await drive.browseRoot?.(); };
 
   return (
-    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-      {/* ── Option A: Local Upload ── */}
-      <div style={{ flex: 1, minWidth: '220px' }}>
-        <p style={{ color: '#C9A84C', fontSize: '12px', marginBottom: '8px', fontWeight: 600 }}>
-          LOCAL UPLOAD
-        </p>
-
-        {/* Drop zone */}
-        <div
-          onClick={() => uploadState === 'idle' && fileInputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-          onDragLeave={() => setIsDragOver(false)}
-          onDrop={handleDrop}
-          style={{
-            border: `2px dashed ${borderColor}`,
-            borderRadius: '12px',
-            padding: '20px',
-            textAlign: 'center',
-            cursor: uploadState === 'idle' ? 'pointer' : 'default',
-            background: isDragOver ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.03)',
-            transition: 'all 0.2s ease',
-            minHeight: '120px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-          }}
-        >
-          {uploadState === 'idle' && (
-            <>
-              <span style={{ fontSize: '28px' }}>{MIME_ICONS[accept] || '📎'}</span>
-              <span style={{ color: 'rgba(245,237,214,0.6)', fontSize: '13px' }}>
-                Drag & drop or click to select
-              </span>
-              <span style={{ color: 'rgba(245,237,214,0.4)', fontSize: '11px' }}>
-                Max {maxSizeMB} MB
-              </span>
-            </>
-          )}
-
-          {uploadState === 'selected' && selectedFile && (
-            <>
-              <span style={{ fontSize: '24px' }}>{MIME_ICONS[accept] || '📎'}</span>
-              <span style={{ color: '#F5EDD6', fontSize: '13px', wordBreak: 'break-all' }}>
-                {selectedFile.name}
-              </span>
-              <span style={{ color: 'rgba(245,237,214,0.5)', fontSize: '11px' }}>
-                {formatBytes(selectedFile.size)}
-              </span>
-            </>
-          )}
-
-          {uploadState === 'uploading' && (
-            <div style={{ width: '100%' }}>
-              <LoadingSpinner size="sm" text={`Uploading… ${progressPct}%`} />
-              <div style={{
-                marginTop: '12px', height: '6px', borderRadius: '3px',
-                background: 'rgba(255,255,255,0.1)', overflow: 'hidden',
-              }}>
-                <div style={{
-                  height: '100%', borderRadius: '3px',
-                  background: '#C9A84C',
-                  width: `${progressPct}%`,
-                  transition: 'width 0.2s ease',
-                }} />
-              </div>
-            </div>
-          )}
-
-          {uploadState === 'done' && (
-            <>
-              <span style={{ fontSize: '28px' }}>✅</span>
-              <span style={{ color: '#4ade80', fontSize: '13px' }}>Upload complete!</span>
-            </>
-          )}
-
-          {uploadState === 'error' && (
-            <>
-              <span style={{ fontSize: '28px' }}>❌</span>
-              <span style={{ color: '#f87171', fontSize: '13px' }}>{errorMsg}</span>
-            </>
-          )}
-        </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={ACCEPT_MAP[accept]}
-          style={{ display: 'none' }}
-          onChange={handleInputChange}
-        />
-
-        {/* Action buttons */}
-        <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-          {uploadState === 'selected' && (
-            <button onClick={handleUpload} style={btnStyle('#C9A84C', '#050E1A')}>
-              Upload
-            </button>
-          )}
-          {(uploadState === 'selected' || uploadState === 'done' || uploadState === 'error') && (
-            <button onClick={handleReset} style={btnStyle('transparent', '#C9A84C', 'rgba(201,168,76,0.4)')}>
-              Reset
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ── Option B: Google Drive ── */}
-      <div style={{ flex: 1, minWidth: '220px' }}>
-        <p style={{ color: '#C9A84C', fontSize: '12px', marginBottom: '8px', fontWeight: 600 }}>
-          GOOGLE DRIVE
-        </p>
-        <div style={{
-          border: '2px dashed rgba(201,168,76,0.25)',
-          borderRadius: '12px',
-          padding: '20px',
-          textAlign: 'center',
-          minHeight: '120px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-          background: 'rgba(255,255,255,0.03)',
-        }}>
-          <span style={{ fontSize: '28px' }}>📁</span>
-          <button onClick={openDriveModal} style={btnStyle('#0D4F4F', '#C9A84C')}>
-            Import from Google Drive
+    <div style={{
+      position:'fixed', inset:0, zIndex:9999,
+      background:'rgba(7,25,66,0.55)', backdropFilter:'blur(8px)',
+      display:'flex', alignItems:'center', justifyContent:'center',
+      padding:16,
+    }} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div style={{
+        width:'100%', maxWidth:540, maxHeight:'82vh',
+        background:'rgba(246,249,255,0.98)',
+        backdropFilter:'blur(32px)',
+        border:`1px solid rgba(17,116,255,0.18)`,
+        borderRadius:24,
+        boxShadow:'0 24px 80px rgba(17,50,140,0.22)',
+        display:'flex', flexDirection:'column',
+        overflow:'hidden',
+      }}>
+        {/* Modal header */}
+        <div style={{ padding:'16px 20px', borderBottom:`1px solid ${C.line}`, display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:36, height:36, borderRadius:10, background:`${C.blue}12`, border:`1px solid ${C.blue}22`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <FolderOpen size={18} color={C.blue}/>
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontWeight:800, color:C.ink, fontSize:'0.95rem' }}>Google Drive</div>
+            <div style={{ fontSize:'0.72rem', color:C.muted }}>Pilih fail untuk diimport</div>
+          </div>
+          <button onClick={onClose} style={{ background:`${C.red}12`, border:`1px solid ${C.red}28`, borderRadius:8, padding:'5px 8px', cursor:'pointer', color:C.red, display:'flex' }}>
+            <X size={14}/>
           </button>
-          <span style={{ color: 'rgba(245,237,214,0.4)', fontSize: '11px' }}>
-            Connects to your Google account
-          </span>
         </div>
-      </div>
 
-      {/* ── Google Drive Modal ── */}
-      {showDriveModal && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          background: 'rgba(5,14,26,0.85)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <div style={{
-            background: 'rgba(13,79,79,0.95)',
-            border: '1px solid rgba(201,168,76,0.3)',
-            borderRadius: '16px',
-            padding: '24px',
-            width: '100%', maxWidth: '480px',
-            maxHeight: '70vh', display: 'flex', flexDirection: 'column',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ color: '#C9A84C', fontFamily: "'Cinzel Decorative', serif", fontSize: '16px', margin: 0 }}>
-                Google Drive
-              </h3>
-              <button onClick={() => setShowDriveModal(false)} style={{ ...btnStyle('transparent', '#F5EDD6'), fontSize: '18px', padding: '0 8px' }}>
-                ✕
+        {!drive.isConnected ? (
+          <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:40, gap:16 }}>
+            <div style={{ width:64, height:64, borderRadius:18, background:`${C.blue}10`, border:`1px solid ${C.blue}20`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <FolderOpen size={28} color={C.blue}/>
+            </div>
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontWeight:700, color:C.ink, marginBottom:6 }}>Sambungkan Google Drive</div>
+              <div style={{ fontSize:'0.82rem', color:C.muted }}>Log masuk dengan Google untuk melayari fail anda</div>
+            </div>
+            <button onClick={connectAndBrowse} disabled={drive.isLoading} style={{
+              display:'inline-flex', alignItems:'center', gap:8,
+              padding:'10px 24px', borderRadius:12,
+              background:`linear-gradient(135deg,${C.blue},${C.violet})`,
+              color:'white', border:'none', cursor:'pointer', fontWeight:700, fontSize:'0.875rem',
+              opacity:drive.isLoading?0.6:1,
+            }}>
+              <FolderOpen size={16}/>
+              {drive.isLoading ? 'Menyambung...' : 'Sambungkan Google Drive'}
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Toolbar */}
+            <div style={{ padding:'10px 16px', borderBottom:`1px solid ${C.line}`, display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+              {['image','video','audio'].map(t=>(
+                <button key={t} onClick={()=>setActiveType(activeType===t?null:t)} style={{
+                  padding:'4px 10px', borderRadius:8, border:'none', cursor:'pointer', fontSize:'0.75rem', fontWeight:600,
+                  background: activeType===t ? C.blue : 'rgba(17,116,255,0.07)',
+                  color: activeType===t ? 'white' : C.muted,
+                }}>
+                  {MIME_ICON[t]} {t}
+                </button>
+              ))}
+              <div style={{ flex:1 }}/>
+              {drive.currentFolderId!=='root' && (
+                <button onClick={drive.browseRoot} style={{ background:'none', border:'none', cursor:'pointer', color:C.blue, display:'flex', alignItems:'center', gap:4, fontSize:'0.78rem', fontWeight:600 }}>
+                  <Home size={12}/> Root
+                </button>
+              )}
+              <button onClick={drive.refresh} disabled={drive.isLoading} style={{ background:'none', border:'none', cursor:'pointer', color:C.muted, display:'flex', padding:4 }}>
+                <RefreshCw size={14} style={{ animation:drive.isLoading?'spin 0.8s linear infinite':'none' }}/>
               </button>
             </div>
 
-            {!drive.isConnected ? (
-              <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                <p style={{ color: 'rgba(245,237,214,0.7)', marginBottom: '16px', fontSize: '14px' }}>
-                  Connect your Google Drive to browse files
-                </p>
-                <button
-                  onClick={drive.connect}
-                  disabled={drive.isLoading}
-                  style={btnStyle('#C9A84C', '#050E1A')}
-                >
-                  {drive.isLoading ? 'Connecting…' : 'Connect Google Drive'}
-                </button>
-              </div>
-            ) : drive.isLoading ? (
-              <div style={{ padding: '24px', textAlign: 'center' }}>
-                <LoadingSpinner size="md" text="Loading files…" />
-              </div>
-            ) : (
-              <div style={{ overflowY: 'auto', flex: 1 }}>
-                {drive.error && (
-                  <p style={{ color: '#f87171', fontSize: '13px', marginBottom: '12px' }}>{drive.error}</p>
-                )}
-
-                {/* Folders */}
-                {drive.folders.map((folder) => (
-                  <div
-                    key={folder.id}
-                    onClick={() => drive.browseTo(folder.id)}
-                    style={driveItemStyle}
-                  >
-                    <span style={{ fontSize: '20px' }}>📂</span>
-                    <span style={{ color: '#F5EDD6', fontSize: '13px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {folder.name}
-                    </span>
-                  </div>
-                ))}
-
-                {/* Files */}
-                {drive.files.map((file) => (
-                  <div
-                    key={file.id}
-                    onClick={() => handleDriveFileSelect(file)}
-                    style={driveItemStyle}
-                  >
-                    {file.thumbnailLink ? (
-                      <img src={file.thumbnailLink} alt="" style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '4px' }} />
-                    ) : (
-                      <span style={{ fontSize: '20px' }}>{MIME_ICONS[accept] || '📄'}</span>
-                    )}
-                    <div style={{ flex: 1, overflow: 'hidden' }}>
-                      <div style={{ color: '#F5EDD6', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {file.name}
-                      </div>
-                      {file.size && (
-                        <div style={{ color: 'rgba(245,237,214,0.45)', fontSize: '11px' }}>
-                          {formatBytes(Number(file.size))}
-                        </div>
-                      )}
+            {/* File list */}
+            <div style={{ flex:1, overflowY:'auto', padding:12 }}>
+              {drive.isLoading ? (
+                <div style={{ textAlign:'center', padding:32 }}>
+                  <div style={{ width:36, height:36, border:`3px solid ${C.line}`, borderTopColor:C.blue, borderRadius:'50%', animation:'spin 0.8s linear infinite', margin:'0 auto 10px' }}/>
+                  <p style={{ fontSize:'0.82rem', color:C.muted }}>Memuatkan...</p>
+                </div>
+              ) : (
+                <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                  {drive.folders.map(f=>(
+                    <div key={f.id} onClick={()=>drive.browseTo(f.id)} style={{
+                      display:'flex', alignItems:'center', gap:10, padding:'9px 12px',
+                      borderRadius:10, cursor:'pointer', border:`1px solid ${C.line}`,
+                      background:'rgba(255,255,255,0.6)', transition:'background 0.15s',
+                    }}
+                    onMouseEnter={e=>e.currentTarget.style.background=`${C.blue}08`}
+                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.6)'}
+                    >
+                      <span style={{ fontSize:20 }}>📂</span>
+                      <span style={{ flex:1, fontSize:'0.855rem', fontWeight:600, color:C.ink, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.name}</span>
+                      <ArrowLeft size={14} color={C.blue} style={{ transform:'rotate(180deg)' }}/>
                     </div>
-                  </div>
-                ))}
-
-                {!drive.folders.length && !drive.files.length && (
-                  <p style={{ color: 'rgba(245,237,214,0.5)', textAlign: 'center', fontSize: '13px', padding: '24px 0' }}>
-                    No files found
-                  </p>
-                )}
-              </div>
-            )}
-
-            {drive.isConnected && (
-              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                <button onClick={drive.browseRoot} style={btnStyle('transparent', '#C9A84C', 'rgba(201,168,76,0.3)')}>
-                  🏠 Root
-                </button>
-                <button onClick={drive.refresh} style={btnStyle('transparent', '#C9A84C', 'rgba(201,168,76,0.3)')}>
-                  🔄 Refresh
-                </button>
-                <button
-                  onClick={() => drive.filterByType(accept)}
-                  style={btnStyle('rgba(201,168,76,0.15)', '#C9A84C', 'rgba(201,168,76,0.3)')}
-                >
-                  Filter {accept}s
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                  ))}
+                  {filtered.map(f=>(
+                    <div key={f.id} onClick={()=>onSelect(f)} style={{
+                      display:'flex', alignItems:'center', gap:10, padding:'9px 12px',
+                      borderRadius:10, cursor:'pointer', border:`1px solid ${C.line}`,
+                      background:'rgba(255,255,255,0.6)', transition:'all 0.15s',
+                    }}
+                    onMouseEnter={e=>{e.currentTarget.style.background=`${C.green}08`;e.currentTarget.style.borderColor=`${C.green}40`;}}
+                    onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.6)';e.currentTarget.style.borderColor=C.line;}}
+                    >
+                      {f.thumbnailLink
+                        ? <img src={f.thumbnailLink} alt="" style={{ width:32, height:32, objectFit:'cover', borderRadius:6, flexShrink:0 }}/>
+                        : <span style={{ fontSize:20 }}>{MIME_ICON[accept]||'📄'}</span>
+                      }
+                      <div style={{ flex:1, overflow:'hidden' }}>
+                        <div style={{ fontSize:'0.855rem', fontWeight:600, color:C.ink, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.name}</div>
+                        {f.size && <div style={{ fontSize:'0.72rem', color:C.faint }}>{fmtBytes(Number(f.size))}</div>}
+                      </div>
+                      <CheckCircle size={14} color={C.green} style={{ opacity:0.5, flexShrink:0 }}/>
+                    </div>
+                  ))}
+                  {drive.folders.length===0&&filtered.length===0&&(
+                    <p style={{ textAlign:'center', padding:'28px 0', fontSize:'0.855rem', color:C.faint }}>Tiada fail dijumpai</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }
 
-function btnStyle(bg, color, borderColor) {
-  return {
-    background: bg,
-    color,
-    border: `1px solid ${borderColor || color}`,
-    borderRadius: '8px',
-    padding: '7px 14px',
-    fontSize: '13px',
-    cursor: 'pointer',
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
-    transition: 'opacity 0.2s',
-  };
-}
+/* ── Main MediaUploader ── */
+export default function MediaUploader({ accept='image', userId, uploadPath, onUploadComplete, onProgress, maxSizeMB=100 }) {
+  const [state,     setState]    = useState('idle');
+  const [file,      setFile]     = useState(null);
+  const [pct,       setPct]      = useState(0);
+  const [err,       setErr]      = useState('');
+  const [dragging,  setDragging] = useState(false);
+  const [showDrive, setShowDrive]= useState(false);
+  const fileRef = useRef(null);
+  const drive   = useGoogleDrive();
 
-const driveItemStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '10px',
-  padding: '10px',
-  borderRadius: '8px',
-  cursor: 'pointer',
-  marginBottom: '4px',
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(201,168,76,0.1)',
-  transition: 'background 0.15s',
-};
+  const pickFile = useCallback(f => {
+    if (!f) return;
+    if (f.size > maxSizeMB*1048576) { setErr(`Fail melebihi ${maxSizeMB} MB`); setState('error'); return; }
+    setFile(f); setState('selected'); setErr('');
+  }, [maxSizeMB]);
+
+  const handleDrop = useCallback(e => { e.preventDefault(); setDragging(false); pickFile(e.dataTransfer.files?.[0]); }, [pickFile]);
+
+  const handleUpload = useCallback(async () => {
+    if (!file||!userId) return;
+    setState('uploading'); setPct(0);
+    try {
+      const key = buildR2Key(userId, uploadPath||accept, file.name);
+      const url = await uploadToR2(file, key, p=>{ setPct(p); onProgress?.(p); });
+      setState('done');
+      onUploadComplete?.({ url, key, filename:file.name, type:accept });
+    } catch(e) { setErr(e.message||'Upload gagal'); setState('error'); }
+  }, [file, userId, uploadPath, accept, onProgress, onUploadComplete]);
+
+  const reset = () => { setState('idle'); setFile(null); setPct(0); setErr(''); if(fileRef.current) fileRef.current.value=''; };
+
+  const handleDriveSelect = f => {
+    setShowDrive(false);
+    const url = `https://drive.google.com/uc?id=${f.id}&export=download`;
+    onUploadComplete?.({ url, key:null, filename:f.name, type:accept, gdriveId:f.id });
+  };
+
+  /* ── Zone colours by state ── */
+  const zoneBg = state==='error' ? `${C.red}08` : dragging ? `${C.blue}0c` : state==='done' ? `${C.green}08` : 'rgba(255,255,255,0.55)';
+  const zoneBorder = state==='error' ? C.red : dragging ? C.blue : state==='done' ? C.green : `rgba(17,116,255,0.2)`;
+
+  return (
+    <div>
+      {/* Two-column: local + drive */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:10, alignItems:'stretch' }}>
+
+        {/* ── Local upload zone ── */}
+        <div
+          onClick={()=>state==='idle'&&fileRef.current?.click()}
+          onDragOver={e=>{e.preventDefault();setDragging(true);}}
+          onDragLeave={()=>setDragging(false)}
+          onDrop={handleDrop}
+          style={{
+            border:`2px dashed ${zoneBorder}`,
+            borderRadius:14, padding:'16px 20px',
+            background:zoneBg,
+            cursor:state==='idle'?'pointer':'default',
+            transition:'all 0.2s',
+            display:'flex', alignItems:'center', gap:14, minHeight:80,
+          }}
+        >
+          {/* Icon / progress */}
+          <div style={{ flexShrink:0, width:56, height:56, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            {state==='uploading' ? (
+              <div style={{ position:'relative', width:56, height:56 }}>
+                <Ring pct={pct}/>
+                <span style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.72rem', fontWeight:800, color:C.blue }}>{pct}%</span>
+              </div>
+            ) : state==='done' ? (
+              <div style={{ width:44, height:44, borderRadius:14, background:`${C.green}15`, border:`1px solid ${C.green}33`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <CheckCircle size={22} color={C.green}/>
+              </div>
+            ) : (
+              <div style={{ width:44, height:44, borderRadius:14, background:`${C.blue}10`, border:`1px solid ${C.blue}20`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <Upload size={20} color={C.blue}/>
+              </div>
+            )}
+          </div>
+
+          {/* Text */}
+          <div style={{ flex:1, minWidth:0 }}>
+            {state==='idle' && <>
+              <div style={{ fontWeight:700, color:C.ink, fontSize:'0.875rem', marginBottom:2 }}>
+                {dragging ? 'Lepaskan fail di sini' : 'Klik atau seret fail'}
+              </div>
+              <div style={{ fontSize:'0.75rem', color:C.faint }}>{MIME_ICON[accept]} {accept.toUpperCase()} · Maks {maxSizeMB} MB</div>
+            </>}
+            {state==='selected' && file && <>
+              <div style={{ fontWeight:700, color:C.ink, fontSize:'0.875rem', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{file.name}</div>
+              <div style={{ fontSize:'0.75rem', color:C.muted }}>{fmtBytes(file.size)}</div>
+            </>}
+            {state==='uploading' && <div style={{ fontWeight:600, color:C.blue, fontSize:'0.875rem' }}>Memuat naik...</div>}
+            {state==='done' && <div style={{ fontWeight:700, color:C.green, fontSize:'0.875rem' }}>✓ Berjaya dimuat naik!</div>}
+            {state==='error' && <>
+              <div style={{ fontWeight:700, color:C.red, fontSize:'0.875rem' }}>Muat naik gagal</div>
+              <div style={{ fontSize:'0.75rem', color:C.red }}>{err}</div>
+            </>}
+          </div>
+        </div>
+
+        {/* ── Google Drive button ── */}
+        <button onClick={()=>setShowDrive(true)} style={{
+          display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:6,
+          padding:'12px 16px', borderRadius:14, cursor:'pointer',
+          border:`2px dashed rgba(17,116,255,0.2)`,
+          background:'rgba(255,255,255,0.55)',
+          color:C.muted, fontSize:'0.72rem', fontWeight:600,
+          transition:'all 0.2s', minWidth:80, whiteSpace:'nowrap',
+        }}
+        onMouseEnter={e=>{e.currentTarget.style.background=`${C.blue}0a`;e.currentTarget.style.borderColor=`${C.blue}40`;e.currentTarget.style.color=C.blue;}}
+        onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.55)';e.currentTarget.style.borderColor='rgba(17,116,255,0.2)';e.currentTarget.style.color=C.muted;}}
+        >
+          <FolderOpen size={20}/>
+          Google Drive
+        </button>
+      </div>
+
+      <input ref={fileRef} type="file" accept={ACCEPT_MAP[accept]} style={{ display:'none' }} onChange={e=>pickFile(e.target.files?.[0])}/>
+
+      {/* Action buttons */}
+      {(state==='selected'||state==='error')&&(
+        <div style={{ display:'flex', gap:8, marginTop:10 }}>
+          {state==='selected'&&(
+            <button onClick={handleUpload} style={{
+              display:'inline-flex', alignItems:'center', gap:6, padding:'7px 16px', borderRadius:10,
+              background:`linear-gradient(135deg,${C.blue},${C.violet})`, color:'white', border:'none', cursor:'pointer', fontWeight:700, fontSize:'0.82rem',
+            }}>
+              <Upload size={13}/> Muat Naik
+            </button>
+          )}
+          <button onClick={reset} style={{
+            display:'inline-flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:10,
+            background:`${C.red}0f`, color:C.red, border:`1px solid ${C.red}28`, cursor:'pointer', fontSize:'0.82rem',
+          }}>
+            <X size={12}/> Reset
+          </button>
+        </div>
+      )}
+
+      {showDrive && <DriveModal drive={drive} accept={accept} onSelect={handleDriveSelect} onClose={()=>setShowDrive(false)}/>}
+    </div>
+  );
+}

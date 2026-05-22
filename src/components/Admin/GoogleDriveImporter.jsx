@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import GlassCard from '../shared/GlassCard';
-import LoadingSpinner from '../shared/LoadingSpinner';
+import { FolderOpen, RefreshCw, ArrowLeft, Home, Download, CheckCircle, XCircle, Loader } from 'lucide-react';
+import { Card, Btn, Badge, Alert, Empty, C } from './ui';
 import useGoogleDrive from '../../hooks/useGoogleDrive';
 import useStore from '../../store/useStore';
 import {
@@ -9,267 +9,236 @@ import {
 } from '../../lib/supabase';
 import { getDriveDownloadUrl } from '../../lib/googleDrive';
 
-const btnPrimary = {
-  background: '#C9A84C', color: '#050E1A', border: 'none',
-  borderRadius: '8px', padding: '10px 20px', cursor: 'pointer',
-  fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: '14px',
-};
-const btnSecondary = {
-  background: 'transparent', color: '#C9A84C',
-  border: '1px solid rgba(201,168,76,0.4)',
-  borderRadius: '8px', padding: '8px 14px', cursor: 'pointer',
-  fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px',
-};
-
 const TYPE_FILTERS = [
-  { id: null, label: 'Semua' },
-  { id: 'image', label: 'Imej' },
-  { id: 'video', label: 'Video' },
-  { id: 'audio', label: 'Audio' },
+  { id: null,    label: 'Semua', icon: '🗂️' },
+  { id: 'image', label: 'Imej',  icon: '🖼️' },
+  { id: 'video', label: 'Video', icon: '🎬' },
+  { id: 'audio', label: 'Audio', icon: '🎵' },
 ];
 
-function getMimeIcon(mimeType) {
-  if (!mimeType) return '📄';
-  if (mimeType.includes('image')) return '🖼️';
-  if (mimeType.includes('video')) return '🎬';
-  if (mimeType.includes('audio')) return '🎵';
-  if (mimeType.includes('folder')) return '📂';
+function getMimeIcon(m) {
+  if (!m) return '📄';
+  if (m.includes('image'))  return '🖼️';
+  if (m.includes('video'))  return '🎬';
+  if (m.includes('audio'))  return '🎵';
+  if (m.includes('folder')) return '📂';
   return '📄';
 }
 
-function formatBytes(bytes) {
-  if (!bytes) return '';
-  const n = Number(bytes);
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+function fmtBytes(b) {
+  if (!b) return '';
+  const n = Number(b);
+  if (n < 1024)        return `${n} B`;
+  if (n < 1048576)     return `${(n/1024).toFixed(1)} KB`;
+  return `${(n/1048576).toFixed(1)} MB`;
+}
+
+/* ── Status badge ── */
+function StatusBadge({ status }) {
+  const map = {
+    idle:      null,
+    importing: { icon: <Loader size={11} style={{ animation:'spin 1s linear infinite' }}/>, label:'Mengimport', color: C.amber },
+    done:      { icon: <CheckCircle size={11}/>, label:'Selesai',    color: C.green },
+    error:     { icon: <XCircle size={11}/>,     label:'Ralat',      color: C.red   },
+  };
+  const s = map[status];
+  if (!s) return null;
+  return (
+    <span style={{
+      display:'inline-flex', alignItems:'center', gap:4,
+      padding:'3px 8px', borderRadius:20,
+      background:`${s.color}15`, border:`1px solid ${s.color}33`,
+      color: s.color, fontSize:'0.72rem', fontWeight:700,
+    }}>
+      {s.icon}{s.label}
+    </span>
+  );
+}
+
+/* ── File / Folder tile ── */
+function Tile({ children, onClick, style }) {
+  return (
+    <div onClick={onClick} style={{
+      background: 'rgba(255,255,255,0.65)',
+      backdropFilter: 'blur(20px)',
+      border: `1px solid rgba(17,116,255,0.12)`,
+      borderRadius: 14,
+      overflow: 'hidden',
+      cursor: onClick ? 'pointer' : 'default',
+      transition: 'transform 0.15s, box-shadow 0.15s',
+      boxShadow: '0 2px 12px rgba(17,50,140,0.06)',
+      ...style,
+    }}
+    onMouseEnter={e => { if (onClick) { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 6px 20px rgba(17,50,140,0.12)'; }}}
+    onMouseLeave={e => { e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='0 2px 12px rgba(17,50,140,0.06)'; }}
+    >
+      {children}
+    </div>
+  );
 }
 
 export default function GoogleDriveImporter({ onImportComplete }) {
   const { user } = useStore();
   const drive = useGoogleDrive();
-  const [importStatuses, setImportStatuses] = useState({});
+  const [statuses,   setStatuses]   = useState({});
+  const [activeType, setActiveType] = useState(null);
 
-  const setStatus = (fileId, status) => {
-    setImportStatuses(prev => ({ ...prev, [fileId]: status }));
-  };
+  const setStatus = (id, s) => setStatuses(p => ({ ...p, [id]: s }));
 
-  const handleConnect = async () => {
-    await drive.connect();
-  };
-
-  const handleImport = async (file) => {
+  const handleImport = async file => {
     if (!user?.id) return;
     setStatus(file.id, 'importing');
-
     const importType = file.mimeType?.includes('audio') ? 'audio' : 'slider';
-
     let logId = null;
     try {
-      const { data: logData } = await logGdriveImport({
-        user_id: user.id,
-        file_id: file.id,
-        file_name: file.name,
-        import_type: importType,
-        status: 'importing',
-      });
-      logId = logData?.id;
-
-      const downloadUrl = getDriveDownloadUrl(file.id);
-
+      const { data: ld } = await logGdriveImport({ user_id:user.id, file_id:file.id, file_name:file.name, import_type:importType, status:'importing' });
+      logId = ld?.id;
+      const url = getDriveDownloadUrl(file.id);
       if (importType === 'audio') {
-        await upsertAudioItem({
-          title: file.name,
-          audio_url: downloadUrl,
-          source_gdrive_id: file.id,
-          user_id: user.id,
-          category: 'zikir',
-          storage_provider: 'gdrive',
-          is_active: true,
-        });
+        await upsertAudioItem({ title:file.name, audio_url:url, source_gdrive_id:file.id, user_id:user.id, category:'zikir', storage_provider:'gdrive', is_active:true });
       } else {
-        await upsertSliderItem({
-          media_url: downloadUrl,
-          media_type: 'image',
-          title: file.name,
-          user_id: user.id,
-          storage_provider: 'gdrive',
-          is_active: true,
-        });
+        await upsertSliderItem({ media_url:url, media_type:'image', title:file.name, user_id:user.id, storage_provider:'gdrive', is_active:true });
       }
-
-      if (logId) {
-        await updateGdriveImportStatus(logId, 'done', downloadUrl);
-      }
-
+      if (logId) await updateGdriveImportStatus(logId, 'done', url);
       setStatus(file.id, 'done');
-      onImportComplete && onImportComplete();
+      onImportComplete?.();
     } catch (err) {
-      if (logId) {
-        await updateGdriveImportStatus(logId, 'error', null, err.message || 'Unknown error');
-      }
+      if (logId) await updateGdriveImportStatus(logId, 'error', null, err.message);
       setStatus(file.id, 'error');
     }
   };
 
-  const filterStyle = (active) => ({
-    padding: '6px 14px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
-    fontSize: '12px',
-    border: 'none',
-    background: active ? '#C9A84C' : 'rgba(255,255,255,0.06)',
-    color: active ? '#050E1A' : 'rgba(245,237,214,0.6)',
-    fontWeight: active ? 600 : 400,
-  });
-
+  /* ── Not connected ── */
   if (!drive.isConnected) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>📁</div>
-        <button onClick={handleConnect} disabled={drive.isLoading} style={{ ...btnPrimary, marginBottom: '12px' }}>
-          {drive.isLoading ? 'Menyambung...' : 'Sambungkan Google Drive'}
-        </button>
-        <p style={{ color: 'rgba(245,237,214,0.5)', fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif", margin: '8px 0 0' }}>
-          Sambungkan akaun Google anda untuk mengimport fail
+      <div style={{ textAlign:'center', padding:'48px 24px' }}>
+        <div style={{
+          width:80, height:80, borderRadius:24, margin:'0 auto 20px',
+          background:'linear-gradient(135deg,rgba(17,116,255,0.1),rgba(117,71,255,0.08))',
+          border:`1px solid rgba(17,116,255,0.15)`,
+          display:'flex', alignItems:'center', justifyContent:'center',
+        }}>
+          <FolderOpen size={36} color={C.blue} />
+        </div>
+        <h3 style={{ fontSize:'1rem', fontWeight:800, color:C.ink, marginBottom:8 }}>
+          Sambungkan Google Drive
+        </h3>
+        <p style={{ fontSize:'0.855rem', color:C.muted, marginBottom:24, maxWidth:320, margin:'0 auto 24px' }}>
+          Sambungkan akaun Google anda untuk melayari dan mengimport fail terus ke MasjidTV.
         </p>
-        {drive.error && (
-          <p style={{ color: '#f87171', fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif", marginTop: '8px' }}>
-            {drive.error}
-          </p>
-        )}
+        {drive.error && <Alert type="error">{drive.error}</Alert>}
+        <Btn onClick={drive.connect} disabled={drive.isLoading} size="lg">
+          <FolderOpen size={16} />
+          {drive.isLoading ? 'Menyambung...' : 'Sambungkan Google Drive'}
+        </Btn>
       </div>
     );
   }
 
+  const filtered = activeType
+    ? drive.files.filter(f => f.mimeType?.includes(activeType))
+    : drive.files;
+
   return (
     <div>
-      {/* Top bar */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ color: 'rgba(245,237,214,0.6)', fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          {drive.currentFolderId === 'root' ? '📁 Drive' : '📂 Folder'}
-        </span>
+      {/* Toolbar */}
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+        {/* Path breadcrumb */}
+        <div style={{
+          display:'flex', alignItems:'center', gap:4,
+          padding:'5px 10px', borderRadius:8,
+          background:'rgba(17,116,255,0.05)', border:`1px solid ${C.line}`,
+          fontSize:'0.78rem', color:C.muted,
+        }}>
+          <FolderOpen size={13} color={C.blue} />
+          <span style={{ fontWeight:600, color:C.blue }}>
+            {drive.currentFolderId === 'root' ? 'My Drive' : 'Folder'}
+          </span>
+        </div>
 
-        <div style={{ display: 'flex', gap: '4px' }}>
+        {/* Type filter pills */}
+        <div style={{ display:'flex', gap:4 }}>
           {TYPE_FILTERS.map(f => (
-            <button
-              key={String(f.id)}
-              onClick={() => drive.filterByType(f.id)}
-              style={filterStyle(false)}
-            >
-              {f.label}
-            </button>
+            <button key={String(f.id)} onClick={() => setActiveType(f.id)} style={{
+              display:'inline-flex', alignItems:'center', gap:4,
+              padding:'5px 10px', borderRadius:8, border:'none', cursor:'pointer', fontSize:'0.78rem', fontWeight:600,
+              background: activeType===f.id ? C.blue : 'rgba(17,116,255,0.06)',
+              color: activeType===f.id ? 'white' : C.muted,
+              transition:'all 0.15s',
+            }}>{f.icon} {f.label}</button>
           ))}
         </div>
 
-        <button onClick={drive.refresh} style={btnSecondary}>
-          🔄 Muat Semula
-        </button>
+        <div style={{ flex:1 }} />
 
         {drive.currentFolderId !== 'root' && (
-          <button onClick={drive.browseRoot} style={btnSecondary}>
-            ← Kembali ke Root
-          </button>
+          <Btn variant="ghost" size="sm" onClick={drive.browseRoot}><Home size={13}/> Root</Btn>
         )}
+        <Btn variant="ghost" size="sm" onClick={drive.refresh} disabled={drive.isLoading}>
+          <RefreshCw size={13} style={{ animation: drive.isLoading ? 'spin 1s linear infinite' : 'none' }} />
+          Muat Semula
+        </Btn>
       </div>
 
-      {drive.isLoading && (
-        <div style={{ padding: '40px', textAlign: 'center' }}>
-          <LoadingSpinner size="md" text="Memuatkan fail..." />
+      {drive.error && <Alert type="error">{drive.error}</Alert>}
+
+      {drive.isLoading ? (
+        <div style={{ padding:'40px', textAlign:'center' }}>
+          <div style={{ width:44, height:44, border:`3px solid ${C.line}`, borderTopColor:C.blue, borderRadius:'50%', animation:'spin 0.8s linear infinite', margin:'0 auto 12px' }} />
+          <p style={{ fontSize:'0.855rem', color:C.muted }}>Memuatkan fail...</p>
         </div>
-      )}
-
-      {drive.error && (
-        <p style={{ color: '#f87171', fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: '12px' }}>
-          {drive.error}
-        </p>
-      )}
-
-      {!drive.isLoading && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+      ) : (drive.folders.length + filtered.length) === 0 ? (
+        <Empty icon="📂" text="Tiada fail dijumpai" sub="Cuba tukar penapis atau buka folder lain" />
+      ) : (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:12 }}>
           {/* Folders */}
           {drive.folders.map(folder => (
-            <GlassCard
-              key={folder.id}
-              style={{ padding: '12px', cursor: 'pointer' }}
-              onClick={() => drive.browseTo(folder.id)}
-            >
-              <div style={{ fontSize: '28px', marginBottom: '8px' }}>📂</div>
-              <div style={{
-                color: '#F5EDD6', fontSize: '13px', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '8px',
-              }}>
-                {folder.name}
+            <Tile key={folder.id} onClick={() => drive.browseTo(folder.id)}>
+              <div style={{ padding:'14px 12px 10px', textAlign:'center' }}>
+                <div style={{ fontSize:36, marginBottom:8 }}>📂</div>
+                <div style={{ fontSize:'0.78rem', fontWeight:600, color:C.ink, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:8 }}>
+                  {folder.name}
+                </div>
+                <Btn variant="secondary" size="sm" onClick={e=>{e.stopPropagation();drive.browseTo(folder.id);}}>
+                  Buka
+                </Btn>
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); drive.browseTo(folder.id); }}
-                style={{ ...btnSecondary, padding: '4px 10px', fontSize: '12px' }}
-              >
-                Buka →
-              </button>
-            </GlassCard>
+            </Tile>
           ))}
 
           {/* Files */}
-          {drive.files.map(file => {
-            const status = importStatuses[file.id] || 'idle';
+          {filtered.map(file => {
+            const status = statuses[file.id] || 'idle';
             return (
-              <GlassCard key={file.id} style={{ padding: '12px' }}>
+              <Tile key={file.id}>
+                {/* Thumb */}
                 {file.thumbnailLink ? (
-                  <img
-                    src={file.thumbnailLink}
-                    alt=""
-                    style={{ width: '100%', height: '60px', objectFit: 'cover', borderRadius: '6px', marginBottom: '8px' }}
-                  />
+                  <img src={file.thumbnailLink} alt="" style={{ width:'100%', height:80, objectFit:'cover', display:'block' }} />
                 ) : (
-                  <div style={{
-                    width: '100%', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '28px', borderRadius: '6px', background: 'rgba(255,255,255,0.06)', marginBottom: '8px',
-                  }}>
+                  <div style={{ height:80, display:'flex', alignItems:'center', justifyContent:'center', fontSize:32, background:`${C.blue}08` }}>
                     {getMimeIcon(file.mimeType)}
                   </div>
                 )}
-
-                <div style={{
-                  color: '#F5EDD6', fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px',
-                }}>
-                  {file.name}
-                </div>
-                {file.size && (
-                  <div style={{ color: 'rgba(245,237,214,0.4)', fontSize: '11px', fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: '8px' }}>
-                    {formatBytes(file.size)}
+                <div style={{ padding:'10px 12px' }}>
+                  <div style={{ fontSize:'0.78rem', fontWeight:600, color:C.ink, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:2 }}>
+                    {file.name}
                   </div>
-                )}
-
-                {status === 'idle' && (
-                  <button onClick={() => handleImport(file)} style={{ ...btnPrimary, padding: '6px 12px', fontSize: '12px' }}>
-                    Import
-                  </button>
-                )}
-                {status === 'importing' && (
-                  <span style={{ color: '#C9A84C', fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>⏳ Mengimport...</span>
-                )}
-                {status === 'done' && (
-                  <span style={{ color: '#4ade80', fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>✓ Selesai</span>
-                )}
-                {status === 'error' && (
-                  <span style={{ color: '#f87171', fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>✗ Ralat</span>
-                )}
-              </GlassCard>
+                  {file.size && <div style={{ fontSize:'0.7rem', color:C.faint, marginBottom:8 }}>{fmtBytes(file.size)}</div>}
+                  {status === 'idle' ? (
+                    <Btn size="sm" onClick={() => handleImport(file)} style={{ width:'100%' }}>
+                      <Download size={11}/> Import
+                    </Btn>
+                  ) : (
+                    <StatusBadge status={status} />
+                  )}
+                </div>
+              </Tile>
             );
           })}
-
-          {drive.folders.length === 0 && drive.files.length === 0 && !drive.isLoading && (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 0' }}>
-              <p style={{ color: 'rgba(245,237,214,0.5)', fontSize: '14px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                Tiada fail dijumpai
-              </p>
-            </div>
-          )}
         </div>
       )}
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }

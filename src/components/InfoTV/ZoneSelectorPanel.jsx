@@ -1,180 +1,166 @@
 import { useState, useRef, useEffect } from 'react';
+import { Globe, ChevronDown, ChevronRight, X, MapPin, Check } from 'lucide-react';
 import { ZONES } from '../../hooks/useWaktuSolat';
 
-const COUNTRIES = {
-  MY: { label: 'Malaysia', flag: '🇲🇾', zones: ZONES },
+const COUNTRIES = { MY: { label:'Malaysia', flag:'🇲🇾', zones:ZONES } };
+
+/* ── Token colours (light theme, not admin dark) ── */
+const T = {
+  blue:   '#1174ff',
+  violet: '#7547ff',
+  ink:    '#0f1f4a',
+  muted:  '#3f568d',
+  faint:  'rgba(63,86,141,0.45)',
+  line:   'rgba(17,116,255,0.1)',
 };
 
 export default function ZoneSelectorPanel({ currentZone, onZoneChange }) {
-  const [open, setOpen] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState('MY');
-  const [expandedState, setExpandedState] = useState(null);
-  const panelRef = useRef(null);
+  const [open,     setOpen]    = useState(false);
+  const [country,  setCountry] = useState('MY');
+  const [expanded, setExpanded]= useState(null);
+  const ref = useRef(null);
 
-  // Close on outside click
-  useEffect(() => {
-    function handle(e) {
-      if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false);
-    }
-    if (open) document.addEventListener('mousedown', handle);
-    return () => document.removeEventListener('mousedown', handle);
-  }, [open]);
-
-  // Auto-expand state that owns currentZone
   useEffect(() => {
     if (!open) return;
-    for (const [state, zones] of Object.entries(COUNTRIES[selectedCountry].zones)) {
-      if (Object.keys(zones).includes(currentZone)) { setExpandedState(state); break; }
-    }
-  }, [open, currentZone, selectedCountry]);
+    const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
 
-  // Short label for button
+  useEffect(() => {
+    if (!open) return;
+    for (const [state, zones] of Object.entries(COUNTRIES[country].zones)) {
+      if (Object.keys(zones).includes(currentZone)) { setExpanded(state); break; }
+    }
+  }, [open, currentZone, country]);
+
   let shortLabel = currentZone;
   for (const zones of Object.values(ZONES)) {
     if (zones[currentZone]) { shortLabel = zones[currentZone].split(',')[0].trim(); break; }
   }
 
-  const country = COUNTRIES[selectedCountry];
+  const c = COUNTRIES[country];
 
   return (
-    <div ref={panelRef} style={{ position: 'absolute', top: '50%', right: '1.2vw', transform: 'translateY(-50%)', zIndex: 9999 }}>
+    <div ref={ref} style={{ position:'absolute', top:'50%', right:'1.2vw', transform:'translateY(-50%)', zIndex:9999 }}>
 
-      {/* Trigger button */}
-      <button
-        onClick={() => setOpen(v => !v)}
-        title="Tukar Zon Waktu Solat"
-        style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '5px 12px', borderRadius: 20,
-          background: open ? 'rgba(13,134,255,.15)' : 'rgba(255,255,255,.55)',
-          border: `1px solid ${open ? 'rgba(13,134,255,.4)' : 'rgba(54,78,135,.22)'}`,
-          backdropFilter: 'blur(12px)',
-          cursor: 'pointer', color: open ? '#0d86ff' : '#1a2b5f',
-          fontFamily: 'inherit', fontSize: 'clamp(11px,.75vw,14px)',
-          fontWeight: 600, whiteSpace: 'nowrap',
-          boxShadow: '0 2px 8px rgba(0,0,0,.08)',
-          transition: 'all .2s',
-        }}
-      >
-        {/* Globe SVG */}
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="2" y1="12" x2="22" y2="12"/>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-        </svg>
-        <span>{currentZone}</span>
-        <span style={{ color: open ? '#0d86ff' : '#5a7abf', fontWeight: 400, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      {/* Trigger pill */}
+      <button onClick={()=>setOpen(v=>!v)} style={{
+        display:'flex', alignItems:'center', gap:6,
+        padding:'6px 13px', borderRadius:22,
+        background: open
+          ? 'linear-gradient(135deg,rgba(17,116,255,0.15),rgba(117,71,255,0.1))'
+          : 'rgba(255,255,255,0.72)',
+        backdropFilter:'blur(20px) saturate(1.6)',
+        border:`1px solid ${open ? 'rgba(17,116,255,0.35)' : 'rgba(17,116,255,0.18)'}`,
+        boxShadow: open ? '0 4px 20px rgba(17,116,255,0.2)' : '0 2px 10px rgba(17,50,140,0.08)',
+        cursor:'pointer', color: open ? T.blue : T.ink,
+        fontFamily:'inherit', fontSize:'clamp(11px,.72vw,13px)',
+        fontWeight:600, whiteSpace:'nowrap',
+        transition:'all 0.2s',
+      }}>
+        <Globe size={13} style={{ flexShrink:0, color: open ? T.blue : T.violet }}/>
+        <span style={{ color: open ? T.blue : T.muted, fontWeight:800, letterSpacing:'0.02em' }}>{currentZone}</span>
+        <span style={{ color:T.faint, maxWidth:100, overflow:'hidden', textOverflow:'ellipsis', fontWeight:400 }}>
           · {shortLabel}
         </span>
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2.5"
-          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s', flexShrink: 0 }}>
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
+        <ChevronDown size={10} style={{ flexShrink:0, transform:open?'rotate(180deg)':'none', transition:'transform 0.2s', opacity:0.6 }}/>
       </button>
 
       {/* Dropdown */}
       {open && (
         <div style={{
-          position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-          width: 330, maxHeight: 480, overflowY: 'auto',
-          background: 'rgba(245,248,255,.97)',
-          border: '1px solid rgba(54,78,135,.18)',
-          borderRadius: 16,
-          boxShadow: '0 20px 60px rgba(17,50,140,.18)',
-          backdropFilter: 'blur(24px)',
+          position:'absolute', top:'calc(100% + 10px)', right:0,
+          width:340, maxHeight:500, overflowY:'auto',
+          background:'rgba(246,249,255,0.98)',
+          backdropFilter:'blur(40px) saturate(1.8)',
+          border:'1px solid rgba(17,116,255,0.15)',
+          borderRadius:20,
+          boxShadow:'0 24px 70px rgba(17,50,140,0.2), 0 1px 0 rgba(255,255,255,0.9) inset',
         }}>
 
           {/* Header */}
-          <div style={{
-            padding: '10px 14px',
-            borderBottom: '1px solid rgba(54,78,135,.1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          }}>
-            <span style={{ fontWeight: 700, fontSize: 13, color: '#0f1f4a', letterSpacing: '.01em' }}>
-              Pilih Zon Waktu Solat
-            </span>
-            <button onClick={() => setOpen(false)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5a7abf', fontSize: 14, lineHeight: 1 }}>
-              ✕
+          <div style={{ padding:'13px 16px', borderBottom:`1px solid ${T.line}`, display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ width:30, height:30, borderRadius:9, background:`${T.blue}12`, border:`1px solid ${T.blue}22`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <MapPin size={14} color={T.blue}/>
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:800, fontSize:'0.875rem', color:T.ink }}>Pilih Zon Waktu Solat</div>
+              <div style={{ fontSize:'0.7rem', color:T.faint }}>Zon semasa: {currentZone}</div>
+            </div>
+            <button onClick={()=>setOpen(false)} style={{ background:`rgba(17,116,255,0.07)`, border:'none', borderRadius:8, padding:'5px 7px', cursor:'pointer', color:T.muted, display:'flex' }}>
+              <X size={13}/>
             </button>
           </div>
 
-          {/* Country tabs */}
-          <div style={{ display: 'flex', gap: 6, padding: '8px 12px 4px', borderBottom: '1px solid rgba(54,78,135,.08)' }}>
-            {Object.entries(COUNTRIES).map(([code, info]) => (
-              <button key={code}
-                onClick={() => { setSelectedCountry(code); setExpandedState(null); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '3px 10px', borderRadius: 8,
-                  border: selectedCountry === code ? '1px solid rgba(13,134,255,.5)' : '1px solid rgba(54,78,135,.15)',
-                  background: selectedCountry === code ? 'rgba(13,134,255,.1)' : 'transparent',
-                  color: selectedCountry === code ? '#0d86ff' : '#7a90bb',
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all .15s',
+          {/* Country selector */}
+          <div style={{ padding:'10px 14px 6px', borderBottom:`1px solid ${T.line}` }}>
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+              {Object.entries(COUNTRIES).map(([code,info])=>(
+                <button key={code} onClick={()=>{setCountry(code);setExpanded(null);}} style={{
+                  display:'inline-flex', alignItems:'center', gap:5,
+                  padding:'4px 11px', borderRadius:9,
+                  border: country===code ? `1px solid ${T.blue}50` : `1px solid ${T.line}`,
+                  background: country===code ? `${T.blue}10` : 'transparent',
+                  color: country===code ? T.blue : T.faint,
+                  fontSize:'0.78rem', fontWeight:600, cursor:'pointer', transition:'all 0.15s',
                 }}>
-                <span>{info.flag}</span><span>{info.label}</span>
-              </button>
-            ))}
-            <span style={{ fontSize: 11, color: '#bcc8e0', alignSelf: 'center', marginLeft: 2 }}>+ akan datang</span>
+                  <span>{info.flag}</span><span>{info.label}</span>
+                </button>
+              ))}
+              <span style={{ fontSize:'0.7rem', color:'#bcc8e0', alignSelf:'center', marginLeft:2 }}>+ akan datang</span>
+            </div>
           </div>
 
-          {/* States & zones */}
-          <div style={{ padding: '4px 0' }}>
-            {Object.entries(country.zones).map(([state, zones]) => {
-              const expanded = expandedState === state;
-              const hasActive = Object.keys(zones).includes(currentZone);
+          {/* States + zones */}
+          <div style={{ padding:'6px 0' }}>
+            {Object.entries(c.zones).map(([state, zones])=>{
+              const isExpanded = expanded===state;
+              const hasActive  = Object.keys(zones).includes(currentZone);
               return (
                 <div key={state}>
-                  <button
-                    onClick={() => setExpandedState(expanded ? null : state)}
-                    style={{
-                      width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '7px 14px',
-                      background: hasActive ? 'rgba(13,134,255,.06)' : 'transparent',
-                      border: 'none', cursor: 'pointer', textAlign: 'left',
-                      color: hasActive ? '#0d86ff' : '#1a2b5f',
-                      fontSize: 13, fontWeight: hasActive ? 700 : 500,
-                      transition: 'background .15s',
-                    }}>
-                    <span>{state}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {hasActive && (
-                        <span style={{
-                          background: 'rgba(13,134,255,.12)', border: '1px solid rgba(13,134,255,.3)',
-                          borderRadius: 4, padding: '1px 6px', color: '#0d86ff', fontSize: 10, fontWeight: 700,
-                        }}>Aktif</span>
-                      )}
-                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" strokeWidth="2.5"
-                        style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>
-                        <polyline points="6 9 12 15 18 9"/>
-                      </svg>
+                  {/* State row */}
+                  <button onClick={()=>setExpanded(isExpanded?null:state)} style={{
+                    width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between',
+                    padding:'9px 16px', border:'none', cursor:'pointer', textAlign:'left',
+                    background: hasActive ? `${T.blue}07` : 'transparent',
+                    transition:'background 0.15s',
+                  }}
+                  onMouseEnter={e=>{ if(!hasActive) e.currentTarget.style.background=`${T.blue}04`; }}
+                  onMouseLeave={e=>{ if(!hasActive) e.currentTarget.style.background='transparent'; }}
+                  >
+                    <span style={{ fontSize:'0.855rem', fontWeight: hasActive?700:500, color: hasActive?T.blue:T.ink }}>
+                      {state}
                     </span>
+                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      {hasActive && (
+                        <span style={{ fontSize:'0.65rem', fontWeight:800, color:T.blue, background:`${T.blue}12`, border:`1px solid ${T.blue}28`, borderRadius:5, padding:'1px 6px' }}>
+                          Aktif
+                        </span>
+                      )}
+                      <ChevronDown size={12} color={T.faint} style={{ transform:isExpanded?'rotate(180deg)':'none', transition:'transform 0.2s' }}/>
+                    </div>
                   </button>
 
-                  {expanded && (
-                    <div style={{ background: 'rgba(245,248,255,.7)' }}>
-                      {Object.entries(zones).map(([code, label]) => {
-                        const active = code === currentZone;
+                  {/* Zone options */}
+                  {isExpanded && (
+                    <div style={{ background:'rgba(248,250,255,0.8)' }}>
+                      {Object.entries(zones).map(([code, label])=>{
+                        const isActive = code===currentZone;
                         return (
-                          <button key={code}
-                            onClick={() => { onZoneChange(code); setOpen(false); }}
-                            style={{
-                              width: '100%', display: 'flex', alignItems: 'flex-start', gap: 10,
-                              padding: '7px 14px 7px 24px',
-                              background: active ? 'rgba(13,134,255,.1)' : 'transparent',
-                              borderLeft: active ? '2px solid #0d86ff' : '2px solid transparent',
-                              border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'all .15s',
-                            }}>
-                            <span style={{
-                              fontSize: 11, fontWeight: 800, color: active ? '#0d86ff' : '#7a90bb',
-                              minWidth: 48, flexShrink: 0, paddingTop: 1,
-                            }}>{code}</span>
-                            <span style={{
-                              fontSize: 12, color: active ? '#1a2b5f' : '#7a90bb', lineHeight: 1.4,
-                            }}>{label}</span>
+                          <button key={code} onClick={()=>{onZoneChange(code);setOpen(false);}} style={{
+                            width:'100%', display:'flex', alignItems:'flex-start', gap:10,
+                            padding:'8px 16px 8px 28px',
+                            background: isActive ? `${T.blue}0e` : 'transparent',
+                            borderLeft: isActive ? `3px solid ${T.blue}` : '3px solid transparent',
+                            border:'none', cursor:'pointer', textAlign:'left', transition:'all 0.15s',
+                          }}
+                          onMouseEnter={e=>{ if(!isActive) e.currentTarget.style.background=`${T.blue}06`; }}
+                          onMouseLeave={e=>{ if(!isActive) e.currentTarget.style.background='transparent'; }}
+                          >
+                            <span style={{ fontSize:'0.72rem', fontWeight:800, color:isActive?T.blue:T.faint, minWidth:48, flexShrink:0, paddingTop:1 }}>{code}</span>
+                            <span style={{ fontSize:'0.78rem', color:isActive?T.ink:T.muted, lineHeight:1.4, flex:1 }}>{label}</span>
+                            {isActive && <Check size={13} color={T.blue} style={{ flexShrink:0, marginTop:1 }}/>}
                           </button>
                         );
                       })}
@@ -186,10 +172,7 @@ export default function ZoneSelectorPanel({ currentZone, onZoneChange }) {
           </div>
 
           {/* Footer */}
-          <div style={{
-            padding: '8px 14px', borderTop: '1px solid rgba(54,78,135,.08)',
-            fontSize: 10, color: '#b0bcd8', textAlign: 'center',
-          }}>
+          <div style={{ padding:'9px 16px', borderTop:`1px solid ${T.line}`, fontSize:'0.68rem', color:T.faint, textAlign:'center' }}>
             Data waktu solat dari e-Solat JAKIM
           </div>
         </div>

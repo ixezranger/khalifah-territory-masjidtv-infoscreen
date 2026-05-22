@@ -419,43 +419,77 @@ export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onL
             </span>
           </div>
 
-          {/* Right actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {/* ── Right toolbar ── */}
+          <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+
+            {/* Pratonton InfoTV */}
             <button
               onClick={() => window.open('/', '_blank')}
+              title="Pratonton InfoTV"
               style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '6px 14px', borderRadius: 10,
-                background: 'linear-gradient(135deg,rgba(17,116,255,0.12),rgba(117,71,255,0.08))',
-                border: '1px solid rgba(17,116,255,0.2)',
-                color: '#1174ff', fontSize: '0.78rem', fontWeight: 700,
-                cursor: 'pointer', whiteSpace: 'nowrap',
-                boxShadow: '0 2px 8px rgba(17,116,255,0.12)',
-                transition: 'all 0.15s',
+                display:'flex', alignItems:'center', gap:isMobile?0:6,
+                height:34, padding: isMobile ? '0 10px' : '0 14px',
+                borderRadius:10,
+                background:'linear-gradient(135deg,rgba(17,116,255,0.12),rgba(117,71,255,0.08))',
+                border:'1px solid rgba(17,116,255,0.2)',
+                color:'#1174ff', fontSize:'0.78rem', fontWeight:700,
+                cursor:'pointer', whiteSpace:'nowrap',
+                boxShadow:'0 2px 8px rgba(17,116,255,0.1)',
+                transition:'all 0.18s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow='0 4px 16px rgba(17,116,255,0.22)'; e.currentTarget.style.transform='translateY(-1px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow='0 2px 8px rgba(17,116,255,0.12)'; e.currentTarget.style.transform='none'; }}
+              onMouseEnter={e=>{e.currentTarget.style.boxShadow='0 4px 18px rgba(17,116,255,0.2)';e.currentTarget.style.transform='translateY(-1px)';}}
+              onMouseLeave={e=>{e.currentTarget.style.boxShadow='0 2px 8px rgba(17,116,255,0.1)';e.currentTarget.style.transform='none';}}
             >
-              <Monitor size={13} />
-              {!isMobile && 'Pratonton InfoTV'}
+              <Monitor size={14}/>
+              {!isMobile && <span>Pratonton</span>}
             </button>
-            <button
-              onClick={onLogout}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                padding: '6px 12px', borderRadius: 10,
-                background: 'rgba(220,38,38,0.07)',
-                border: '1px solid rgba(220,38,38,0.15)',
-                color: '#dc2626', fontSize: '0.78rem', fontWeight: 600,
-                cursor: 'pointer', whiteSpace: 'nowrap',
-                transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background='rgba(220,38,38,0.13)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background='rgba(220,38,38,0.07)'; }}
-            >
-              <LogOut size={13} />
-              {!isMobile && 'Keluar'}
-            </button>
+
+            {/* Divider */}
+            <div style={{ width:1, height:22, background:'rgba(17,116,255,0.12)', flexShrink:0 }}/>
+
+            {/* User avatar + logout */}
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              {/* Avatar chip */}
+              <div style={{
+                height:34, padding:'0 10px',
+                display:'flex', alignItems:'center', gap:7,
+                background:'rgba(255,255,255,0.6)',
+                border:'1px solid rgba(17,116,255,0.12)',
+                borderRadius:10,
+              }}>
+                <div style={{
+                  width:22, height:22, borderRadius:7, flexShrink:0,
+                  background:'linear-gradient(135deg,#1174ff,#7547ff)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  color:'white', fontWeight:800, fontSize:'0.6rem',
+                }}>
+                  A
+                </div>
+                {!isMobile && (
+                  <span style={{ fontSize:'0.78rem', fontWeight:600, color:'#0f1f4a', whiteSpace:'nowrap', maxWidth:90, overflow:'hidden', textOverflow:'ellipsis' }}>
+                    Admin
+                  </span>
+                )}
+              </div>
+
+              {/* Logout icon-button */}
+              <button
+                onClick={onLogout}
+                title="Log Keluar"
+                style={{
+                  width:34, height:34, borderRadius:10,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  background:'rgba(220,38,38,0.07)',
+                  border:'1px solid rgba(220,38,38,0.15)',
+                  color:'#dc2626', cursor:'pointer',
+                  transition:'all 0.18s',
+                }}
+                onMouseEnter={e=>{e.currentTarget.style.background='rgba(220,38,38,0.14)';e.currentTarget.style.transform='scale(1.05)';}}
+                onMouseLeave={e=>{e.currentTarget.style.background='rgba(220,38,38,0.07)';e.currentTarget.style.transform='none';}}
+              >
+                <LogOut size={14}/>
+              </button>
+            </div>
           </div>
         </div>
 
