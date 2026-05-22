@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║          MasjidTV — Fail Konfigurasi (config.xml)               ║
+  ║  Edit fail ini untuk menukar paparan tanpa perlu database.      ║
+  ║  Muat semula pelayar selepas simpan untuk lihat perubahan.      ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+<masjidtv>
+
+  <!-- ══════════════════════════════════════════════
+       PROFIL MASJID
+       ══════════════════════════════════════════════ -->
+  <profile>
+    <!-- Nama masjid yang akan terpapar di skrin -->
+    <masjid_name>Masjid Demo — MasjidTV</masjid_name>
+
+    <!-- Penerangan ringkas -->
+    <masjid_description>Sistem InfoTV Islamik oleh Khalifah Territory</masjid_description>
+
+    <!-- Kod zon waktu solat (contoh: WLY01, SGR01, KTN01, KTN02 …) -->
+    <zone_code>WLY01</zone_code>
+  </profile>
+
+  <!-- ══════════════════════════════════════════════
+       PENAMPILAN (BACKGROUND & IKON)
+       ══════════════════════════════════════════════ -->
+  <appearance>
+    <!--
+      URL imej latar belakang.
+      Boleh dari hosting anda sendiri atau mana-mana URL awam.
+      Kosongkan untuk guna latar lalai (gradient orbs).
+      Contoh: https://yourdomain.com/images/masjid-bg.jpg
+    -->
+    <background_image_url></background_image_url>
+
+    <!--
+      Kegelapan overlay di atas imej latar (0–90).
+      Nilai lebih tinggi = lebih gelap = teks lebih mudah dibaca.
+    -->
+    <bg_overlay_opacity>40</bg_overlay_opacity>
+
+    <!--
+      URL ikon / logo masjid.
+      Cadangan: PNG/SVG dengan latar telus, saiz 256×256px.
+      Kosongkan untuk guna ikon lalai (🕌).
+      Contoh: https://yourdomain.com/images/logo-masjid.png
+    -->
+    <icon_url></icon_url>
+  </appearance>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDER IMEJ / VIDEO
+       ══════════════════════════════════════════════ -->
+  <slider>
+    <!--
+      Setiap <item> adalah satu slaid.
+      Atribut:
+        type    — "image" atau "youtube"
+        duration — berapa saat papar slaid ini (lalai: 8)
+      Contoh YouTube: https://www.youtube.com/watch?v=XXXXXXXXXXX
+    -->
+    <item type="image" duration="8">
+      <title>Selamat Datang</title>
+      <url>https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=1280&q=80</url>
+    </item>
+
+    <item type="image" duration="8">
+      <title>Program Masjid</title>
+      <url></url>
+    </item>
+
+    <!--
+    <item type="youtube" duration="30">
+      <title>Tazkirah Jumaat</title>
+      <url>https://www.youtube.com/watch?v=XXXXXXXXXXX</url>
+    </item>
+    -->
+  </slider>
+
+  <!-- ══════════════════════════════════════════════
+       TEKS TICKER (BERITA / PENGUMUMAN)
+       ══════════════════════════════════════════════ -->
+  <ticker>
+    <message>Selamat datang ke MasjidTV — Sistem InfoTV Islamik Khalifah Territory</message>
+    <message>Solat Jumaat: Azan 12:30 | Khutbah 12:45 | Solat 1:00 petang</message>
+    <message>Program Kelas Fardhu Ain setiap Ahad jam 9:00 pagi</message>
+    <!-- Tambah mesej baharu di sini -->
+  </ticker>
+
+  <!-- ══════════════════════════════════════════════
+       HADITH / KATA-KATA HIKMAH
+       ══════════════════════════════════════════════ -->
+  <hadith>
+    <item>
+      <arabic>إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ</arabic>
+      <translation>Sesungguhnya setiap amalan bergantung kepada niat.</translation>
+      <source>Hadith Riwayat Bukhari &amp; Muslim</source>
+    </item>
+    <item>
+      <arabic>الْمُسْلِمُ مَنْ سَلِمَ الْمُسْلِمُونَ مِنْ لِسَانِهِ وَيَدِهِ</arabic>
+      <translation>Muslim yang sempurna ialah orang yang orang-orang Islam lain selamat daripada lidah dan tangannya.</translation>
+      <source>Hadith Riwayat Bukhari</source>
+    </item>
+    <item>
+      <arabic>خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ</arabic>
+      <translation>Sebaik-baik kamu ialah orang yang mempelajari al-Quran dan mengajarkannya.</translation>
+      <source>Hadith Riwayat Bukhari</source>
+    </item>
+    <!-- Tambah hadith baharu di sini -->
+  </hadith>
+
+  <!-- ══════════════════════════════════════════════
+       TETAPAN CIRI-CIRI (FEATURES)
+       ══════════════════════════════════════════════ -->
+  <features>
+    <!-- Tunjuk / sembunyi komponen (true / false) -->
+    <show_countdown>true</show_countdown>
+    <show_ticker>true</show_ticker>
+    <show_hadith>true</show_hadith>
+    <show_datetime>true</show_datetime>
+    <show_slider>true</show_slider>
+
+    <!-- Kelajuan ticker (piksel sesaat, lalai: 50) -->
+    <ticker_speed>50</ticker_speed>
+
+    <!-- Tukar hadith setiap berapa minit -->
+    <hadith_rotation_minutes>5</hadith_rotation_minutes>
+  </features>
+
+</masjidtv>
