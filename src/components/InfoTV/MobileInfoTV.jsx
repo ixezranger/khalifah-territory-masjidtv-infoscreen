@@ -105,152 +105,146 @@ const ANNOUNCEMENTS = [
 ];
 
 function AnnouncementCarousel() {
-  const trackRef  = useRef(null);
-  const [active, setActive] = useState(0);
-  const autoRef   = useRef(null);
+  const [active,  setActive]  = useState(0);
+  const autoRef               = useRef(null);
+  const containerRef          = useRef(null);
 
-  // drag state
-  const drag = useRef({ startX:0, scrollLeft:0, isDragging:false });
+  // Drag/swipe state
+  const drag = useRef({ startX: 0, isDragging: false, startActive: 0 });
 
-  const CARD_W = 84; // card width + gap ≈ 84px per item
-  const VISIBLE = 4;
+  const N = ANNOUNCEMENTS.length;
 
-  const scrollToIdx = (idx) => {
-    const track = trackRef.current;
-    if (!track) return;
-    const maxScroll = track.scrollWidth - track.clientWidth;
-    const target = Math.min(idx * CARD_W, maxScroll);
-    track.scrollTo({ left: target, behavior: 'smooth' });
-  };
+  // Each card occupies exactly 1/3 of the container width.
+  // We translate the track by -(active * 33.333)% relative to container.
+  // This keeps exactly 3 cards visible at all times.
 
-  // auto-scroll every 3s
-  useEffect(() => {
-    autoRef.current = setInterval(() => {
-      setActive(prev => {
-        const next = (prev + 1) % ANNOUNCEMENTS.length;
-        scrollToIdx(next);
-        return next;
-      });
-    }, 3000);
-    return () => clearInterval(autoRef.current);
-  }, []);
-
-  const pauseAuto = () => {
+  const startAuto = () => {
     clearInterval(autoRef.current);
     autoRef.current = setInterval(() => {
-      setActive(prev => {
-        const next = (prev + 1) % ANNOUNCEMENTS.length;
-        scrollToIdx(next);
-        return next;
-      });
-    }, 3000);
+      setActive(prev => (prev + 1) % N);
+    }, 10000);
   };
 
-  // Pointer drag handlers (mouse + touch)
-  const onPointerDown = (e) => {
-    const track = trackRef.current;
-    drag.current = { startX: e.pageX - track.offsetLeft, scrollLeft: track.scrollLeft, isDragging: true };
-    track.style.cursor = 'grabbing';
-    pauseAuto();
+  useEffect(() => {
+    startAuto();
+    return () => clearInterval(autoRef.current);
+  }, []); // eslint-disable-line
+
+  const goTo = (idx) => {
+    setActive(((idx % N) + N) % N);
+    startAuto(); // reset timer on manual interaction
   };
-  const onPointerMove = (e) => {
+
+  // Touch / mouse drag to swipe
+  const onDragStart = (clientX) => {
+    drag.current = { startX: clientX, isDragging: true, startActive: active };
+  };
+  const onDragEnd = (clientX) => {
     if (!drag.current.isDragging) return;
-    e.preventDefault();
-    const track = trackRef.current;
-    const x = e.pageX - track.offsetLeft;
-    const dist = x - drag.current.startX;
-    track.scrollLeft = drag.current.scrollLeft - dist;
-  };
-  const onPointerUp = () => {
     drag.current.isDragging = false;
-    if (trackRef.current) trackRef.current.style.cursor = 'grab';
-    // snap to nearest
-    const track = trackRef.current;
-    if (!track) return;
-    const idx = Math.round(track.scrollLeft / CARD_W);
-    setActive(Math.min(idx, ANNOUNCEMENTS.length - 1));
+    const diff = drag.current.startX - clientX;
+    const W = containerRef.current?.offsetWidth || 300;
+    // swipe threshold: 15% of card width (one card = W/3)
+    if (Math.abs(diff) > W / 3 / 3) {
+      goTo(diff > 0 ? active + 1 : active - 1);
+    }
   };
 
   return (
-    <div style={{padding:'0 0 20px'}}>
-      {/* Scroll track */}
+    <div style={{ padding: '0 0 20px' }}>
+      {/* Clipping window — shows exactly 3 cards */}
       <div
-        ref={trackRef}
-        onMouseDown={onPointerDown}
-        onMouseMove={onPointerMove}
-        onMouseUp={onPointerUp}
-        onMouseLeave={onPointerUp}
-        onTouchStart={e => onPointerDown({ pageX: e.touches[0].pageX })}
-        onTouchMove={e => { e.preventDefault(); onPointerMove({ pageX: e.touches[0].pageX }); }}
-        onTouchEnd={onPointerUp}
+        ref={containerRef}
         style={{
-          display:'flex',gap:10,
-          overflowX:'auto',overflowY:'hidden',
-          paddingLeft:16,paddingRight:16,
-          paddingBottom:4,
-          scrollbarWidth:'none',
-          msOverflowStyle:'none',
-          cursor:'grab',
-          WebkitOverflowScrolling:'touch',
-          userSelect:'none',
+          overflow: 'hidden',
+          padding: '4px 16px 4px',
+          cursor: 'grab',
+          userSelect: 'none',
         }}
+        onMouseDown={e  => onDragStart(e.clientX)}
+        onMouseUp={e    => onDragEnd(e.clientX)}
+        onMouseLeave={e => onDragEnd(e.clientX)}
+        onTouchStart={e => onDragStart(e.touches[0].clientX)}
+        onTouchEnd={e   => onDragEnd(e.changedTouches[0].clientX)}
       >
-        <style>{`.ann-track::-webkit-scrollbar{display:none}`}</style>
-        {ANNOUNCEMENTS.map((item, i) => (
-          <div
-            key={item.id}
-            onClick={() => { setActive(i); scrollToIdx(i); pauseAuto(); }}
-            style={{
-              flexShrink:0,
-              width:74,
-              background: i === active
-                ? `linear-gradient(145deg,${item.color},${item.color}bb)`
-                : C.glass,
-              backdropFilter:'blur(24px)',
-              WebkitBackdropFilter:'blur(24px)',
-              border: i === active ? 'none' : `1.5px solid ${C.gBord}`,
-              borderRadius:18,
-              padding:'14px 6px 12px',
-              textAlign:'center',
-              boxShadow: i === active
-                ? `0 8px 24px ${item.color}44`
-                : C.shadow,
-              cursor:'pointer',
-              transition:'all 0.25s',
-            }}
-          >
-            {/* Icon bubble */}
-            <div style={{
-              width:40,height:40,borderRadius:13,
-              margin:'0 auto 8px',
-              background: i === active ? 'rgba(255,255,255,0.22)' : `${item.color}14`,
-              border: i === active ? '1.5px solid rgba(255,255,255,0.3)' : `1.5px solid ${item.color}28`,
-              display:'flex',alignItems:'center',justifyContent:'center',
-              fontSize:20,
-            }}>{item.icon}</div>
-            <div style={{
-              fontSize:9.5,fontWeight:750,lineHeight:1.3,
-              color: i === active ? 'white' : C.ink,
-            }}>{item.label}</div>
-            {item.sub && (
-              <div style={{
-                fontSize:8.5,marginTop:3,lineHeight:1.3,
-                color: i === active ? 'rgba(255,255,255,0.8)' : C.muted,
-              }}>{item.sub}</div>
-            )}
-          </div>
-        ))}
+        {/* Sliding track — width = N/3 × 100% of container */}
+        <div style={{
+          display: 'flex',
+          gap: 10,
+          width: `${(N / 3) * 100}%`,
+          transform: `translateX(calc(-${active} * (100% / ${N}) ))`,
+          transition: 'transform 0.45s cubic-bezier(0.4,0,0.2,1)',
+          willChange: 'transform',
+        }}>
+          {ANNOUNCEMENTS.map((item, i) => {
+            const isActive = i === active;
+            // Each card takes exactly 1/N of the track = 1/3 of the container
+            return (
+              <div
+                key={item.id}
+                onClick={() => goTo(i)}
+                style={{
+                  width: `calc(100% / ${N})`,
+                  flexShrink: 0,
+                  background: isActive
+                    ? `linear-gradient(145deg,${item.color},${item.color}cc)`
+                    : C.glass,
+                  backdropFilter: 'blur(24px)',
+                  WebkitBackdropFilter: 'blur(24px)',
+                  border: isActive ? 'none' : `1.5px solid ${C.gBord}`,
+                  borderRadius: 20,
+                  padding: '16px 8px 14px',
+                  textAlign: 'center',
+                  boxShadow: isActive
+                    ? `0 10px 28px ${item.color}44`
+                    : C.shadow,
+                  cursor: 'pointer',
+                  transition: 'background 0.35s, box-shadow 0.35s, border 0.35s',
+                }}
+              >
+                {/* Icon bubble */}
+                <div style={{
+                  width: 46, height: 46, borderRadius: 14,
+                  margin: '0 auto 10px',
+                  background: isActive ? 'rgba(255,255,255,0.22)' : `${item.color}14`,
+                  border: isActive ? '1.5px solid rgba(255,255,255,0.32)' : `1.5px solid ${item.color}28`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 22,
+                }}>{item.icon}</div>
+
+                <div style={{
+                  fontSize: 11, fontWeight: 750, lineHeight: 1.35,
+                  color: isActive ? 'white' : C.ink,
+                }}>
+                  {item.label}
+                </div>
+                {item.sub && (
+                  <div style={{
+                    fontSize: 10, marginTop: 4, lineHeight: 1.35,
+                    color: isActive ? 'rgba(255,255,255,0.82)' : C.muted,
+                  }}>
+                    {item.sub}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Dot indicators */}
-      <div style={{display:'flex',justifyContent:'center',gap:5,marginTop:8}}>
-        {ANNOUNCEMENTS.map((_,i)=>(
-          <div key={i} onClick={()=>{setActive(i);scrollToIdx(i);pauseAuto();}} style={{
-            width: i===active ? 18 : 6,
-            height:6,borderRadius:3,cursor:'pointer',
-            background: i===active ? C.blue : 'rgba(75,94,255,0.2)',
-            transition:'all 0.3s',
-          }}/>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 5, marginTop: 10 }}>
+        {ANNOUNCEMENTS.map((_, i) => (
+          <div
+            key={i}
+            onClick={() => goTo(i)}
+            style={{
+              width: i === active ? 20 : 6,
+              height: 6, borderRadius: 3, cursor: 'pointer',
+              background: i === active ? C.blue : 'rgba(75,94,255,0.2)',
+              transition: 'all 0.35s',
+            }}
+          />
         ))}
       </div>
     </div>
