@@ -296,7 +296,17 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
             {masjidIcon
               ? <img src={masjidIcon} alt="" style={{width:'100%',height:'100%',objectFit:'contain'}}
                   onError={e=>e.target.style.display='none'}/>
-              : <span style={{fontSize:34,color:'white'}}>🕌</span>
+              : <svg width="38" height="38" viewBox="0 0 64 64" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 56V30M56 56V30"/>
+                  <path d="M2 30h60"/>
+                  <path d="M8 30c0-8 6-14 12-18l4-8 4 8c6 4 12 10 12 18"/>
+                  <path d="M32 4v6"/>
+                  <path d="M20 56V38h24v18"/>
+                  <path d="M27 56V46h10v10"/>
+                  <circle cx="32" cy="30" r="4"/>
+                  <path d="M44 30c0-8 6-14 12-18"/>
+                  <path d="M20 30c0-8-6-14-12-18"/>
+                </svg>
             }
           </div>
           <div style={{minWidth:0}}>
@@ -437,7 +447,36 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
       </div>
 
       {/* ─── Tazkirah Slider ─── */}
-      <div style={{padding:'0 16px 12px'}}>
+      <div style={{padding:'0 16px 12px', position:'relative'}}>
+
+        {/* Floating prev — outside card, left edge */}
+        <button onClick={()=>setSlideIndex(i=>(i-1+slides.length)%slides.length)} style={{
+          position:'absolute', left:-4, top:'50%', transform:'translateY(-50%)',
+          width:32, height:32, borderRadius:'50%', border:'none', cursor:'pointer', zIndex:10,
+          background:'rgba(255,255,255,0.95)',
+          backdropFilter:'blur(12px)',
+          boxShadow:'0 4px 16px rgba(75,94,255,0.22)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B5EFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+
+        {/* Floating next — outside card, right edge */}
+        <button onClick={()=>setSlideIndex(i=>(i+1)%slides.length)} style={{
+          position:'absolute', right:-4, top:'50%', transform:'translateY(-50%)',
+          width:32, height:32, borderRadius:'50%', border:'none', cursor:'pointer', zIndex:10,
+          background:'rgba(255,255,255,0.95)',
+          backdropFilter:'blur(12px)',
+          boxShadow:'0 4px 16px rgba(75,94,255,0.22)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B5EFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+
         <div style={{
           borderRadius:22,overflow:'hidden',position:'relative',minHeight:220,
           background:'linear-gradient(135deg,rgba(10,18,80,0.94),rgba(58,40,200,0.88))',
@@ -453,23 +492,7 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
           {/* Gradient overlay */}
           <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,rgba(10,16,80,0.78) 55%,transparent)',pointerEvents:'none'}}/>
 
-          {/* Prev / Next arrows */}
-          <button onClick={()=>setSlideIndex(i=>(i-1+slides.length)%slides.length)} style={{
-            position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',
-            width:34,height:34,borderRadius:'50%',border:'none',cursor:'pointer',
-            background:'rgba(255,255,255,0.18)',backdropFilter:'blur(8px)',
-            display:'flex',alignItems:'center',justifyContent:'center',
-            color:'white',fontSize:18,zIndex:2,
-          }}>‹</button>
-          <button onClick={()=>setSlideIndex(i=>(i+1)%slides.length)} style={{
-            position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',
-            width:34,height:34,borderRadius:'50%',border:'none',cursor:'pointer',
-            background:'rgba(255,255,255,0.18)',backdropFilter:'blur(8px)',
-            display:'flex',alignItems:'center',justifyContent:'center',
-            color:'white',fontSize:18,zIndex:2,
-          }}>›</button>
-
-          <div style={{position:'relative',padding:'22px 52px 36px 22px',zIndex:1}}>
+          <div style={{position:'relative',padding:'22px 22px 36px',zIndex:1}}>
             {/* Pill */}
             <div style={{
               display:'inline-flex',alignItems:'center',gap:6,
@@ -942,7 +965,15 @@ function ProfilTab({ profile }) {
           background:`linear-gradient(145deg,${C.blue},${C.violet})`,
           display:'flex',alignItems:'center',justifyContent:'center',
           fontSize:34,boxShadow:'0 10px 28px rgba(75,94,255,0.35)',
-        }}>🕌</div>
+        }><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 56V30M56 56V30"/>
+              <path d="M2 30h60"/>
+              <path d="M8 30c0-8 6-14 12-18l4-8 4 8c6 4 12 10 12 18"/>
+              <path d="M32 4v6"/>
+              <path d="M20 56V38h24v18"/>
+              <path d="M27 56V46h10v10"/>
+              <circle cx="32" cy="30" r="4"/>
+            </svg></div>
         <h3 style={{fontSize:18,fontWeight:850,color:C.ink,margin:'0 0 4px'}}>{profile?.masjid_name||'MasjidTV'}</h3>
         <p style={{fontSize:12,color:C.muted,margin:0}}>{profile?.masjid_description||'Sistem InfoTV Islamik'}</p>
       </Card>
@@ -1046,7 +1077,15 @@ function BottomNav({ active, onChange }) {
           }}
           onMouseEnter={e => e.currentTarget.style.transform='scale(1.08)'}
           onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
-          >🕌</div>
+          ><svg width="28" height="28" viewBox="0 0 64 64" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 56V30M56 56V30"/>
+              <path d="M2 30h60"/>
+              <path d="M8 30c0-8 6-14 12-18l4-8 4 8c6 4 12 10 12 18"/>
+              <path d="M32 4v6"/>
+              <path d="M20 56V38h24v18"/>
+              <path d="M27 56V46h10v10"/>
+              <circle cx="32" cy="30" r="4"/>
+            </svg></div>
         </div>
 
         {/* Right 2 tabs */}
@@ -1090,18 +1129,80 @@ export default function MobileInfoTV(props) {
   return (
     <div style={{
       width:'100%', minHeight:'100vh',
-      background:`linear-gradient(170deg,${C.bg1} 0%,${C.bg2} 45%,${C.bg3} 100%)`,
+      background:'#eceeff',
       overflowX:'hidden',
       fontFamily:"'Plus Jakarta Sans','SF Pro Display','Segoe UI',sans-serif",
       position:'relative', WebkitFontSmoothing:'antialiased',
     }}>
-      {/* Ambient blobs */}
-      <div style={{position:'fixed',top:-80,right:-60,width:320,height:320,borderRadius:'50%',
-        background:'rgba(123,92,255,0.13)',filter:'blur(70px)',pointerEvents:'none',zIndex:0}}/>
-      <div style={{position:'fixed',bottom:120,left:-50,width:260,height:260,borderRadius:'50%',
-        background:'rgba(75,94,255,0.1)',filter:'blur(60px)',pointerEvents:'none',zIndex:0}}/>
-      <div style={{position:'fixed',top:'40%',right:-40,width:180,height:180,borderRadius:'50%',
-        background:'rgba(255,180,200,0.12)',filter:'blur(50px)',pointerEvents:'none',zIndex:0}}/>
+      {/* ── Animated gradient layer ── */}
+      <style>{`
+        @keyframes gradShift {
+          0%   { background-position: 0% 50%; }
+          50%  { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes orbFloat1 {
+          0%,100% { transform: translate(0px, 0px) scale(1); }
+          33%     { transform: translate(18px,-22px) scale(1.06); }
+          66%     { transform: translate(-12px, 14px) scale(0.96); }
+        }
+        @keyframes orbFloat2 {
+          0%,100% { transform: translate(0px, 0px) scale(1); }
+          40%     { transform: translate(-20px, 18px) scale(1.08); }
+          70%     { transform: translate(14px,-10px) scale(0.94); }
+        }
+        @keyframes orbFloat3 {
+          0%,100% { transform: translate(0px, 0px) scale(1); }
+          30%     { transform: translate(10px, 20px) scale(1.05); }
+          60%     { transform: translate(-16px,-8px) scale(0.97); }
+        }
+        @keyframes orbFloat4 {
+          0%,100% { transform: translate(0px, 0px) scale(1); }
+          45%     { transform: translate(-14px, 16px) scale(1.1); }
+          75%     { transform: translate(18px,-12px) scale(0.93); }
+        }
+      `}</style>
+
+      {/* Animated gradient mesh background */}
+      <div style={{
+        position:'fixed', inset:0, zIndex:0, pointerEvents:'none',
+        background:'linear-gradient(135deg,#eef0ff,#e4e8ff,#ede4ff,#e8f0ff,#f0e8ff,#eceeff)',
+        backgroundSize:'300% 300%',
+        animation:'gradShift 14s ease infinite',
+      }}/>
+
+      {/* Floating ambient orbs */}
+      <div style={{
+        position:'fixed', top:-100, right:-80, width:340, height:340,
+        borderRadius:'50%', pointerEvents:'none', zIndex:0,
+        background:'radial-gradient(circle,rgba(123,92,255,0.18) 0%,transparent 70%)',
+        animation:'orbFloat1 9s ease-in-out infinite',
+      }}/>
+      <div style={{
+        position:'fixed', top:'30%', left:-90, width:300, height:300,
+        borderRadius:'50%', pointerEvents:'none', zIndex:0,
+        background:'radial-gradient(circle,rgba(75,94,255,0.14) 0%,transparent 70%)',
+        animation:'orbFloat2 11s ease-in-out infinite',
+      }}/>
+      <div style={{
+        position:'fixed', bottom:160, right:-60, width:260, height:260,
+        borderRadius:'50%', pointerEvents:'none', zIndex:0,
+        background:'radial-gradient(circle,rgba(180,140,255,0.13) 0%,transparent 70%)',
+        animation:'orbFloat3 13s ease-in-out infinite',
+      }}/>
+      <div style={{
+        position:'fixed', bottom:-60, left:-40, width:240, height:240,
+        borderRadius:'50%', pointerEvents:'none', zIndex:0,
+        background:'radial-gradient(circle,rgba(100,160,255,0.12) 0%,transparent 70%)',
+        animation:'orbFloat4 10s ease-in-out infinite',
+      }}/>
+      {/* Subtle noise grain overlay */}
+      <div style={{
+        position:'fixed', inset:0, zIndex:0, pointerEvents:'none', opacity:0.025,
+        backgroundImage:`url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        backgroundRepeat:'repeat',
+        backgroundSize:'200px 200px',
+      }}/>
 
       <div style={{position:'relative',zIndex:1}}>
         {tab==='home'     && <HomeTab    {...props}/>}
