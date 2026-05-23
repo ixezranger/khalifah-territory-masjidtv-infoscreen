@@ -608,7 +608,7 @@ export default function InfoTVScreen() {
   /* ── Mobile view ── */
   if (isMobileView) {
     return (
-      <div style={{ width:'100%', minHeight:'100vh', overflow:'hidden', position:'relative' }}>
+      <div style={{ width:'100%', minHeight:'100vh', overflowY:'auto', overflowX:'hidden', position:'relative' }}>
         <MobileInfoTV {...mobileProps} />
         <ViewportSwitcher currentView={viewportMode} onViewChange={setViewportMode} />
       </div>

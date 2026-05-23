@@ -286,7 +286,7 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
   const dateStr = gregorianDate.replace(/^[A-Za-z]+,\s*/, '');
 
   return (
-    <div style={{ paddingBottom: 90 }}>
+    <div style={{ paddingBottom: 110 }}>
 
       {/* ─── Header ─── */}
       <div style={{ padding:'22px 18px 14px', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
@@ -667,7 +667,7 @@ function JadualTab({ times, nextSolatName }) {
   const selHoliday = isHoliday(viewYear, viewMonth, selDay);
 
   return (
-    <div style={{paddingBottom:90}}>
+    <div style={{paddingBottom:110}}>
       {/* ── Sub tabs ── */}
       <div style={{padding:'18px 16px 0'}}>
         <div style={{
@@ -887,7 +887,7 @@ function JadualTab({ times, nextSolatName }) {
 
       {/* ── Placeholder sub-tabs ── */}
       {(sub==='jadual'||sub==='iqamah') && (
-        <div style={{padding:'48px 16px',textAlign:'center'}}>
+        <div style={{padding:'48px 16px 110px',textAlign:'center'}}>
           <div style={{
             width:72,height:72,borderRadius:22,margin:'0 auto 16px',
             background:'rgba(75,94,255,0.08)',border:`1.5px solid rgba(75,94,255,0.15)`,
@@ -910,7 +910,7 @@ function JadualTab({ times, nextSolatName }) {
    ═══════════════════════════════════════════════════════════════════ */
 function KomunitiTab() {
   return (
-    <div style={{padding:'24px 16px 90px'}}>
+    <div style={{padding:'24px 16px 110px'}}>
       <h2 style={{fontSize:18,fontWeight:850,color:C.ink,margin:'0 0 16px'}}>Komuniti Masjid</h2>
       {[
         {icon:'📢',title:'Pengumuman Masjid',sub:'Berita & maklumat terkini',color:'#6B48FF'},
@@ -940,7 +940,7 @@ function KomunitiTab() {
    ═══════════════════════════════════════════════════════════════════ */
 function ProfilTab({ profile }) {
   return (
-    <div style={{padding:'24px 16px 90px'}}>
+    <div style={{padding:'24px 16px 110px'}}>
       {/* Profile card */}
       <Card style={{padding:'24px 20px',marginBottom:16,textAlign:'center'}}>
         <div style={{
@@ -985,75 +985,104 @@ function BottomNav({ active, onChange }) {
   ];
 
   return (
+    /* Outer safe-area wrapper */
     <div style={{
-      position:'fixed',bottom:0,left:0,right:0,
-      height:72,
-      background:'rgba(255,255,255,0.92)',
-      backdropFilter:'blur(28px) saturate(1.6)',
-      WebkitBackdropFilter:'blur(28px) saturate(1.6)',
-      borderTop:`1px solid rgba(75,94,255,0.1)`,
-      display:'flex',alignItems:'center',
-      paddingBottom:'env(safe-area-inset-bottom,0)',
-      zIndex:100,
+      position:'fixed', bottom:0, left:0, right:0, zIndex:100,
+      padding:'0 12px 14px',
+      paddingBottom:'calc(14px + env(safe-area-inset-bottom, 0px))',
+      pointerEvents:'none',
     }}>
-      {/* Left 2 tabs */}
-      {TABS.slice(0,2).map(tab=>{
-        const isActive = active===tab.id;
-        return (
-          <button key={tab.id} onClick={()=>onChange(tab.id)} style={{
-            flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,
-            background:'none',border:'none',cursor:'pointer',padding:'6px 0',
-          }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-              stroke={isActive?C.blue:C.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {tab.d.split(' M').map((seg,i)=>(
-                <path key={i} d={(i?'M':'')+seg}/>
-              ))}
-            </svg>
-            <span style={{fontSize:10,fontWeight:isActive?750:450,color:isActive?C.blue:C.muted}}>
-              {tab.label}
-            </span>
-            {isActive&&<div style={{width:4,height:4,borderRadius:'50%',background:C.blue}}/>}
-          </button>
-        );
-      })}
-
-      {/* Centre FAB */}
+      {/* Floating pill container */}
       <div style={{
-        flex:'0 0 80px',display:'flex',flexDirection:'column',alignItems:'center',
-        marginTop:-24,
+        display:'flex', alignItems:'center',
+        background:'rgba(255,255,255,0.88)',
+        backdropFilter:'blur(32px) saturate(1.8)',
+        WebkitBackdropFilter:'blur(32px) saturate(1.8)',
+        borderRadius:36,
+        border:'1.5px solid rgba(255,255,255,0.95)',
+        boxShadow:'0 8px 32px rgba(75,94,255,0.18), 0 2px 0 rgba(255,255,255,0.8) inset',
+        padding:'6px 4px',
+        height:64,
+        pointerEvents:'all',
+        position:'relative',
       }}>
-        <div style={{
-          width:60,height:60,borderRadius:'50%',
-          background:`linear-gradient(145deg,${C.blue},${C.violet})`,
-          border:'4px solid white',
-          boxShadow:'0 8px 28px rgba(75,94,255,0.4)',
-          display:'flex',alignItems:'center',justifyContent:'center',
-          fontSize:26,cursor:'pointer',
-        }}>🕌</div>
-      </div>
 
-      {/* Right 2 tabs */}
-      {TABS.slice(2).map(tab=>{
-        const isActive = active===tab.id;
-        return (
-          <button key={tab.id} onClick={()=>onChange(tab.id)} style={{
-            flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,
-            background:'none',border:'none',cursor:'pointer',padding:'6px 0',
-          }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-              stroke={isActive?C.blue:C.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {tab.d.split(' M').map((seg,i)=>(
-                <path key={i} d={(i?'M':'')+seg}/>
-              ))}
-            </svg>
-            <span style={{fontSize:10,fontWeight:isActive?750:450,color:isActive?C.blue:C.muted}}>
-              {tab.label}
-            </span>
-            {isActive&&<div style={{width:4,height:4,borderRadius:'50%',background:C.blue}}/>}
-          </button>
-        );
-      })}
+        {/* Left 2 tabs */}
+        {TABS.slice(0,2).map(tab => {
+          const isActive = active === tab.id;
+          return (
+            <button key={tab.id} onClick={() => onChange(tab.id)} style={{
+              flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3,
+              background: isActive ? `${C.blue}12` : 'transparent',
+              border:'none', cursor:'pointer',
+              padding:'7px 4px', borderRadius:24,
+              margin:'0 2px',
+              transition:'all 0.18s',
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke={isActive ? C.blue : C.muted} strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round">
+                {tab.d.split(' M').map((seg,i) => (
+                  <path key={i} d={(i?'M':'')+seg}/>
+                ))}
+              </svg>
+              <span style={{
+                fontSize:10, fontWeight:isActive ? 750 : 450,
+                color: isActive ? C.blue : C.muted,
+                lineHeight:1,
+              }}>{tab.label}</span>
+            </button>
+          );
+        })}
+
+        {/* Centre FAB — raised above the pill */}
+        <div style={{
+          flex:'0 0 72px', display:'flex', flexDirection:'column',
+          alignItems:'center', justifyContent:'center',
+          marginTop:-28,
+        }}>
+          <div style={{
+            width:56, height:56, borderRadius:'50%',
+            background:`linear-gradient(145deg,${C.blue},${C.violet})`,
+            border:'4px solid white',
+            boxShadow:`0 8px 24px rgba(75,94,255,0.45)`,
+            display:'flex', alignItems:'center', justifyContent:'center',
+            fontSize:24, cursor:'pointer',
+            transition:'transform 0.18s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform='scale(1.08)'}
+          onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
+          >🕌</div>
+        </div>
+
+        {/* Right 2 tabs */}
+        {TABS.slice(2).map(tab => {
+          const isActive = active === tab.id;
+          return (
+            <button key={tab.id} onClick={() => onChange(tab.id)} style={{
+              flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3,
+              background: isActive ? `${C.blue}12` : 'transparent',
+              border:'none', cursor:'pointer',
+              padding:'7px 4px', borderRadius:24,
+              margin:'0 2px',
+              transition:'all 0.18s',
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke={isActive ? C.blue : C.muted} strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round">
+                {tab.d.split(' M').map((seg,i) => (
+                  <path key={i} d={(i?'M':'')+seg}/>
+                ))}
+              </svg>
+              <span style={{
+                fontSize:10, fontWeight:isActive ? 750 : 450,
+                color: isActive ? C.blue : C.muted,
+                lineHeight:1,
+              }}>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1066,11 +1095,11 @@ export default function MobileInfoTV(props) {
 
   return (
     <div style={{
-      width:'100%',height:'100%',
+      width:'100%', minHeight:'100vh',
       background:`linear-gradient(170deg,${C.bg1} 0%,${C.bg2} 45%,${C.bg3} 100%)`,
-      overflowY:'auto',overflowX:'hidden',
+      overflowX:'hidden',
       fontFamily:"'Plus Jakarta Sans','SF Pro Display','Segoe UI',sans-serif",
-      position:'relative',WebkitFontSmoothing:'antialiased',
+      position:'relative', WebkitFontSmoothing:'antialiased',
     }}>
       {/* Ambient blobs */}
       <div style={{position:'fixed',top:-80,right:-60,width:320,height:320,borderRadius:'50%',
