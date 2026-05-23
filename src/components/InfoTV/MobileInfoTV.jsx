@@ -3,7 +3,7 @@
  * Layout: soft lavender gradient bg, glass cards, purple accent,
  * bottom nav with centre FAB, icon-based prayer row.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { isHoliday, toHijri } from '../../lib/myHolidays';
 
 /* ─── Design tokens ──────────────────────────────────────────────── */
@@ -91,6 +91,169 @@ function Pill({ children, icon, bg='rgba(75,94,255,0.12)', color=C.blue }) {
       {icon && <span style={{fontSize:12}}>{icon}</span>}
       {children}
     </span>
+  );
+}
+
+/* ─── Announcement Carousel ─────────────────────────────────────── */
+const ANNOUNCEMENTS = [
+  { id:1, icon:'📢', label:'PENGUMUMAN',        sub:null,                     color:'#6B48FF' },
+  { id:2, icon:'📚', label:'Kelas Pengajian',    sub:'Setiap Khamis, 8:30 Malam', color:'#0ea5e9' },
+  { id:3, icon:'🏦', label:'Tabung Infaq Masjid',sub:'Maybank 5642 7654 3210', color:'#10b981' },
+  { id:4, icon:'🤲', label:'Jom Menyumbang',     sub:'Jom Beramal Jariah',     color:'#f59e0b' },
+  { id:5, icon:'📅', label:'Program Minggu Ini', sub:'Sabtu & Ahad, 9:00 Pagi',color:'#8b5cf6' },
+  { id:6, icon:'🕌', label:'Kuliah Maghrib',      sub:'Setiap Malam, 8:30 PM', color:'#ec4899' },
+];
+
+function AnnouncementCarousel() {
+  const trackRef  = useRef(null);
+  const [active, setActive] = useState(0);
+  const autoRef   = useRef(null);
+
+  // drag state
+  const drag = useRef({ startX:0, scrollLeft:0, isDragging:false });
+
+  const CARD_W = 84; // card width + gap ≈ 84px per item
+  const VISIBLE = 4;
+
+  const scrollToIdx = (idx) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    const target = Math.min(idx * CARD_W, maxScroll);
+    track.scrollTo({ left: target, behavior: 'smooth' });
+  };
+
+  // auto-scroll every 3s
+  useEffect(() => {
+    autoRef.current = setInterval(() => {
+      setActive(prev => {
+        const next = (prev + 1) % ANNOUNCEMENTS.length;
+        scrollToIdx(next);
+        return next;
+      });
+    }, 3000);
+    return () => clearInterval(autoRef.current);
+  }, []);
+
+  const pauseAuto = () => {
+    clearInterval(autoRef.current);
+    autoRef.current = setInterval(() => {
+      setActive(prev => {
+        const next = (prev + 1) % ANNOUNCEMENTS.length;
+        scrollToIdx(next);
+        return next;
+      });
+    }, 3000);
+  };
+
+  // Pointer drag handlers (mouse + touch)
+  const onPointerDown = (e) => {
+    const track = trackRef.current;
+    drag.current = { startX: e.pageX - track.offsetLeft, scrollLeft: track.scrollLeft, isDragging: true };
+    track.style.cursor = 'grabbing';
+    pauseAuto();
+  };
+  const onPointerMove = (e) => {
+    if (!drag.current.isDragging) return;
+    e.preventDefault();
+    const track = trackRef.current;
+    const x = e.pageX - track.offsetLeft;
+    const dist = x - drag.current.startX;
+    track.scrollLeft = drag.current.scrollLeft - dist;
+  };
+  const onPointerUp = () => {
+    drag.current.isDragging = false;
+    if (trackRef.current) trackRef.current.style.cursor = 'grab';
+    // snap to nearest
+    const track = trackRef.current;
+    if (!track) return;
+    const idx = Math.round(track.scrollLeft / CARD_W);
+    setActive(Math.min(idx, ANNOUNCEMENTS.length - 1));
+  };
+
+  return (
+    <div style={{padding:'0 0 20px'}}>
+      {/* Scroll track */}
+      <div
+        ref={trackRef}
+        onMouseDown={onPointerDown}
+        onMouseMove={onPointerMove}
+        onMouseUp={onPointerUp}
+        onMouseLeave={onPointerUp}
+        onTouchStart={e => onPointerDown({ pageX: e.touches[0].pageX })}
+        onTouchMove={e => { e.preventDefault(); onPointerMove({ pageX: e.touches[0].pageX }); }}
+        onTouchEnd={onPointerUp}
+        style={{
+          display:'flex',gap:10,
+          overflowX:'auto',overflowY:'hidden',
+          paddingLeft:16,paddingRight:16,
+          paddingBottom:4,
+          scrollbarWidth:'none',
+          msOverflowStyle:'none',
+          cursor:'grab',
+          WebkitOverflowScrolling:'touch',
+          userSelect:'none',
+        }}
+      >
+        <style>{`.ann-track::-webkit-scrollbar{display:none}`}</style>
+        {ANNOUNCEMENTS.map((item, i) => (
+          <div
+            key={item.id}
+            onClick={() => { setActive(i); scrollToIdx(i); pauseAuto(); }}
+            style={{
+              flexShrink:0,
+              width:74,
+              background: i === active
+                ? `linear-gradient(145deg,${item.color},${item.color}bb)`
+                : C.glass,
+              backdropFilter:'blur(24px)',
+              WebkitBackdropFilter:'blur(24px)',
+              border: i === active ? 'none' : `1.5px solid ${C.gBord}`,
+              borderRadius:18,
+              padding:'14px 6px 12px',
+              textAlign:'center',
+              boxShadow: i === active
+                ? `0 8px 24px ${item.color}44`
+                : C.shadow,
+              cursor:'pointer',
+              transition:'all 0.25s',
+            }}
+          >
+            {/* Icon bubble */}
+            <div style={{
+              width:40,height:40,borderRadius:13,
+              margin:'0 auto 8px',
+              background: i === active ? 'rgba(255,255,255,0.22)' : `${item.color}14`,
+              border: i === active ? '1.5px solid rgba(255,255,255,0.3)' : `1.5px solid ${item.color}28`,
+              display:'flex',alignItems:'center',justifyContent:'center',
+              fontSize:20,
+            }}>{item.icon}</div>
+            <div style={{
+              fontSize:9.5,fontWeight:750,lineHeight:1.3,
+              color: i === active ? 'white' : C.ink,
+            }}>{item.label}</div>
+            {item.sub && (
+              <div style={{
+                fontSize:8.5,marginTop:3,lineHeight:1.3,
+                color: i === active ? 'rgba(255,255,255,0.8)' : C.muted,
+              }}>{item.sub}</div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Dot indicators */}
+      <div style={{display:'flex',justifyContent:'center',gap:5,marginTop:8}}>
+        {ANNOUNCEMENTS.map((_,i)=>(
+          <div key={i} onClick={()=>{setActive(i);scrollToIdx(i);pauseAuto();}} style={{
+            width: i===active ? 18 : 6,
+            height:6,borderRadius:3,cursor:'pointer',
+            background: i===active ? C.blue : 'rgba(75,94,255,0.2)',
+            transition:'all 0.3s',
+          }}/>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -191,10 +354,10 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
             {/* Big time */}
             <div>
               <div style={{display:'flex',alignItems:'flex-end',gap:5,lineHeight:1}}>
-                <span style={{fontSize:52,fontWeight:850,color:C.ink,letterSpacing:'-0.04em',lineHeight:1}}>
+                <span style={{fontSize:38,fontWeight:850,color:C.ink,letterSpacing:'-0.04em',lineHeight:1}}>
                   {time.substring(0,5)}
                 </span>
-                <span style={{fontSize:20,fontWeight:800,color:C.blue,paddingBottom:4}}>{meridiem}</span>
+                <span style={{fontSize:16,fontWeight:800,color:C.blue,paddingBottom:3}}>{meridiem}</span>
               </div>
             </div>
             {/* Divider */}
@@ -232,18 +395,18 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
               <span style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:'0.08em'}}>
                 COUNTDOWN KE
               </span>
-              <div style={{fontSize:28,fontWeight:850,color:isImminent?'#e05c00':C.blue,lineHeight:1.1,margin:'4px 0 14px'}}>
+              <div style={{fontSize:22,fontWeight:850,color:isImminent?'#e05c00':C.blue,lineHeight:1.1,margin:'4px 0 12px'}}>
                 {nextSolatName || '--'}
               </div>
               {/* Big digits row */}
               <div style={{display:'flex',alignItems:'flex-end',gap:0}}>
                 {[{n:pad(hours),label:'JAM'},{n:pad(minutes),label:'MINIT'},{n:pad(seconds),label:'SAAT'}].map((item,i)=>(
                   <div key={i} style={{display:'flex',alignItems:'flex-end',gap:0}}>
-                    <div style={{textAlign:'center',minWidth:52}}>
-                      <div style={{fontSize:52,fontWeight:850,color:isImminent?'#e05c00':C.ink,lineHeight:1,letterSpacing:'-0.02em'}}>{item.n}</div>
-                      <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:'0.06em',marginTop:4}}>{item.label}</div>
+                    <div style={{textAlign:'center',minWidth:46}}>
+                      <div style={{fontSize:42,fontWeight:850,color:isImminent?'#e05c00':C.ink,lineHeight:1,letterSpacing:'-0.02em'}}>{item.n}</div>
+                      <div style={{fontSize:9,fontWeight:700,color:C.muted,letterSpacing:'0.06em',marginTop:3}}>{item.label}</div>
                     </div>
-                    {i<2 && <div style={{fontSize:44,fontWeight:700,color:C.muted,paddingBottom:18,margin:'0 2px',lineHeight:1}}>:</div>}
+                    {i<2 && <div style={{fontSize:36,fontWeight:700,color:C.muted,paddingBottom:16,margin:'0 1px',lineHeight:1}}>:</div>}
                   </div>
                 ))}
               </div>
@@ -417,40 +580,45 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
             </Pill>
           </div>
 
-          {/* 7-col grid */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4}}>
+          {/* 7-col grid — matches reference: icon top, label, big time, AM/PM */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:3}}>
             {PRAYERS.map(p=>{
               const isNext = nextSolatName === p.label;
               return (
                 <div key={p.key} style={{
-                  textAlign:'center',padding:'10px 3px 10px',borderRadius:16,
-                  background: isNext ? `linear-gradient(160deg,${C.blue},${C.violet})` : 'rgba(75,94,255,0.05)',
-                  border: isNext ? 'none' : '1.5px solid rgba(75,94,255,0.08)',
+                  display:'flex',flexDirection:'column',alignItems:'center',
+                  padding:'10px 2px 10px',borderRadius:16,
+                  background: isNext
+                    ? `linear-gradient(160deg,${C.blue},${C.violet})`
+                    : 'rgba(75,94,255,0.05)',
+                  border: isNext ? 'none' : `1.5px solid rgba(75,94,255,0.08)`,
                   boxShadow: isNext ? '0 8px 22px rgba(75,94,255,0.32)' : 'none',
-                  transition:'all 0.2s',
                 }}>
                   {/* SVG icon */}
-                  <div style={{display:'flex',justifyContent:'center',marginBottom:5}}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                      stroke={isNext?'rgba(255,255,255,0.9)':'rgba(107,115,172,0.7)'}
-                      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d={p.svg}/>
-                    </svg>
-                  </div>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke={isNext ? 'rgba(255,255,255,0.88)' : 'rgba(107,115,172,0.6)'}
+                    strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"
+                    style={{marginBottom:5}}>
+                    <path d={p.svg}/>
+                  </svg>
+                  {/* Label */}
                   <div style={{
-                    fontSize:8.5,fontWeight:750,letterSpacing:'0.04em',
-                    color:isNext?'rgba(255,255,255,0.8)':C.muted,
-                    textTransform:'uppercase',marginBottom:5,lineHeight:1.2,
+                    fontSize:8,fontWeight:750,letterSpacing:'0.03em',textTransform:'uppercase',
+                    color: isNext ? 'rgba(255,255,255,0.78)' : C.muted,
+                    marginBottom:5,textAlign:'center',lineHeight:1.2,
                   }}>{p.label}</div>
+                  {/* Time */}
                   <div style={{
-                    fontSize:13,fontWeight:850,lineHeight:1,
-                    color:isNext?'white':C.ink,marginBottom:2,
-                  }}>
-                    {fmt12(times?.[p.key])}
-                  </div>
-                  <div style={{fontSize:8.5,color:isNext?'rgba(255,255,255,0.7)':C.muted,fontWeight:600}}>
-                    {ampm(times?.[p.key])}
-                  </div>
+                    fontSize:14,fontWeight:850,lineHeight:1,
+                    color: isNext ? 'white' : C.ink,
+                    marginBottom:2,textAlign:'center',
+                  }}>{fmt12(times?.[p.key])}</div>
+                  {/* AM/PM */}
+                  <div style={{
+                    fontSize:9,fontWeight:650,
+                    color: isNext ? 'rgba(255,255,255,0.7)' : C.muted,
+                    textAlign:'center',
+                  }}>{ampm(times?.[p.key])}</div>
                 </div>
               );
             })}
@@ -458,27 +626,8 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
         </Card>
       </div>
 
-      {/* ─── Announcements ─── */}
-      <div style={{padding:'0 16px 12px'}}>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
-          {[
-            {icon:'📢', label:'PENGUMUMAN', sub:null},
-            {icon:'📚', label:'Kelas Pengajian Kitab', sub:'Setiap Khamis, 8:30 Malam'},
-            {icon:'🏦', label:'Tabung Infaq Masjid', sub:'Maybank 5642 7654 3210'},
-            {icon:'🤲', label:'Jom Menyumbang,', sub:'Jom Beramal Jariah'},
-          ].map((item,i)=>(
-            <Card key={i} style={{padding:'13px 8px',textAlign:'center',cursor:'pointer'}}>
-              <div style={{
-                width:40,height:40,borderRadius:13,margin:'0 auto 8px',
-                background:'rgba(75,94,255,0.08)',border:'1.5px solid rgba(75,94,255,0.12)',
-                display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,
-              }}>{item.icon}</div>
-              <div style={{fontSize:10,fontWeight:700,color:C.ink,lineHeight:1.3}}>{item.label}</div>
-              {item.sub && <div style={{fontSize:9,color:C.muted,marginTop:3,lineHeight:1.3}}>{item.sub}</div>}
-            </Card>
-          ))}
-        </div>
-      </div>
+      {/* ─── Announcements Carousel ─── */}
+      <AnnouncementCarousel />
     </div>
   );
 }

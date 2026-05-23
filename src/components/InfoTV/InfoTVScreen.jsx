@@ -608,15 +608,8 @@ export default function InfoTVScreen() {
   /* ── Mobile view ── */
   if (isMobileView) {
     return (
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', background:'#1a1a2e', overflow:'hidden' }}>
-        <div style={{
-          width: vp.width, height: vp.height, maxWidth: vp.maxWidth,
-          overflow: 'hidden', borderRadius: 40,
-          boxShadow: '0 0 0 10px #2a2a3e, 0 40px 80px rgba(0,0,0,0.6)',
-          position: 'relative', flexShrink: 0,
-        }}>
-          <MobileInfoTV {...mobileProps} />
-        </div>
+      <div style={{ width:'100%', minHeight:'100vh', overflow:'hidden', position:'relative' }}>
+        <MobileInfoTV {...mobileProps} />
         <ViewportSwitcher currentView={viewportMode} onViewChange={setViewportMode} />
       </div>
     );
