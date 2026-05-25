@@ -1163,48 +1163,47 @@ export default function MobileInfoTV(props) {
         }
       `}</style>
 
-      {/* Animated gradient mesh background */}
+      {/* Animated gradient mesh background — position:absolute not fixed to avoid mobile repaint glitch */}
       <div style={{
-        position:'fixed', inset:0, zIndex:0, pointerEvents:'none',
+        position:'absolute', inset:0, zIndex:0, pointerEvents:'none',
         background:'linear-gradient(135deg,#eef0ff,#e4e8ff,#ede4ff,#e8f0ff,#f0e8ff,#eceeff)',
         backgroundSize:'300% 300%',
         animation:'gradShift 14s ease infinite',
+        minHeight:'100vh',
       }}/>
 
-      {/* Floating ambient orbs */}
+      {/* Floating ambient orbs — absolute, not fixed */}
       <div style={{
-        position:'fixed', top:-100, right:-80, width:340, height:340,
+        position:'absolute', top:-100, right:-80, width:340, height:340,
         borderRadius:'50%', pointerEvents:'none', zIndex:0,
         background:'radial-gradient(circle,rgba(123,92,255,0.18) 0%,transparent 70%)',
         animation:'orbFloat1 9s ease-in-out infinite',
+        willChange:'transform',
       }}/>
       <div style={{
-        position:'fixed', top:'30%', left:-90, width:300, height:300,
+        position:'absolute', top:'30%', left:-90, width:300, height:300,
         borderRadius:'50%', pointerEvents:'none', zIndex:0,
         background:'radial-gradient(circle,rgba(75,94,255,0.14) 0%,transparent 70%)',
         animation:'orbFloat2 11s ease-in-out infinite',
+        willChange:'transform',
       }}/>
       <div style={{
-        position:'fixed', bottom:160, right:-60, width:260, height:260,
+        position:'absolute', bottom:160, right:-60, width:260, height:260,
         borderRadius:'50%', pointerEvents:'none', zIndex:0,
         background:'radial-gradient(circle,rgba(180,140,255,0.13) 0%,transparent 70%)',
         animation:'orbFloat3 13s ease-in-out infinite',
+        willChange:'transform',
       }}/>
       <div style={{
-        position:'fixed', bottom:-60, left:-40, width:240, height:240,
+        position:'absolute', bottom:-60, left:-40, width:240, height:240,
         borderRadius:'50%', pointerEvents:'none', zIndex:0,
         background:'radial-gradient(circle,rgba(100,160,255,0.12) 0%,transparent 70%)',
         animation:'orbFloat4 10s ease-in-out infinite',
-      }}/>
-      {/* Subtle noise grain overlay */}
-      <div style={{
-        position:'fixed', inset:0, zIndex:0, pointerEvents:'none', opacity:0.025,
-        backgroundImage:`url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-        backgroundRepeat:'repeat',
-        backgroundSize:'200px 200px',
+        willChange:'transform',
       }}/>
 
-      <div style={{position:'relative',zIndex:1}}>
+      {/* Content — isolated stacking context prevents bg layer bleed-through */}
+      <div style={{position:'relative', zIndex:1, isolation:'isolate'}}>
         {tab==='home'     && <HomeTab    {...props}/>}
         {tab==='jadual'   && <JadualTab  times={props.times} nextSolatName={props.nextSolatName}/>}
         {tab==='komuniti' && <KomunitiTab/>}
