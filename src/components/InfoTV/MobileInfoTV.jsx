@@ -964,16 +964,18 @@ function ProfilTab({ profile }) {
           width:76,height:76,borderRadius:22,margin:'0 auto 14px',
           background:`linear-gradient(145deg,${C.blue},${C.violet})`,
           display:'flex',alignItems:'center',justifyContent:'center',
-          fontSize:34,boxShadow:'0 10px 28px rgba(75,94,255,0.35)',
-        }><svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 56V30M56 56V30"/>
-              <path d="M2 30h60"/>
-              <path d="M8 30c0-8 6-14 12-18l4-8 4 8c6 4 12 10 12 18"/>
-              <path d="M32 4v6"/>
-              <path d="M20 56V38h24v18"/>
-              <path d="M27 56V46h10v10"/>
-              <circle cx="32" cy="30" r="4"/>
-            </svg></div>
+          boxShadow:'0 10px 28px rgba(75,94,255,0.35)',
+        }}>
+          <svg width="28" height="28" viewBox="0 0 64 64" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 56V30M56 56V30" />
+            <path d="M2 30h60" />
+            <path d="M8 30c0-8 6-14 12-18l4-8 4 8c6 4 12 10 12 18" />
+            <path d="M32 4v6" />
+            <path d="M20 56V38h24v18" />
+            <path d="M27 56V46h10v10" />
+            <circle cx="32" cy="30" r="4" />
+          </svg>
+        </div>
         <h3 style={{fontSize:18,fontWeight:850,color:C.ink,margin:'0 0 4px'}}>{profile?.masjid_name||'MasjidTV'}</h3>
         <p style={{fontSize:12,color:C.muted,margin:0}}>{profile?.masjid_description||'Sistem InfoTV Islamik'}</p>
       </Card>
@@ -1077,7 +1079,8 @@ function BottomNav({ active, onChange }) {
           }}
           onMouseEnter={e => e.currentTarget.style.transform='scale(1.08)'}
           onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
-          ><svg width="28" height="28" viewBox="0 0 64 64" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          >
+          <svg width="28" height="28" viewBox="0 0 64 64" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M8 56V30M56 56V30"/>
               <path d="M2 30h60"/>
               <path d="M8 30c0-8 6-14 12-18l4-8 4 8c6 4 12 10 12 18"/>
@@ -1085,7 +1088,8 @@ function BottomNav({ active, onChange }) {
               <path d="M20 56V38h24v18"/>
               <path d="M27 56V46h10v10"/>
               <circle cx="32" cy="30" r="4"/>
-            </svg></div>
+            </svg>
+          </div>
         </div>
 
         {/* Right 2 tabs */}
