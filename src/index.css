@@ -42,7 +42,7 @@ html, body {
   height: 100%;
   font-family: Inter, 'Segoe UI', system-ui, -apple-system, sans-serif;
   color: var(--ink);
-  /* overflow is controlled per viewport mode by InfoTVScreen.jsx */
+  overflow: hidden;
 }
 
 body {
@@ -52,7 +52,6 @@ body {
     linear-gradient(135deg, #eef3ff 0%, #d8e6ff 45%, #e9ddff 100%);
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
 }
 
 /* Glass utility */
@@ -103,7 +102,7 @@ body {
   border-radius: 8px;
 }
 
-#root { height: 100%; min-height: 100%; }
+#root { height: 100%; }
 
 /* Admin inputs */
 .ms-input {

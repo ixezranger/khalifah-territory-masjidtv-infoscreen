@@ -3,7 +3,7 @@
  * Layout: soft lavender gradient bg, glass cards, purple accent,
  * bottom nav with centre FAB, icon-based prayer row.
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { isHoliday, toHijri } from '../../lib/myHolidays';
 
 /* ─── Design tokens ──────────────────────────────────────────────── */
@@ -17,8 +17,8 @@ const C = {
   muted:  '#7a82ac',
   faint:  'rgba(122,130,172,0.45)',
   line:   'rgba(75,94,255,0.08)',
-  glass:  'rgba(255,255,255,0.97)',
-  gBord:  'rgba(255,255,255,1.0)',
+  glass:  'rgba(255,255,255,0.78)',
+  gBord:  'rgba(255,255,255,0.92)',
   shadow: '0 4px 20px rgba(75,94,255,0.09)',
 };
 
@@ -55,10 +55,12 @@ const PRAYERS = [
 function Card({ children, style, onClick }) {
   return (
     <div onClick={onClick} style={{
-      background: 'rgba(255,255,255,0.96)',
-      border: '1.5px solid rgba(255,255,255,0.98)',
+      background: C.glass,
+      backdropFilter: 'blur(28px) saturate(1.6)',
+      WebkitBackdropFilter: 'blur(28px) saturate(1.6)',
+      border: `1.5px solid ${C.gBord}`,
       borderRadius: 22,
-      boxShadow: '0 2px 16px rgba(75,94,255,0.08), 0 1px 0 rgba(255,255,255,1) inset',
+      boxShadow: `${C.shadow}, 0 1px 0 rgba(255,255,255,0.85) inset`,
       overflow: 'hidden',
       ...style,
     }}>
@@ -92,160 +94,6 @@ function Pill({ children, icon, bg='rgba(75,94,255,0.12)', color=C.blue }) {
   );
 }
 
-/* ─── Announcement Carousel ─────────────────────────────────────── */
-const ANNOUNCEMENTS = [
-  { id:1, icon:'📢', label:'PENGUMUMAN',        sub:null,                     color:'#6B48FF' },
-  { id:2, icon:'📚', label:'Kelas Pengajian',    sub:'Setiap Khamis, 8:30 Malam', color:'#0ea5e9' },
-  { id:3, icon:'🏦', label:'Tabung Infaq Masjid',sub:'Maybank 5642 7654 3210', color:'#10b981' },
-  { id:4, icon:'🤲', label:'Jom Menyumbang',     sub:'Jom Beramal Jariah',     color:'#f59e0b' },
-  { id:5, icon:'📅', label:'Program Minggu Ini', sub:'Sabtu & Ahad, 9:00 Pagi',color:'#8b5cf6' },
-  { id:6, icon:'🕌', label:'Kuliah Maghrib',      sub:'Setiap Malam, 8:30 PM', color:'#ec4899' },
-];
-
-function AnnouncementCarousel() {
-  const [active,  setActive]  = useState(0);
-  const autoRef               = useRef(null);
-  const containerRef          = useRef(null);
-
-  // Drag/swipe state
-  const drag = useRef({ startX: 0, isDragging: false, startActive: 0 });
-
-  const N = ANNOUNCEMENTS.length;
-
-  // Each card occupies exactly 1/3 of the container width.
-  // We translate the track by -(active * 33.333)% relative to container.
-  // This keeps exactly 3 cards visible at all times.
-
-  const startAuto = () => {
-    clearInterval(autoRef.current);
-    autoRef.current = setInterval(() => {
-      setActive(prev => (prev + 1) % N);
-    }, 10000);
-  };
-
-  useEffect(() => {
-    startAuto();
-    return () => clearInterval(autoRef.current);
-  }, []); // eslint-disable-line
-
-  const goTo = (idx) => {
-    setActive(((idx % N) + N) % N);
-    startAuto(); // reset timer on manual interaction
-  };
-
-  // Touch / mouse drag to swipe
-  const onDragStart = (clientX) => {
-    drag.current = { startX: clientX, isDragging: true, startActive: active };
-  };
-  const onDragEnd = (clientX) => {
-    if (!drag.current.isDragging) return;
-    drag.current.isDragging = false;
-    const diff = drag.current.startX - clientX;
-    const W = containerRef.current?.offsetWidth || 300;
-    // swipe threshold: 15% of card width (one card = W/3)
-    if (Math.abs(diff) > W / 3 / 3) {
-      goTo(diff > 0 ? active + 1 : active - 1);
-    }
-  };
-
-  return (
-    <div style={{ padding: '0 0 20px' }}>
-      {/* Clipping window — shows exactly 3 cards */}
-      <div
-        ref={containerRef}
-        style={{
-          overflow: 'hidden',
-          padding: '4px 16px 4px',
-          cursor: 'grab',
-          userSelect: 'none',
-        }}
-        onMouseDown={e  => onDragStart(e.clientX)}
-        onMouseUp={e    => onDragEnd(e.clientX)}
-        onMouseLeave={e => onDragEnd(e.clientX)}
-        onTouchStart={e => onDragStart(e.touches[0].clientX)}
-        onTouchEnd={e   => onDragEnd(e.changedTouches[0].clientX)}
-      >
-        {/* Sliding track — width = N/3 × 100% of container */}
-        <div style={{
-          display: 'flex',
-          gap: 10,
-          width: `${(N / 3) * 100}%`,
-          transform: `translateX(calc(-${active} * (100% / ${N}) ))`,
-          transition: 'transform 0.45s cubic-bezier(0.4,0,0.2,1)',
-        }}>
-          {ANNOUNCEMENTS.map((item, i) => {
-            const isActive = i === active;
-            // Each card takes exactly 1/N of the track = 1/3 of the container
-            return (
-              <div
-                key={item.id}
-                onClick={() => goTo(i)}
-                style={{
-                  width: `calc(100% / ${N})`,
-                  flexShrink: 0,
-                  background: isActive
-                    ? `linear-gradient(145deg,${item.color},${item.color}cc)`
-                    : 'rgba(255,255,255,0.96)',
-                  border: isActive ? 'none' : '1.5px solid rgba(255,255,255,0.98)',
-                  borderRadius: 20,
-                  padding: '16px 8px 14px',
-                  textAlign: 'center',
-                  boxShadow: isActive
-                    ? `0 10px 28px ${item.color}44`
-                    : '0 2px 12px rgba(75,94,255,0.07)',
-                  cursor: 'pointer',
-                  transition: 'background 0.35s, box-shadow 0.35s, border 0.35s',
-                }}
-              >
-                {/* Icon bubble */}
-                <div style={{
-                  width: 46, height: 46, borderRadius: 14,
-                  margin: '0 auto 10px',
-                  background: isActive ? 'rgba(255,255,255,0.22)' : `${item.color}14`,
-                  border: isActive ? '1.5px solid rgba(255,255,255,0.32)' : `1.5px solid ${item.color}28`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 22,
-                }}>{item.icon}</div>
-
-                <div style={{
-                  fontSize: 11, fontWeight: 750, lineHeight: 1.35,
-                  color: isActive ? 'white' : C.ink,
-                }}>
-                  {item.label}
-                </div>
-                {item.sub && (
-                  <div style={{
-                    fontSize: 10, marginTop: 4, lineHeight: 1.35,
-                    color: isActive ? 'rgba(255,255,255,0.82)' : C.muted,
-                  }}>
-                    {item.sub}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Dot indicators */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 5, marginTop: 10 }}>
-        {ANNOUNCEMENTS.map((_, i) => (
-          <div
-            key={i}
-            onClick={() => goTo(i)}
-            style={{
-              width: i === active ? 20 : 6,
-              height: 6, borderRadius: 3, cursor: 'pointer',
-              background: i === active ? C.blue : 'rgba(75,94,255,0.2)',
-              transition: 'all 0.35s',
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /* ═══════════════════════════════════════════════════════════════════
    HOME TAB
    ═══════════════════════════════════════════════════════════════════ */
@@ -275,7 +123,7 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
   const dateStr = gregorianDate.replace(/^[A-Za-z]+,\s*/, '');
 
   return (
-    <div style={{ paddingBottom: 110 }}>
+    <div style={{ paddingBottom: 90 }}>
 
       {/* ─── Header ─── */}
       <div style={{ padding:'22px 18px 14px', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
@@ -291,17 +139,7 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
             {masjidIcon
               ? <img src={masjidIcon} alt="" style={{width:'100%',height:'100%',objectFit:'contain'}}
                   onError={e=>e.target.style.display='none'}/>
-              : <svg width="38" height="38" viewBox="0 0 64 64" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 56V30M56 56V30"/>
-                  <path d="M2 30h60"/>
-                  <path d="M8 30c0-8 6-14 12-18l4-8 4 8c6 4 12 10 12 18"/>
-                  <path d="M32 4v6"/>
-                  <path d="M20 56V38h24v18"/>
-                  <path d="M27 56V46h10v10"/>
-                  <circle cx="32" cy="30" r="4"/>
-                  <path d="M44 30c0-8 6-14 12-18"/>
-                  <path d="M20 30c0-8-6-14-12-18"/>
-                </svg>
+              : <span style={{fontSize:34,color:'white'}}>🕌</span>
             }
           </div>
           <div style={{minWidth:0}}>
@@ -353,10 +191,10 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
             {/* Big time */}
             <div>
               <div style={{display:'flex',alignItems:'flex-end',gap:5,lineHeight:1}}>
-                <span style={{fontSize:38,fontWeight:850,color:C.ink,letterSpacing:'-0.04em',lineHeight:1}}>
+                <span style={{fontSize:52,fontWeight:850,color:C.ink,letterSpacing:'-0.04em',lineHeight:1}}>
                   {time.substring(0,5)}
                 </span>
-                <span style={{fontSize:16,fontWeight:800,color:C.blue,paddingBottom:3}}>{meridiem}</span>
+                <span style={{fontSize:20,fontWeight:800,color:C.blue,paddingBottom:4}}>{meridiem}</span>
               </div>
             </div>
             {/* Divider */}
@@ -394,18 +232,18 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
               <span style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:'0.08em'}}>
                 COUNTDOWN KE
               </span>
-              <div style={{fontSize:22,fontWeight:850,color:isImminent?'#e05c00':C.blue,lineHeight:1.1,margin:'4px 0 12px'}}>
+              <div style={{fontSize:28,fontWeight:850,color:isImminent?'#e05c00':C.blue,lineHeight:1.1,margin:'4px 0 14px'}}>
                 {nextSolatName || '--'}
               </div>
               {/* Big digits row */}
               <div style={{display:'flex',alignItems:'flex-end',gap:0}}>
                 {[{n:pad(hours),label:'JAM'},{n:pad(minutes),label:'MINIT'},{n:pad(seconds),label:'SAAT'}].map((item,i)=>(
                   <div key={i} style={{display:'flex',alignItems:'flex-end',gap:0}}>
-                    <div style={{textAlign:'center',minWidth:46}}>
-                      <div style={{fontSize:42,fontWeight:850,color:isImminent?'#e05c00':C.ink,lineHeight:1,letterSpacing:'-0.02em'}}>{item.n}</div>
-                      <div style={{fontSize:9,fontWeight:700,color:C.muted,letterSpacing:'0.06em',marginTop:3}}>{item.label}</div>
+                    <div style={{textAlign:'center',minWidth:52}}>
+                      <div style={{fontSize:52,fontWeight:850,color:isImminent?'#e05c00':C.ink,lineHeight:1,letterSpacing:'-0.02em'}}>{item.n}</div>
+                      <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:'0.06em',marginTop:4}}>{item.label}</div>
                     </div>
-                    {i<2 && <div style={{fontSize:36,fontWeight:700,color:C.muted,paddingBottom:16,margin:'0 1px',lineHeight:1}}>:</div>}
+                    {i<2 && <div style={{fontSize:44,fontWeight:700,color:C.muted,paddingBottom:18,margin:'0 2px',lineHeight:1}}>:</div>}
                   </div>
                 ))}
               </div>
@@ -442,34 +280,7 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
       </div>
 
       {/* ─── Tazkirah Slider ─── */}
-      <div style={{padding:'0 16px 12px', position:'relative'}}>
-
-        {/* Floating prev — outside card, left edge */}
-        <button onClick={()=>setSlideIndex(i=>(i-1+slides.length)%slides.length)} style={{
-          position:'absolute', left:-4, top:'50%', transform:'translateY(-50%)',
-          width:32, height:32, borderRadius:'50%', border:'none', cursor:'pointer', zIndex:10,
-          background:'rgba(255,255,255,0.95)',
-          boxShadow:'0 2px 12px rgba(75,94,255,0.18)',
-          display:'flex', alignItems:'center', justifyContent:'center',
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B5EFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
-
-        {/* Floating next — outside card, right edge */}
-        <button onClick={()=>setSlideIndex(i=>(i+1)%slides.length)} style={{
-          position:'absolute', right:-4, top:'50%', transform:'translateY(-50%)',
-          width:32, height:32, borderRadius:'50%', border:'none', cursor:'pointer', zIndex:10,
-          background:'rgba(255,255,255,0.95)',
-          boxShadow:'0 2px 12px rgba(75,94,255,0.18)',
-          display:'flex', alignItems:'center', justifyContent:'center',
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B5EFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </button>
-
+      <div style={{padding:'0 16px 12px'}}>
         <div style={{
           borderRadius:22,overflow:'hidden',position:'relative',minHeight:220,
           background:'linear-gradient(135deg,rgba(10,18,80,0.94),rgba(58,40,200,0.88))',
@@ -485,7 +296,23 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
           {/* Gradient overlay */}
           <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,rgba(10,16,80,0.78) 55%,transparent)',pointerEvents:'none'}}/>
 
-          <div style={{position:'relative',padding:'22px 22px 36px',zIndex:1}}>
+          {/* Prev / Next arrows */}
+          <button onClick={()=>setSlideIndex(i=>(i-1+slides.length)%slides.length)} style={{
+            position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',
+            width:34,height:34,borderRadius:'50%',border:'none',cursor:'pointer',
+            background:'rgba(255,255,255,0.18)',backdropFilter:'blur(8px)',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            color:'white',fontSize:18,zIndex:2,
+          }}>‹</button>
+          <button onClick={()=>setSlideIndex(i=>(i+1)%slides.length)} style={{
+            position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',
+            width:34,height:34,borderRadius:'50%',border:'none',cursor:'pointer',
+            background:'rgba(255,255,255,0.18)',backdropFilter:'blur(8px)',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            color:'white',fontSize:18,zIndex:2,
+          }}>›</button>
+
+          <div style={{position:'relative',padding:'22px 52px 36px 22px',zIndex:1}}>
             {/* Pill */}
             <div style={{
               display:'inline-flex',alignItems:'center',gap:6,
@@ -590,45 +417,40 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
             </Pill>
           </div>
 
-          {/* 7-col grid — matches reference: icon top, label, big time, AM/PM */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:3}}>
+          {/* 7-col grid */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4}}>
             {PRAYERS.map(p=>{
               const isNext = nextSolatName === p.label;
               return (
                 <div key={p.key} style={{
-                  display:'flex',flexDirection:'column',alignItems:'center',
-                  padding:'10px 2px 10px',borderRadius:16,
-                  background: isNext
-                    ? `linear-gradient(160deg,${C.blue},${C.violet})`
-                    : 'rgba(75,94,255,0.05)',
-                  border: isNext ? 'none' : `1.5px solid rgba(75,94,255,0.08)`,
+                  textAlign:'center',padding:'10px 3px 10px',borderRadius:16,
+                  background: isNext ? `linear-gradient(160deg,${C.blue},${C.violet})` : 'rgba(75,94,255,0.05)',
+                  border: isNext ? 'none' : '1.5px solid rgba(75,94,255,0.08)',
                   boxShadow: isNext ? '0 8px 22px rgba(75,94,255,0.32)' : 'none',
+                  transition:'all 0.2s',
                 }}>
                   {/* SVG icon */}
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke={isNext ? 'rgba(255,255,255,0.88)' : 'rgba(107,115,172,0.6)'}
-                    strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"
-                    style={{marginBottom:5}}>
-                    <path d={p.svg}/>
-                  </svg>
-                  {/* Label */}
+                  <div style={{display:'flex',justifyContent:'center',marginBottom:5}}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                      stroke={isNext?'rgba(255,255,255,0.9)':'rgba(107,115,172,0.7)'}
+                      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d={p.svg}/>
+                    </svg>
+                  </div>
                   <div style={{
-                    fontSize:8,fontWeight:750,letterSpacing:'0.03em',textTransform:'uppercase',
-                    color: isNext ? 'rgba(255,255,255,0.78)' : C.muted,
-                    marginBottom:5,textAlign:'center',lineHeight:1.2,
+                    fontSize:8.5,fontWeight:750,letterSpacing:'0.04em',
+                    color:isNext?'rgba(255,255,255,0.8)':C.muted,
+                    textTransform:'uppercase',marginBottom:5,lineHeight:1.2,
                   }}>{p.label}</div>
-                  {/* Time */}
                   <div style={{
-                    fontSize:14,fontWeight:850,lineHeight:1,
-                    color: isNext ? 'white' : C.ink,
-                    marginBottom:2,textAlign:'center',
-                  }}>{fmt12(times?.[p.key])}</div>
-                  {/* AM/PM */}
-                  <div style={{
-                    fontSize:9,fontWeight:650,
-                    color: isNext ? 'rgba(255,255,255,0.7)' : C.muted,
-                    textAlign:'center',
-                  }}>{ampm(times?.[p.key])}</div>
+                    fontSize:13,fontWeight:850,lineHeight:1,
+                    color:isNext?'white':C.ink,marginBottom:2,
+                  }}>
+                    {fmt12(times?.[p.key])}
+                  </div>
+                  <div style={{fontSize:8.5,color:isNext?'rgba(255,255,255,0.7)':C.muted,fontWeight:600}}>
+                    {ampm(times?.[p.key])}
+                  </div>
                 </div>
               );
             })}
@@ -636,8 +458,27 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
         </Card>
       </div>
 
-      {/* ─── Announcements Carousel ─── */}
-      <AnnouncementCarousel />
+      {/* ─── Announcements ─── */}
+      <div style={{padding:'0 16px 12px'}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
+          {[
+            {icon:'📢', label:'PENGUMUMAN', sub:null},
+            {icon:'📚', label:'Kelas Pengajian Kitab', sub:'Setiap Khamis, 8:30 Malam'},
+            {icon:'🏦', label:'Tabung Infaq Masjid', sub:'Maybank 5642 7654 3210'},
+            {icon:'🤲', label:'Jom Menyumbang,', sub:'Jom Beramal Jariah'},
+          ].map((item,i)=>(
+            <Card key={i} style={{padding:'13px 8px',textAlign:'center',cursor:'pointer'}}>
+              <div style={{
+                width:40,height:40,borderRadius:13,margin:'0 auto 8px',
+                background:'rgba(75,94,255,0.08)',border:'1.5px solid rgba(75,94,255,0.12)',
+                display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,
+              }}>{item.icon}</div>
+              <div style={{fontSize:10,fontWeight:700,color:C.ink,lineHeight:1.3}}>{item.label}</div>
+              {item.sub && <div style={{fontSize:9,color:C.muted,marginTop:3,lineHeight:1.3}}>{item.sub}</div>}
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -677,7 +518,7 @@ function JadualTab({ times, nextSolatName }) {
   const selHoliday = isHoliday(viewYear, viewMonth, selDay);
 
   return (
-    <div style={{paddingBottom:110}}>
+    <div style={{paddingBottom:90}}>
       {/* ── Sub tabs ── */}
       <div style={{padding:'18px 16px 0'}}>
         <div style={{
@@ -897,7 +738,7 @@ function JadualTab({ times, nextSolatName }) {
 
       {/* ── Placeholder sub-tabs ── */}
       {(sub==='jadual'||sub==='iqamah') && (
-        <div style={{padding:'48px 16px 110px',textAlign:'center'}}>
+        <div style={{padding:'48px 16px',textAlign:'center'}}>
           <div style={{
             width:72,height:72,borderRadius:22,margin:'0 auto 16px',
             background:'rgba(75,94,255,0.08)',border:`1.5px solid rgba(75,94,255,0.15)`,
@@ -920,7 +761,7 @@ function JadualTab({ times, nextSolatName }) {
    ═══════════════════════════════════════════════════════════════════ */
 function KomunitiTab() {
   return (
-    <div style={{padding:'24px 16px 110px'}}>
+    <div style={{padding:'24px 16px 90px'}}>
       <h2 style={{fontSize:18,fontWeight:850,color:C.ink,margin:'0 0 16px'}}>Komuniti Masjid</h2>
       {[
         {icon:'📢',title:'Pengumuman Masjid',sub:'Berita & maklumat terkini',color:'#6B48FF'},
@@ -950,25 +791,15 @@ function KomunitiTab() {
    ═══════════════════════════════════════════════════════════════════ */
 function ProfilTab({ profile }) {
   return (
-    <div style={{padding:'24px 16px 110px'}}>
+    <div style={{padding:'24px 16px 90px'}}>
       {/* Profile card */}
       <Card style={{padding:'24px 20px',marginBottom:16,textAlign:'center'}}>
         <div style={{
           width:76,height:76,borderRadius:22,margin:'0 auto 14px',
           background:`linear-gradient(145deg,${C.blue},${C.violet})`,
           display:'flex',alignItems:'center',justifyContent:'center',
-          boxShadow:'0 10px 28px rgba(75,94,255,0.35)',
-        }}>
-          <svg width="28" height="28" viewBox="0 0 64 64" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M8 56V30M56 56V30" />
-            <path d="M2 30h60" />
-            <path d="M8 30c0-8 6-14 12-18l4-8 4 8c6 4 12 10 12 18" />
-            <path d="M32 4v6" />
-            <path d="M20 56V38h24v18" />
-            <path d="M27 56V46h10v10" />
-            <circle cx="32" cy="30" r="4" />
-          </svg>
-        </div>
+          fontSize:34,boxShadow:'0 10px 28px rgba(75,94,255,0.35)',
+        }}>🕌</div>
         <h3 style={{fontSize:18,fontWeight:850,color:C.ink,margin:'0 0 4px'}}>{profile?.masjid_name||'MasjidTV'}</h3>
         <p style={{fontSize:12,color:C.muted,margin:0}}>{profile?.masjid_description||'Sistem InfoTV Islamik'}</p>
       </Card>
@@ -1005,113 +836,75 @@ function BottomNav({ active, onChange }) {
   ];
 
   return (
-    /* Outer safe-area wrapper */
     <div style={{
-      position:'fixed', bottom:0, left:0, right:0, zIndex:100,
-      padding:'0 12px 14px',
-      paddingBottom:'calc(14px + env(safe-area-inset-bottom, 0px))',
-      pointerEvents:'none',
+      position:'fixed',bottom:0,left:0,right:0,
+      height:72,
+      background:'rgba(255,255,255,0.92)',
+      backdropFilter:'blur(28px) saturate(1.6)',
+      WebkitBackdropFilter:'blur(28px) saturate(1.6)',
+      borderTop:`1px solid rgba(75,94,255,0.1)`,
+      display:'flex',alignItems:'center',
+      paddingBottom:'env(safe-area-inset-bottom,0)',
+      zIndex:100,
     }}>
-      {/* Floating pill container */}
-      <div style={{
-        display:'flex', alignItems:'center',
-        background:'rgba(255,255,255,0.88)',
-
-        borderRadius:36,
-        border:'1.5px solid rgba(255,255,255,0.95)',
-        boxShadow:'0 8px 32px rgba(75,94,255,0.18), 0 2px 0 rgba(255,255,255,0.8) inset',
-        padding:'6px 4px',
-        height:64,
-        pointerEvents:'all',
-        position:'relative',
-      }}>
-
-        {/* Left 2 tabs */}
-        {TABS.slice(0,2).map(tab => {
-          const isActive = active === tab.id;
-          return (
-            <button key={tab.id} onClick={() => onChange(tab.id)} style={{
-              flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-              background: isActive ? `${C.blue}12` : 'transparent',
-              border:'none', cursor:'pointer',
-              padding:'7px 4px', borderRadius:24,
-              margin:'0 2px',
-              transition:'all 0.18s',
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke={isActive ? C.blue : C.muted} strokeWidth="2"
-                strokeLinecap="round" strokeLinejoin="round">
-                {tab.d.split(' M').map((seg,i) => (
-                  <path key={i} d={(i?'M':'')+seg}/>
-                ))}
-              </svg>
-              <span style={{
-                fontSize:10, fontWeight:isActive ? 750 : 450,
-                color: isActive ? C.blue : C.muted,
-                lineHeight:1,
-              }}>{tab.label}</span>
-            </button>
-          );
-        })}
-
-        {/* Centre FAB — raised above the pill */}
-        <div style={{
-          flex:'0 0 72px', display:'flex', flexDirection:'column',
-          alignItems:'center', justifyContent:'center',
-          marginTop:-28,
-        }}>
-          <div style={{
-            width:56, height:56, borderRadius:'50%',
-            background:`linear-gradient(145deg,${C.blue},${C.violet})`,
-            border:'4px solid white',
-            boxShadow:`0 8px 24px rgba(75,94,255,0.45)`,
-            display:'flex', alignItems:'center', justifyContent:'center',
-            fontSize:24, cursor:'pointer',
-            transition:'transform 0.18s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform='scale(1.08)'}
-          onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
-          >
-          <svg width="28" height="28" viewBox="0 0 64 64" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 56V30M56 56V30"/>
-              <path d="M2 30h60"/>
-              <path d="M8 30c0-8 6-14 12-18l4-8 4 8c6 4 12 10 12 18"/>
-              <path d="M32 4v6"/>
-              <path d="M20 56V38h24v18"/>
-              <path d="M27 56V46h10v10"/>
-              <circle cx="32" cy="30" r="4"/>
+      {/* Left 2 tabs */}
+      {TABS.slice(0,2).map(tab=>{
+        const isActive = active===tab.id;
+        return (
+          <button key={tab.id} onClick={()=>onChange(tab.id)} style={{
+            flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,
+            background:'none',border:'none',cursor:'pointer',padding:'6px 0',
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke={isActive?C.blue:C.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {tab.d.split(' M').map((seg,i)=>(
+                <path key={i} d={(i?'M':'')+seg}/>
+              ))}
             </svg>
-          </div>
-        </div>
+            <span style={{fontSize:10,fontWeight:isActive?750:450,color:isActive?C.blue:C.muted}}>
+              {tab.label}
+            </span>
+            {isActive&&<div style={{width:4,height:4,borderRadius:'50%',background:C.blue}}/>}
+          </button>
+        );
+      })}
 
-        {/* Right 2 tabs */}
-        {TABS.slice(2).map(tab => {
-          const isActive = active === tab.id;
-          return (
-            <button key={tab.id} onClick={() => onChange(tab.id)} style={{
-              flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-              background: isActive ? `${C.blue}12` : 'transparent',
-              border:'none', cursor:'pointer',
-              padding:'7px 4px', borderRadius:24,
-              margin:'0 2px',
-              transition:'all 0.18s',
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke={isActive ? C.blue : C.muted} strokeWidth="2"
-                strokeLinecap="round" strokeLinejoin="round">
-                {tab.d.split(' M').map((seg,i) => (
-                  <path key={i} d={(i?'M':'')+seg}/>
-                ))}
-              </svg>
-              <span style={{
-                fontSize:10, fontWeight:isActive ? 750 : 450,
-                color: isActive ? C.blue : C.muted,
-                lineHeight:1,
-              }}>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* Centre FAB */}
+      <div style={{
+        flex:'0 0 80px',display:'flex',flexDirection:'column',alignItems:'center',
+        marginTop:-24,
+      }}>
+        <div style={{
+          width:60,height:60,borderRadius:'50%',
+          background:`linear-gradient(145deg,${C.blue},${C.violet})`,
+          border:'4px solid white',
+          boxShadow:'0 8px 28px rgba(75,94,255,0.4)',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          fontSize:26,cursor:'pointer',
+        }}>🕌</div>
       </div>
+
+      {/* Right 2 tabs */}
+      {TABS.slice(2).map(tab=>{
+        const isActive = active===tab.id;
+        return (
+          <button key={tab.id} onClick={()=>onChange(tab.id)} style={{
+            flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,
+            background:'none',border:'none',cursor:'pointer',padding:'6px 0',
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke={isActive?C.blue:C.muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {tab.d.split(' M').map((seg,i)=>(
+                <path key={i} d={(i?'M':'')+seg}/>
+              ))}
+            </svg>
+            <span style={{fontSize:10,fontWeight:isActive?750:450,color:isActive?C.blue:C.muted}}>
+              {tab.label}
+            </span>
+            {isActive&&<div style={{width:4,height:4,borderRadius:'50%',background:C.blue}}/>}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -1124,23 +917,28 @@ export default function MobileInfoTV(props) {
 
   return (
     <div style={{
-      width: '100%',
-      minHeight: '100vh',
-      /* Single static gradient — no animated child layers to cause GPU compositing glitches */
-      background: 'linear-gradient(160deg, #eef0ff 0%, #e8ecff 35%, #ede8ff 65%, #eaf0ff 100%)',
-      overflowX: 'hidden',
-      fontFamily: "'Plus Jakarta Sans','SF Pro Display','Segoe UI',sans-serif",
-      WebkitFontSmoothing: 'antialiased',
-      /* No position:relative needed — removes extra stacking context */
+      width:'100%',height:'100%',
+      background:`linear-gradient(170deg,${C.bg1} 0%,${C.bg2} 45%,${C.bg3} 100%)`,
+      overflowY:'auto',overflowX:'hidden',
+      fontFamily:"'Plus Jakarta Sans','SF Pro Display','Segoe UI',sans-serif",
+      position:'relative',WebkitFontSmoothing:'antialiased',
     }}>
-      <div style={{ position: 'relative', zIndex: 0 }}>
-        {tab === 'home'     && <HomeTab    {...props} />}
-        {tab === 'jadual'   && <JadualTab  times={props.times} nextSolatName={props.nextSolatName} />}
-        {tab === 'komuniti' && <KomunitiTab />}
-        {tab === 'profil'   && <ProfilTab  profile={props.profile} />}
+      {/* Ambient blobs */}
+      <div style={{position:'fixed',top:-80,right:-60,width:320,height:320,borderRadius:'50%',
+        background:'rgba(123,92,255,0.13)',filter:'blur(70px)',pointerEvents:'none',zIndex:0}}/>
+      <div style={{position:'fixed',bottom:120,left:-50,width:260,height:260,borderRadius:'50%',
+        background:'rgba(75,94,255,0.1)',filter:'blur(60px)',pointerEvents:'none',zIndex:0}}/>
+      <div style={{position:'fixed',top:'40%',right:-40,width:180,height:180,borderRadius:'50%',
+        background:'rgba(255,180,200,0.12)',filter:'blur(50px)',pointerEvents:'none',zIndex:0}}/>
+
+      <div style={{position:'relative',zIndex:1}}>
+        {tab==='home'     && <HomeTab    {...props}/>}
+        {tab==='jadual'   && <JadualTab  times={props.times} nextSolatName={props.nextSolatName}/>}
+        {tab==='komuniti' && <KomunitiTab/>}
+        {tab==='profil'   && <ProfilTab  profile={props.profile}/>}
       </div>
 
-      <BottomNav active={tab} onChange={setTab} />
+      <BottomNav active={tab} onChange={setTab}/>
     </div>
   );
 }

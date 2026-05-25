@@ -10,7 +10,6 @@ import {
 import ViewportSwitcher from '../shared/ViewportSwitcher';
 import DemoBanner from '../shared/DemoBanner';
 import ZoneSelectorPanel from './ZoneSelectorPanel';
-import MobileInfoTV from './MobileInfoTV';
 
 // ── Default content ───────────────────────────────────────────────────────────
 const DEFAULT_SLIDES = [
@@ -149,28 +148,8 @@ export default function InfoTVScreen() {
   const timeHH = parseInt(time.substring(0, 2), 10);
   const ampm = timeHH >= 12 ? 'PM' : 'AM';
 
-  /* ── Viewport dimensions ── */
-  const vpDimensions = {
-    tv:     { width: '100vw',  height: '100vh',  maxWidth: 'none' },
-    tablet: { width: '1024px', height: '768px',  maxWidth: '1024px' },
-    mobile: { width: '390px',  height: '844px',  maxWidth: '390px' },
-  };
-  const vp = vpDimensions[viewportMode] || vpDimensions.tv;
-  const isMobileView = viewportMode === 'mobile';
-  const isTabletView = viewportMode === 'tablet';
-  const isScaled     = isMobileView || isTabletView;
-
-  /* ── Shared props for mobile layout ── */
-  const mobileProps = {
-    times, nextSolatName, nextSolat, hours, minutes, seconds,
-    isImminent, progressPct, time, gregorianDate, hijriDate, dayName,
-    hadith: hadithItems?.length ? hadithItems : [{ arabic: hadith.arabic, malay: hadith.malay, malay_translation: hadith.malay, source: hadith.source }],
-    slides, slideIndex, setSlideIndex,
-    profile, masjidIcon,
-  };
-
-  const screenContent = (
-    <div style={{ minHeight: '100%', position: 'relative', overflow: 'hidden', fontFamily: "'Plus Jakarta Sans','Segoe UI',sans-serif" }}>
+  return (
+    <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       <DemoBanner />
 
       {/* ── Background: custom image OR default orbs ── */}
@@ -582,6 +561,9 @@ export default function InfoTVScreen() {
 
       </div>{/* end grid */}
 
+      {/* Viewport switcher */}
+      <ViewportSwitcher currentView={viewportMode} onViewChange={setViewportMode} />
+
       {/* Blast toast */}
       {blasts.length > 0 && (
         <div style={{
@@ -602,68 +584,6 @@ export default function InfoTVScreen() {
         </div>
       )}
 
-    </div>
-  ); // end screenContent
-
-  /* ── Apply body scroll style based on viewport mode ── */
-  useEffect(() => {
-    if (viewportMode === 'mobile') {
-      document.documentElement.style.overflow = 'auto';
-      document.documentElement.style.height   = 'auto';
-      document.body.style.overflow  = 'auto';
-      document.body.style.height    = 'auto';
-      document.body.style.minHeight = '100vh';
-    } else {
-      document.documentElement.style.overflow = 'hidden';
-      document.documentElement.style.height   = '100%';
-      document.body.style.overflow  = 'hidden';
-      document.body.style.height    = '100vh';
-      document.body.style.minHeight = '';
-    }
-    return () => {
-      // Restore defaults on unmount
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.height   = '';
-      document.body.style.overflow  = '';
-      document.body.style.height    = '';
-      document.body.style.minHeight = '';
-    };
-  }, [viewportMode]);
-
-  /* ── Mobile view ── */
-  if (isMobileView) {
-    return (
-      <div style={{ width:'100%', minHeight:'100vh', overflowX:'hidden' }}>
-        <MobileInfoTV {...mobileProps} />
-        <ViewportSwitcher currentView={viewportMode} onViewChange={setViewportMode} />
-      </div>
-    );
-  }
-
-  /* ── Restore locked scroll for TV/tablet views ── */
-
-  /* ── Tablet view ── */
-  if (isTabletView) {
-    return (
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', background:'#0f1422', overflow:'auto', padding: 20 }}>
-        <div style={{
-          width: vp.width, height: vp.height, maxWidth: vp.maxWidth,
-          overflow: 'hidden', borderRadius: 16,
-          boxShadow: '0 0 0 6px #222840, 0 40px 80px rgba(0,0,0,0.6)',
-          position: 'relative', flexShrink: 0,
-        }}>
-          {screenContent}
-        </div>
-        <ViewportSwitcher currentView={viewportMode} onViewChange={setViewportMode} />
-      </div>
-    );
-  }
-
-  /* ── TV / fullscreen view ── */
-  return (
-    <div style={{ position: 'relative' }}>
-      {screenContent}
-      <ViewportSwitcher currentView={viewportMode} onViewChange={setViewportMode} />
     </div>
   );
 }
