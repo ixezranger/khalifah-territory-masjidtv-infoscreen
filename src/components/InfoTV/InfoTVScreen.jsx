@@ -605,29 +605,42 @@ export default function InfoTVScreen() {
     </div>
   ); // end screenContent
 
+  /* ── Apply body scroll style based on viewport mode ── */
+  useEffect(() => {
+    if (viewportMode === 'mobile') {
+      document.documentElement.style.overflow = 'auto';
+      document.documentElement.style.height   = 'auto';
+      document.body.style.overflow  = 'auto';
+      document.body.style.height    = 'auto';
+      document.body.style.minHeight = '100vh';
+    } else {
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.height   = '100%';
+      document.body.style.overflow  = 'hidden';
+      document.body.style.height    = '100vh';
+      document.body.style.minHeight = '';
+    }
+    return () => {
+      // Restore defaults on unmount
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.height   = '';
+      document.body.style.overflow  = '';
+      document.body.style.height    = '';
+      document.body.style.minHeight = '';
+    };
+  }, [viewportMode]);
+
   /* ── Mobile view ── */
   if (isMobileView) {
-    // Override the global html/body overflow:hidden that blocks scroll
-    document.documentElement.style.overflow = 'auto';
-    document.documentElement.style.height   = 'auto';
-    document.body.style.overflow  = 'auto';
-    document.body.style.height    = 'auto';
-    document.body.style.width     = '100%';
-
     return (
-      <div style={{ width:'100%', minHeight:'100vh', overflowX:'hidden', position:'relative' }}>
+      <div style={{ width:'100%', minHeight:'100vh', overflowX:'hidden' }}>
         <MobileInfoTV {...mobileProps} />
         <ViewportSwitcher currentView={viewportMode} onViewChange={setViewportMode} />
       </div>
     );
   }
 
-  // Restore locked scroll for TV/tablet views
-  document.documentElement.style.overflow = 'hidden';
-  document.documentElement.style.height   = '100%';
-  document.body.style.overflow  = 'hidden';
-  document.body.style.height    = '100vh';
-  document.body.style.width     = '100vw';
+  /* ── Restore locked scroll for TV/tablet views ── */
 
   /* ── Tablet view ── */
   if (isTabletView) {

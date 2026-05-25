@@ -174,7 +174,6 @@ function AnnouncementCarousel() {
           width: `${(N / 3) * 100}%`,
           transform: `translateX(calc(-${active} * (100% / ${N}) ))`,
           transition: 'transform 0.45s cubic-bezier(0.4,0,0.2,1)',
-          willChange: 'transform',
         }}>
           {ANNOUNCEMENTS.map((item, i) => {
             const isActive = i === active;
@@ -1132,89 +1131,23 @@ export default function MobileInfoTV(props) {
 
   return (
     <div style={{
-      width:'100%', minHeight:'100vh',
-      background:'#eceeff',
-      overflowX:'hidden',
-      fontFamily:"'Plus Jakarta Sans','SF Pro Display','Segoe UI',sans-serif",
-      position:'relative', WebkitFontSmoothing:'antialiased',
+      width: '100%',
+      minHeight: '100vh',
+      /* Single static gradient — no animated child layers to cause GPU compositing glitches */
+      background: 'linear-gradient(160deg, #eef0ff 0%, #e8ecff 35%, #ede8ff 65%, #eaf0ff 100%)',
+      overflowX: 'hidden',
+      fontFamily: "'Plus Jakarta Sans','SF Pro Display','Segoe UI',sans-serif",
+      WebkitFontSmoothing: 'antialiased',
+      /* No position:relative needed — removes extra stacking context */
     }}>
-      {/* ── Animated gradient layer ── */}
-      <style>{`
-        @keyframes gradShift {
-          0%   { background-position: 0% 50%; }
-          50%  { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes orbFloat1 {
-          0%,100% { transform: translate(0px, 0px) scale(1); }
-          33%     { transform: translate(18px,-22px) scale(1.06); }
-          66%     { transform: translate(-12px, 14px) scale(0.96); }
-        }
-        @keyframes orbFloat2 {
-          0%,100% { transform: translate(0px, 0px) scale(1); }
-          40%     { transform: translate(-20px, 18px) scale(1.08); }
-          70%     { transform: translate(14px,-10px) scale(0.94); }
-        }
-        @keyframes orbFloat3 {
-          0%,100% { transform: translate(0px, 0px) scale(1); }
-          30%     { transform: translate(10px, 20px) scale(1.05); }
-          60%     { transform: translate(-16px,-8px) scale(0.97); }
-        }
-        @keyframes orbFloat4 {
-          0%,100% { transform: translate(0px, 0px) scale(1); }
-          45%     { transform: translate(-14px, 16px) scale(1.1); }
-          75%     { transform: translate(18px,-12px) scale(0.93); }
-        }
-      `}</style>
-
-      {/* Animated gradient mesh background — position:absolute not fixed to avoid mobile repaint glitch */}
-      <div style={{
-        position:'absolute', inset:0, zIndex:0, pointerEvents:'none',
-        background:'linear-gradient(135deg,#eef0ff,#e4e8ff,#ede4ff,#e8f0ff,#f0e8ff,#eceeff)',
-        backgroundSize:'300% 300%',
-        animation:'gradShift 14s ease infinite',
-        minHeight:'100vh',
-      }}/>
-
-      {/* Floating ambient orbs — absolute, not fixed */}
-      <div style={{
-        position:'absolute', top:-100, right:-80, width:340, height:340,
-        borderRadius:'50%', pointerEvents:'none', zIndex:0,
-        background:'radial-gradient(circle,rgba(123,92,255,0.18) 0%,transparent 70%)',
-        animation:'orbFloat1 9s ease-in-out infinite',
-        willChange:'transform',
-      }}/>
-      <div style={{
-        position:'absolute', top:'30%', left:-90, width:300, height:300,
-        borderRadius:'50%', pointerEvents:'none', zIndex:0,
-        background:'radial-gradient(circle,rgba(75,94,255,0.14) 0%,transparent 70%)',
-        animation:'orbFloat2 11s ease-in-out infinite',
-        willChange:'transform',
-      }}/>
-      <div style={{
-        position:'absolute', bottom:160, right:-60, width:260, height:260,
-        borderRadius:'50%', pointerEvents:'none', zIndex:0,
-        background:'radial-gradient(circle,rgba(180,140,255,0.13) 0%,transparent 70%)',
-        animation:'orbFloat3 13s ease-in-out infinite',
-        willChange:'transform',
-      }}/>
-      <div style={{
-        position:'absolute', bottom:-60, left:-40, width:240, height:240,
-        borderRadius:'50%', pointerEvents:'none', zIndex:0,
-        background:'radial-gradient(circle,rgba(100,160,255,0.12) 0%,transparent 70%)',
-        animation:'orbFloat4 10s ease-in-out infinite',
-        willChange:'transform',
-      }}/>
-
-      {/* Content — isolated stacking context prevents bg layer bleed-through */}
-      <div style={{position:'relative', zIndex:1, isolation:'isolate'}}>
-        {tab==='home'     && <HomeTab    {...props}/>}
-        {tab==='jadual'   && <JadualTab  times={props.times} nextSolatName={props.nextSolatName}/>}
-        {tab==='komuniti' && <KomunitiTab/>}
-        {tab==='profil'   && <ProfilTab  profile={props.profile}/>}
+      <div style={{ position: 'relative', zIndex: 0 }}>
+        {tab === 'home'     && <HomeTab    {...props} />}
+        {tab === 'jadual'   && <JadualTab  times={props.times} nextSolatName={props.nextSolatName} />}
+        {tab === 'komuniti' && <KomunitiTab />}
+        {tab === 'profil'   && <ProfilTab  profile={props.profile} />}
       </div>
 
-      <BottomNav active={tab} onChange={setTab}/>
+      <BottomNav active={tab} onChange={setTab} />
     </div>
   );
 }
