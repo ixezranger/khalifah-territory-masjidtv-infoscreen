@@ -17,8 +17,8 @@ const C = {
   muted:  '#7a82ac',
   faint:  'rgba(122,130,172,0.45)',
   line:   'rgba(75,94,255,0.08)',
-  glass:  'rgba(255,255,255,0.78)',
-  gBord:  'rgba(255,255,255,0.92)',
+  glass:  'rgba(255,255,255,0.97)',
+  gBord:  'rgba(255,255,255,1.0)',
   shadow: '0 4px 20px rgba(75,94,255,0.09)',
 };
 
@@ -55,12 +55,10 @@ const PRAYERS = [
 function Card({ children, style, onClick }) {
   return (
     <div onClick={onClick} style={{
-      background: C.glass,
-      backdropFilter: 'blur(28px) saturate(1.6)',
-      WebkitBackdropFilter: 'blur(28px) saturate(1.6)',
-      border: `1.5px solid ${C.gBord}`,
+      background: 'rgba(255,255,255,0.96)',
+      border: '1.5px solid rgba(255,255,255,0.98)',
       borderRadius: 22,
-      boxShadow: `${C.shadow}, 0 1px 0 rgba(255,255,255,0.85) inset`,
+      boxShadow: '0 2px 16px rgba(75,94,255,0.08), 0 1px 0 rgba(255,255,255,1) inset',
       overflow: 'hidden',
       ...style,
     }}>
@@ -187,16 +185,14 @@ function AnnouncementCarousel() {
                   flexShrink: 0,
                   background: isActive
                     ? `linear-gradient(145deg,${item.color},${item.color}cc)`
-                    : C.glass,
-                  backdropFilter: 'blur(24px)',
-                  WebkitBackdropFilter: 'blur(24px)',
-                  border: isActive ? 'none' : `1.5px solid ${C.gBord}`,
+                    : 'rgba(255,255,255,0.96)',
+                  border: isActive ? 'none' : '1.5px solid rgba(255,255,255,0.98)',
                   borderRadius: 20,
                   padding: '16px 8px 14px',
                   textAlign: 'center',
                   boxShadow: isActive
                     ? `0 10px 28px ${item.color}44`
-                    : C.shadow,
+                    : '0 2px 12px rgba(75,94,255,0.07)',
                   cursor: 'pointer',
                   transition: 'background 0.35s, box-shadow 0.35s, border 0.35s',
                 }}
@@ -453,8 +449,7 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
           position:'absolute', left:-4, top:'50%', transform:'translateY(-50%)',
           width:32, height:32, borderRadius:'50%', border:'none', cursor:'pointer', zIndex:10,
           background:'rgba(255,255,255,0.95)',
-          backdropFilter:'blur(12px)',
-          boxShadow:'0 4px 16px rgba(75,94,255,0.22)',
+          boxShadow:'0 2px 12px rgba(75,94,255,0.18)',
           display:'flex', alignItems:'center', justifyContent:'center',
         }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B5EFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -467,8 +462,7 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
           position:'absolute', right:-4, top:'50%', transform:'translateY(-50%)',
           width:32, height:32, borderRadius:'50%', border:'none', cursor:'pointer', zIndex:10,
           background:'rgba(255,255,255,0.95)',
-          backdropFilter:'blur(12px)',
-          boxShadow:'0 4px 16px rgba(75,94,255,0.22)',
+          boxShadow:'0 2px 12px rgba(75,94,255,0.18)',
           display:'flex', alignItems:'center', justifyContent:'center',
         }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B5EFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1022,8 +1016,7 @@ function BottomNav({ active, onChange }) {
       <div style={{
         display:'flex', alignItems:'center',
         background:'rgba(255,255,255,0.88)',
-        backdropFilter:'blur(32px) saturate(1.8)',
-        WebkitBackdropFilter:'blur(32px) saturate(1.8)',
+
         borderRadius:36,
         border:'1.5px solid rgba(255,255,255,0.95)',
         boxShadow:'0 8px 32px rgba(75,94,255,0.18), 0 2px 0 rgba(255,255,255,0.8) inset',
