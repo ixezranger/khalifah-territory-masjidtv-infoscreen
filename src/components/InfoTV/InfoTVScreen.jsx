@@ -10,6 +10,7 @@ import {
 import ViewportSwitcher from '../shared/ViewportSwitcher';
 import DemoBanner from '../shared/DemoBanner';
 import ZoneSelectorPanel from './ZoneSelectorPanel';
+import MobileInfoTV from './MobileInfoTV';
 
 // ── Default content ───────────────────────────────────────────────────────────
 const DEFAULT_SLIDES = [
@@ -148,6 +149,65 @@ export default function InfoTVScreen() {
   const timeHH = parseInt(time.substring(0, 2), 10);
   const ampm = timeHH >= 12 ? 'PM' : 'AM';
 
+  const isMobileView = viewportMode === 'mobile';
+  const isTabletView = viewportMode === 'tablet';
+
+  /* ── Scroll unlock for mobile ── */
+  useEffect(() => {
+    if (isMobileView) {
+      document.documentElement.style.overflow = 'auto';
+      document.documentElement.style.height   = 'auto';
+      document.body.style.overflow  = 'auto';
+      document.body.style.height    = 'auto';
+    } else {
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.height   = '100%';
+      document.body.style.overflow  = 'hidden';
+      document.body.style.height    = '100vh';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.height   = '';
+      document.body.style.overflow  = '';
+      document.body.style.height    = '';
+    };
+  }, [isMobileView]);
+
+  /* ── Shared props for mobile layout ── */
+  const mobileProps = {
+    times, nextSolatName, nextSolat,
+    hours, minutes, seconds, isImminent, progressPct,
+    time, gregorianDate, hijriDate, dayName,
+    hadith: hadithItems?.length
+      ? hadithItems.map(h => ({ arabic_text: h.arabic_text, arabic: h.arabic_text, malay_translation: h.malay_translation, malay: h.malay_translation, source: h.source }))
+      : [hadith],
+    slides, slideIndex, setSlideIndex,
+    profile, masjidIcon,
+  };
+
+  /* ── Mobile: full-page app layout ── */
+  if (isMobileView) {
+    return (
+      <div style={{ width: '100%', minHeight: '100vh', overflowX: 'hidden' }}>
+        <MobileInfoTV {...mobileProps} />
+        <ViewportSwitcher currentView={viewportMode} onViewChange={setViewportMode} />
+      </div>
+    );
+  }
+
+  /* ── Tablet: TV layout in constrained frame ── */
+  if (isTabletView) {
+    return (
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', background:'#0f1422', overflow:'auto', padding:20 }}>
+        <div style={{ width:'1024px', height:'768px', overflow:'hidden', borderRadius:16, boxShadow:'0 0 0 6px #222840, 0 40px 80px rgba(0,0,0,0.6)', position:'relative', flexShrink:0 }}>
+          {/* TV content renders below */}
+        </div>
+        <ViewportSwitcher currentView={viewportMode} onViewChange={setViewportMode} />
+      </div>
+    );
+  }
+
+  /* ── TV / fullscreen ── */
   return (
     <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       <DemoBanner />
@@ -583,6 +643,8 @@ export default function InfoTVScreen() {
           <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--ink)' }}>{blasts[0].message}</p>
         </div>
       )}
+
+      <ViewportSwitcher currentView={viewportMode} onViewChange={setViewportMode} />
 
     </div>
   );

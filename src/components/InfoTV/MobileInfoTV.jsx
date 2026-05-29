@@ -178,7 +178,7 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
               : <MosqueSVG size={34}/>}
           </div>
           <div style={{minWidth:0}}>
-            <h1 style={{fontSize:22,fontWeight:850,color:C.ink,margin:'0 0 3px',lineHeight:1.1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+            <h1 style={{fontSize:20,fontWeight:850,color:C.ink,margin:'0 0 3px',lineHeight:1.1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
               {profile?.masjid_name||'MasjidTV'}
             </h1>
             <p style={{fontSize:12,color:C.sub,margin:'0 0 3px',lineHeight:1.4}}>
@@ -206,8 +206,8 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
             </div>
             {/* Time */}
             <div style={{display:'flex',alignItems:'flex-end',gap:4,lineHeight:1}}>
-              <span style={{fontSize:40,fontWeight:850,color:C.ink,letterSpacing:'-0.04em',lineHeight:1}}>{timeDisplay}</span>
-              <span style={{fontSize:16,fontWeight:800,color:C.blue,paddingBottom:3}}>{meridiem}</span>
+              <span style={{fontSize:34,fontWeight:850,color:C.ink,letterSpacing:'-0.04em',lineHeight:1}}>{timeDisplay}</span>
+              <span style={{fontSize:14,fontWeight:800,color:C.blue,paddingBottom:2}}>{meridiem}</span>
             </div>
             {/* Divider */}
             <div style={{width:1,height:54,background:'rgba(75,94,255,0.10)',margin:'0 2px',flexShrink:0}}/>
@@ -238,7 +238,7 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
             <div style={{flex:1}}>
               <span style={{fontSize:10,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:'0.09em'}}>COUNTDOWN KE</span>
-              <div style={{fontSize:24,fontWeight:850,color:isImminent?'#e05c00':C.blue,lineHeight:1.1,margin:'4px 0 14px'}}>
+              <div style={{fontSize:20,fontWeight:850,color:isImminent?'#e05c00':C.blue,lineHeight:1.1,margin:'4px 0 12px'}}>
                 {nextSolatName||'--'}
               </div>
               {/* Digits */}
@@ -246,10 +246,10 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
                 {[{n:pad(hours),l:'JAM'},{n:pad(minutes),l:'MINIT'},{n:pad(seconds),l:'SAAT'}].map((it,i)=>(
                   <div key={i} style={{display:'flex',alignItems:'flex-end'}}>
                     <div style={{textAlign:'center',minWidth:44}}>
-                      <div style={{fontSize:44,fontWeight:850,color:isImminent?'#e05c00':C.ink,lineHeight:1,letterSpacing:'-0.02em'}}>{it.n}</div>
+                      <div style={{fontSize:40,fontWeight:850,color:isImminent?'#e05c00':C.ink,lineHeight:1,letterSpacing:'-0.02em'}}>{it.n}</div>
                       <div style={{fontSize:9,fontWeight:700,color:C.muted,letterSpacing:'0.06em',marginTop:3}}>{it.l}</div>
                     </div>
-                    {i<2&&<div style={{fontSize:38,fontWeight:700,color:C.muted,paddingBottom:14,margin:'0 1px',lineHeight:1}}>:</div>}
+                    {i<2&&<div style={{fontSize:34,fontWeight:700,color:C.muted,paddingBottom:12,margin:'0 1px',lineHeight:1}}>:</div>}
                   </div>
                 ))}
               </div>
