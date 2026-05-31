@@ -103,6 +103,8 @@ const PRAYERS = [
     icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 3L9 9H3l5 4-2 7 6-4 6 4-2-7 5-4h-6z"/></svg> },
   { key:'syuruk',  lbl:'SYURUK',
     icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg> },
+  { key:'dhuha',   lbl:'DHUHA',
+    icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/><path d="M12 8v1"/></svg> },
   { key:'zohor',   lbl:'ZUHUR',
     icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg> },
   { key:'asar',    lbl:'ASAR',
@@ -266,12 +268,12 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
             </div>
           </div>
           {/* Jadual button */}
-          <button style={{marginTop:14,width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderRadius:14,cursor:'pointer',background:'rgba(75,94,255,0.07)',border:'1px solid rgba(75,94,255,0.13)'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-              <span style={{fontSize:13,fontWeight:600,color:C.ink}}>Jadual hari ini</span>
+          <button style={{marginTop:10,width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px',borderRadius:12,cursor:'pointer',background:'rgba(75,94,255,0.07)',border:'1px solid rgba(75,94,255,0.13)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:6}}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span style={{fontSize:11,fontWeight:600,color:C.ink}}>Jadual hari ini</span>
             </div>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
       </div>
@@ -293,7 +295,7 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
           <div style={{position:'relative',padding:'20px 22px 36px',zIndex:1}}>
             <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:20,marginBottom:12,background:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.22)'}}>
               <span style={{fontSize:12}}>📖</span>
-              <span style={{fontSize:11,fontWeight:700,color:'white',letterSpacing:'0.04em'}}>{cur.pill||'Tazkirah Hari Ini'}</span>
+              <span style={{fontSize:10,fontWeight:700,color:'white',letterSpacing:'0.03em'}}>{cur.pill||'Tazkirah Hari Ini'}</span>
             </div>
             <h2 style={{fontSize:22,fontWeight:850,color:'white',lineHeight:1.2,margin:'0 0 10px',whiteSpace:'pre-line'}}>
               {cur.title||'Jangan Lupa,\nAllah Sentiasa\nBersama Kita'}
@@ -342,24 +344,44 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
         <div className="card" style={{padding:'16px 12px'}}>
           {/* Pill header */}
           <div style={{marginBottom:14,paddingLeft:2}}>
-            <span style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 13px',borderRadius:20,background:'rgba(75,94,255,0.10)',border:'1px solid rgba(75,94,255,0.18)',fontSize:11,fontWeight:750,color:C.blue,letterSpacing:'0.04em'}}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',borderRadius:20,background:'rgba(75,94,255,0.10)',border:'1px solid rgba(75,94,255,0.18)',fontSize:9.5,fontWeight:750,color:C.blue,letterSpacing:'0.04em'}}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               WAKTU SOLAT HARI INI
             </span>
           </div>
-          {/* 7-column grid */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:3}}>
+          {/* Horizontally scrollable prayer row */}
+          <div style={{
+            display:'flex', gap:6, overflowX:'auto', overflowY:'hidden',
+            paddingBottom:4, paddingLeft:2, paddingRight:2,
+            scrollbarWidth:'none', msOverflowStyle:'none',
+            WebkitOverflowScrolling:'touch',
+          }}>
+            <style>{'.pray-scroll::-webkit-scrollbar{display:none}'}</style>
             {PRAYERS.map(p=>{
               const isNext = nextSolatName===p.lbl;
+              /* Dhuha: compute as Syuruk + ~1h20m */
+              let displayTime = times?.[p.key];
+              if (p.key==='dhuha' && times?.syuruk) {
+                const [sh,sm] = times.syuruk.split(':').map(Number);
+                const total = sh*60+sm+80;
+                displayTime = `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`;
+              }
               return (
-                <div key={p.key} style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'10px 2px',borderRadius:16,background:isNext?'linear-gradient(160deg,#4B5EFF,#7B5CFF)':'rgba(75,94,255,0.05)',border:isNext?'none':'1px solid rgba(75,94,255,0.08)',boxShadow:isNext?'0 8px 20px rgba(75,94,255,0.30)':'none'}}>
-                  {/* Icon */}
-                  <div style={{width:20,height:20,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:5,color:isNext?'rgba(255,255,255,0.88)':'rgba(107,115,172,0.65)'}}>
+                <div key={p.key} style={{
+                  display:'flex',flexDirection:'column',alignItems:'center',
+                  padding:'10px 6px 10px',borderRadius:16,flexShrink:0,
+                  minWidth:52,
+                  background:isNext?'linear-gradient(160deg,#4B5EFF,#7B5CFF)':'rgba(75,94,255,0.05)',
+                  border:isNext?'none':'1px solid rgba(75,94,255,0.08)',
+                  boxShadow:isNext?'0 8px 20px rgba(75,94,255,0.30)':'none',
+                  transition:'transform 0.15s',
+                }}>
+                  <div style={{width:18,height:18,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:5,color:isNext?'rgba(255,255,255,0.88)':'rgba(107,115,172,0.65)'}}>
                     {p.icon}
                   </div>
-                  <div style={{fontSize:7.5,fontWeight:750,letterSpacing:'0.03em',textTransform:'uppercase',color:isNext?'rgba(255,255,255,0.78)':C.muted,marginBottom:5,textAlign:'center',lineHeight:1.2}}>{p.lbl}</div>
-                  <div style={{fontSize:13,fontWeight:850,lineHeight:1,color:isNext?'white':C.ink,marginBottom:2,textAlign:'center'}}>{fmt12(times?.[p.key])}</div>
-                  <div style={{fontSize:8.5,fontWeight:650,color:isNext?'rgba(255,255,255,0.70)':C.muted,textAlign:'center'}}>{ampm(times?.[p.key])}</div>
+                  <div style={{fontSize:7,fontWeight:750,letterSpacing:'0.03em',textTransform:'uppercase',color:isNext?'rgba(255,255,255,0.78)':C.muted,marginBottom:5,textAlign:'center',lineHeight:1.2,whiteSpace:'nowrap'}}>{p.lbl}</div>
+                  <div style={{fontSize:11,fontWeight:850,lineHeight:1,color:isNext?'white':C.ink,marginBottom:2,textAlign:'center',whiteSpace:'nowrap'}}>{fmt12(displayTime)}</div>
+                  <div style={{fontSize:8,fontWeight:650,color:isNext?'rgba(255,255,255,0.70)':C.muted,textAlign:'center'}}>{ampm(displayTime)}</div>
                 </div>
               );
             })}
@@ -582,17 +604,23 @@ function JadualTab({times,nextSolatName}) {
               <h3 style={{fontSize:14,fontWeight:800,color:C.ink,margin:'0 0 12px'}}>Waktu Solat Hari Ini</h3>
               {PRAYERS.map((p,i)=>{
                 const isNext=nextSolatName===p.lbl;
+                let dTime = times?.[p.key];
+                if (p.key==='dhuha' && times?.syuruk) {
+                  const [sh,sm]=times.syuruk.split(':').map(Number);
+                  const tot=sh*60+sm+80;
+                  dTime=`${String(Math.floor(tot/60)).padStart(2,'0')}:${String(tot%60).padStart(2,'0')}`;
+                }
                 return <div key={p.key} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'11px 0',borderBottom:i<PRAYERS.length-1?'1px solid rgba(75,94,255,0.06)':'none'}}>
                   <div style={{display:'flex',alignItems:'center',gap:11}}>
                     <div style={{width:36,height:36,borderRadius:11,background:isNext?`linear-gradient(135deg,${C.blue},${C.violet})`:'rgba(75,94,255,0.08)',display:'flex',alignItems:'center',justifyContent:'center',color:isNext?'white':'rgba(107,115,172,0.65)'}}>
                       <div style={{width:18,height:18}}>{p.icon}</div>
                     </div>
                     <div>
-                      <div style={{fontSize:13,fontWeight:700,color:C.ink}}>{p.lbl}</div>
+                      <div style={{fontSize:13,fontWeight:700,color:C.ink}}>{p.lbl}{p.key==='dhuha'&&<span style={{fontSize:9,color:C.muted,marginLeft:4,fontWeight:400}}>(Anggaran)</span>}</div>
                       {isNext&&<div style={{fontSize:10,color:C.blue,fontWeight:600}}>Seterusnya</div>}
                     </div>
                   </div>
-                  <div><span style={{fontSize:19,fontWeight:850,color:isNext?C.blue:C.ink}}>{fmt12(times?.[p.key])}</span><span style={{fontSize:10,color:C.muted,marginLeft:3}}>{ampm(times?.[p.key])}</span></div>
+                  <div><span style={{fontSize:19,fontWeight:850,color:isNext?C.blue:C.ink}}>{fmt12(dTime)}</span><span style={{fontSize:10,color:C.muted,marginLeft:3}}>{ampm(dTime)}</span></div>
                 </div>;
               })}
             </div>
