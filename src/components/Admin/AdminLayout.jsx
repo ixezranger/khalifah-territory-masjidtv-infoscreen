@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard, Users, Building2, MapPin, Palette, Images, Music,
   ListMusic, FolderOpen, MessageSquare, BookOpen, Bell, Settings,
-  Monitor, LogOut, ChevronRight, Menu, X, ChevronDown,
+  Monitor, LogOut, ChevronRight, Menu, X, ChevronDown, Key, FileText,
 } from 'lucide-react';
 import CrescentIcon from '../shared/CrescentIcon';
 import useStore from '../../store/useStore';
@@ -20,6 +20,8 @@ import HadithManager from './HadithManager';
 import BlastNotification from './BlastNotification';
 import FeatureToggle from './FeatureToggle';
 import UserManagement from './UserManagement';
+import GitHubSetup from './GitHubSetup';
+import XmlCmsEditor from './XmlCmsEditor';
 
 /* ── Nav groups ─────────────────────────────────────────────────────────── */
 const NAV_GROUPS = [
@@ -59,6 +61,13 @@ const NAV_GROUPS = [
     label: 'Sistem',
     items: [
       { id: 'features', label: 'Tetapan Ciri', icon: Settings },
+    ],
+  },
+  {
+    label: 'XML Config',
+    items: [
+      { id: 'xmlcms',  label: 'Editor XML CMS',  icon: FileText },
+      { id: 'ghsetup', label: 'Tetapan GitHub',  icon: Key      },
     ],
   },
 ];
@@ -320,6 +329,8 @@ export default function AdminLayout({ currentPage = 'dashboard', onNavigate, onL
       case 'hadith':     return <HadithManager />;
       case 'blast':      return <BlastNotification />;
       case 'features':   return <FeatureToggle />;
+      case 'xmlcms':     return <XmlCmsEditor />;
+      case 'ghsetup':    return <GitHubSetup />;
       default:           return <Dashboard onNavigate={onNavigate} />;
     }
   };
