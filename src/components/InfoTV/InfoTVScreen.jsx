@@ -183,6 +183,8 @@ export default function InfoTVScreen() {
       : [hadith],
     slides, slideIndex, setSlideIndex,
     profile, masjidIcon,
+    viewportMode,
+    onViewChange: (mode) => { setViewportMode(mode); },
   };
 
   /* ── Mobile: full-page app layout ── */

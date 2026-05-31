@@ -43,10 +43,12 @@ const GLOBAL_CSS = `
     animation-fill-mode: both;
   }
   .card {
-    background: rgba(255,255,255,0.92);
-    border: 1.5px solid rgba(255,255,255,0.98);
+    background: rgba(255,255,255,0.72);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+    border: 1.5px solid rgba(255,255,255,0.88);
     border-radius: 22px;
-    box-shadow: 0 2px 20px rgba(75,94,255,0.08), 0 1px 0 rgba(255,255,255,1) inset;
+    box-shadow: 0 4px 24px rgba(75,94,255,0.10), 0 1px 0 rgba(255,255,255,0.9) inset;
     overflow: hidden;
   }
   .card-blue {
@@ -56,6 +58,11 @@ const GLOBAL_CSS = `
     box-shadow: 0 8px 28px rgba(75,94,255,0.38);
   }
   .sec-fade { animation: fadeUp 0.5s ease both; }
+  @keyframes prayerPulse {
+    0%,100% { box-shadow: 0 8px 24px rgba(13,134,255,0.38); }
+    50%     { box-shadow: 0 12px 36px rgba(139,72,255,0.55); }
+  }
+  .prayer-active { animation: prayerPulse 2.8s ease-in-out infinite; }
 `;
 
 function InjectStyles() {
@@ -367,13 +374,13 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
                 displayTime = `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`;
               }
               return (
-                <div key={p.key} style={{
+                <div key={p.key} className={isNext?'prayer-active':''} style={{
                   display:'flex',flexDirection:'column',alignItems:'center',
                   padding:'10px 6px 10px',borderRadius:16,flexShrink:0,
                   minWidth:52,
-                  background:isNext?'linear-gradient(160deg,#4B5EFF,#7B5CFF)':'rgba(75,94,255,0.05)',
+                  background:isNext?'linear-gradient(135deg,#0d86ff,#8b48ff)':'rgba(75,94,255,0.05)',
                   border:isNext?'none':'1px solid rgba(75,94,255,0.08)',
-                  boxShadow:isNext?'0 8px 20px rgba(75,94,255,0.30)':'none',
+                  boxShadow:isNext?'0 8px 24px rgba(13,134,255,0.38)':'none',
                   transition:'transform 0.15s',
                 }}>
                   <div style={{width:18,height:18,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:5,color:isNext?'rgba(255,255,255,0.88)':'rgba(107,115,172,0.65)'}}>
@@ -664,25 +671,101 @@ function KomunitiTab() {
 /* ══════════════════════════════════════════════════════════════════
    PROFIL TAB
    ══════════════════════════════════════════════════════════════════ */
-function ProfilTab({profile}) {
+function PaparanTab({profile, viewportMode, onViewChange}) {
+  const MODES = [
+    {
+      id:'tv', label:'Paparan TV',
+      desc:'Skrin penuh untuk TV & projektor (1920×1080)',
+      icon:<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
+      gradient:'linear-gradient(135deg,#0d86ff,#8b48ff)',
+    },
+    {
+      id:'tablet', label:'Paparan Tablet',
+      desc:'Skrin tablet 1024×768px',
+      icon:<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18" strokeWidth="2"/></svg>,
+      gradient:'linear-gradient(135deg,#0ea5e9,#22d3ee)',
+    },
+    {
+      id:'mobile', label:'Paparan Mobile',
+      desc:'Reka letak aplikasi mudah alih',
+      icon:<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18" strokeWidth="2"/></svg>,
+      gradient:'linear-gradient(135deg,#7B5CFF,#ec4899)',
+    },
+  ];
+
   return (
     <div style={{padding:'24px 16px 110px'}}>
-      <div className="card" style={{padding:'22px 18px',marginBottom:16,textAlign:'center'}}>
-        <div style={{width:74,height:74,borderRadius:21,margin:'0 auto 13px',background:'linear-gradient(145deg,#4B5EFF,#7B5CFF)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 10px 26px rgba(75,94,255,0.33)'}}>
-          <MosqueSVG size={32}/>
-        </div>
-        <h3 style={{fontSize:17,fontWeight:850,color:C.ink,margin:'0 0 4px'}}>{profile?.masjid_name||'MasjidTV'}</h3>
-        <p style={{fontSize:11,color:C.muted,margin:0}}>{profile?.masjid_description||'Sistem InfoTV Islamik'}</p>
+      {/* Header */}
+      <div style={{marginBottom:24}}>
+        <h2 style={{fontSize:18,fontWeight:850,color:C.ink,margin:'0 0 4px'}}>Mod Paparan</h2>
+        <p style={{fontSize:12,color:C.muted,margin:0}}>Pilih mod paparan untuk skrin InfoTV</p>
       </div>
-      {[{icon:'⚙️',l:'Tetapan',s:'Konfigurasi masjid'},{icon:'🔔',l:'Notifikasi',s:'Urus pemberitahuan'},{icon:'🌐',l:'Zon Solat',s:profile?.zone_code||'WLY01'},{icon:'ℹ️',l:'Tentang MasjidTV',s:'Versi 1.0 — Khalifah Territory'}].map(item=>(
-        <div key={item.l} className="card" style={{padding:'13px 17px',marginBottom:9,cursor:'pointer'}}>
-          <div style={{display:'flex',alignItems:'center',gap:12}}>
-            <span style={{fontSize:21,flexShrink:0}}>{item.icon}</span>
-            <div style={{flex:1}}><div style={{fontSize:13,fontWeight:650,color:C.ink}}>{item.l}</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>{item.s}</div></div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+
+      {/* Mode cards */}
+      {MODES.map(mode => {
+        const isActive = viewportMode === mode.id;
+        return (
+          <button key={mode.id} onClick={() => onViewChange(mode.id)}
+            style={{
+              width:'100%', display:'flex', alignItems:'center', gap:16,
+              padding:'16px 18px', marginBottom:12, borderRadius:20,
+              border: isActive ? 'none' : '1.5px solid rgba(255,255,255,0.88)',
+              background: isActive ? mode.gradient : 'rgba(255,255,255,0.72)',
+              boxShadow: isActive
+                ? '0 8px 28px rgba(75,94,255,0.30)'
+                : '0 4px 20px rgba(75,94,255,0.08)',
+              cursor:'pointer', textAlign:'left',
+              transition:'all 0.2s',
+            }}>
+            <div style={{
+              width:52, height:52, borderRadius:16, flexShrink:0,
+              background: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(75,94,255,0.10)',
+              border: isActive ? '1.5px solid rgba(255,255,255,0.35)' : '1px solid rgba(75,94,255,0.18)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              color: isActive ? 'white' : C.blue,
+            }}>
+              {mode.icon}
+            </div>
+            <div style={{flex:1, minWidth:0}}>
+              <div style={{
+                fontSize:15, fontWeight:800,
+                color: isActive ? 'white' : C.ink,
+                marginBottom:3,
+              }}>{mode.label}</div>
+              <div style={{
+                fontSize:12,
+                color: isActive ? 'rgba(255,255,255,0.80)' : C.muted,
+              }}>{mode.desc}</div>
+            </div>
+            {isActive && (
+              <div style={{width:22, height:22, borderRadius:'50%', background:'rgba(255,255,255,0.28)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+            )}
+          </button>
+        );
+      })}
+
+      {/* Masjid info */}
+      <div className="card" style={{padding:'18px',marginTop:8}}>
+        <div style={{display:'flex',alignItems:'center',gap:13}}>
+          <div style={{width:44,height:44,borderRadius:13,background:'linear-gradient(145deg,#4B5EFF,#7B5CFF)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 6px 18px rgba(75,94,255,0.30)'}}>
+            <MosqueSVG size={22}/>
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:14,fontWeight:750,color:C.ink,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{profile?.masjid_name||'MasjidTV'}</div>
+            <div style={{fontSize:11,color:C.muted,marginTop:2}}>{profile?.zone_code||'WLY01'} · {profile?.masjid_description||'Sistem InfoTV Islamik'}</div>
           </div>
         </div>
-      ))}
+      </div>
+
+      {/* App info */}
+      <div style={{marginTop:16, padding:'12px 0', textAlign:'center'}}>
+        <p style={{fontSize:11,color:C.faint,margin:0}}>MasjidTV v1.0 · Khalifah Territory</p>
+        <p style={{fontSize:10,color:C.faint,margin:'4px 0 0'}}>Data waktu solat rasmi JAKIM</p>
+      </div>
     </div>
   );
 }
@@ -694,7 +777,7 @@ const NAV_TABS=[
   {id:'home',l:'Utama',d:'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10'},
   {id:'jadual',l:'Jadual',d:'M8 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-2 M8 2v4 M16 2v4 M3 10h18'},
   {id:'komuniti',l:'Komuniti',d:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75'},
-  {id:'profil',l:'Profil',d:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'},
+  {id:'profil',l:'Paparan',d:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'},
 ];
 
 function BottomNav({active,onChange}) {
@@ -713,7 +796,7 @@ function BottomNav({active,onChange}) {
         })}
         {/* Centre FAB */}
         <div style={{flex:'0 0 72px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',marginTop:-24}}>
-          <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(145deg,#4B5EFF,#7B5CFF)',border:'4px solid white',boxShadow:'0 8px 26px rgba(75,94,255,0.42)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'transform 0.18s'}}
+          <div onClick={()=>onChange('profil')} style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(145deg,#4B5EFF,#7B5CFF)',border:'4px solid white',boxShadow:'0 8px 26px rgba(75,94,255,0.42)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'transform 0.18s'}}
             onMouseEnter={e=>e.currentTarget.style.transform='scale(1.07)'}
             onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
             <MosqueSVG size={26}/>
@@ -746,7 +829,7 @@ export default function MobileInfoTV(props) {
         {tab==='home'    &&<HomeTab    {...props}/>}
         {tab==='jadual'  &&<JadualTab  times={props.times} nextSolatName={props.nextSolatName}/>}
         {tab==='komuniti'&&<KomunitiTab/>}
-        {tab==='profil'  &&<ProfilTab  profile={props.profile}/>}
+        {tab==='profil'  &&<PaparanTab profile={props.profile} viewportMode={props.viewportMode} onViewChange={props.onViewChange}/>}
         <BottomNav active={tab} onChange={setTab}/>
       </div>
     </>
