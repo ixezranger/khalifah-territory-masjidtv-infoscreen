@@ -59,8 +59,8 @@ const GLOBAL_CSS = `
   }
   .sec-fade { animation: fadeUp 0.5s ease both; }
   @keyframes prayerPulse {
-    0%,100% { box-shadow: 0 8px 24px rgba(13,134,255,0.38); }
-    50%     { box-shadow: 0 12px 36px rgba(139,72,255,0.55); }
+    0%,100% { box-shadow: 0 8px 24px rgba(13,134,255,0.45), 0 0 0 2px rgba(13,134,255,0.18); }
+    50%     { box-shadow: 0 14px 40px rgba(139,72,255,0.60), 0 0 0 3px rgba(139,72,255,0.22); }
   }
   .prayer-active { animation: prayerPulse 2.8s ease-in-out infinite; }
 `;
@@ -671,6 +671,37 @@ function KomunitiTab() {
 /* ══════════════════════════════════════════════════════════════════
    PROFIL TAB
    ══════════════════════════════════════════════════════════════════ */
+function ProfilTab({profile}) {
+  return (
+    <div style={{padding:'24px 16px 110px'}}>
+      <div className="card" style={{padding:'22px 18px',marginBottom:16,textAlign:'center'}}>
+        <div style={{width:74,height:74,borderRadius:21,margin:'0 auto 13px',background:'linear-gradient(145deg,#4B5EFF,#7B5CFF)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 10px 26px rgba(75,94,255,0.33)'}}>
+          <MosqueSVG size={32}/>
+        </div>
+        <h3 style={{fontSize:17,fontWeight:850,color:C.ink,margin:'0 0 4px'}}>{profile?.masjid_name||'MasjidTV'}</h3>
+        <p style={{fontSize:11,color:C.muted,margin:0}}>{profile?.masjid_description||'Sistem InfoTV Islamik'}</p>
+      </div>
+      {[
+        {icon:'⚙️', l:'Tetapan',        s:'Konfigurasi masjid'},
+        {icon:'🔔', l:'Notifikasi',     s:'Urus pemberitahuan'},
+        {icon:'🌐', l:'Zon Solat',      s:profile?.zone_code||'WLY01'},
+        {icon:'ℹ️', l:'Tentang MasjidTV',s:'Versi 1.0 — Khalifah Territory'},
+      ].map(item=>(
+        <div key={item.l} className="card" style={{padding:'13px 17px',marginBottom:9,cursor:'pointer'}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <span style={{fontSize:21,flexShrink:0}}>{item.icon}</span>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:650,color:C.ink}}>{item.l}</div>
+              <div style={{fontSize:11,color:C.muted,marginTop:2}}>{item.s}</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function PaparanTab({profile, viewportMode, onViewChange}) {
   const MODES = [
     {
@@ -777,7 +808,7 @@ const NAV_TABS=[
   {id:'home',l:'Utama',d:'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10'},
   {id:'jadual',l:'Jadual',d:'M8 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-2 M8 2v4 M16 2v4 M3 10h18'},
   {id:'komuniti',l:'Komuniti',d:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75'},
-  {id:'profil',l:'Paparan',d:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'},
+  {id:'paparan',l:'Paparan',d:'M20 3H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z M8 21h8M12 17v4'},
 ];
 
 function BottomNav({active,onChange}) {
@@ -829,7 +860,8 @@ export default function MobileInfoTV(props) {
         {tab==='home'    &&<HomeTab    {...props}/>}
         {tab==='jadual'  &&<JadualTab  times={props.times} nextSolatName={props.nextSolatName}/>}
         {tab==='komuniti'&&<KomunitiTab/>}
-        {tab==='profil'  &&<PaparanTab profile={props.profile} viewportMode={props.viewportMode} onViewChange={props.onViewChange}/>}
+        {tab==='profil'  &&<ProfilTab  profile={props.profile}/>}
+        {tab==='paparan' &&<PaparanTab profile={props.profile} viewportMode={props.viewportMode} onViewChange={props.onViewChange}/>}
         <BottomNav active={tab} onChange={setTab}/>
       </div>
     </>
