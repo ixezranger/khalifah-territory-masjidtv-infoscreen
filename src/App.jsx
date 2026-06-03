@@ -30,35 +30,39 @@ export default function App() {
   const { setUser, setSession, setProfile, setSliderItems, setTickerMessages, setHadithItems, setFeatureSettings, setZone } = useStore();
 
   useEffect(() => {
-    // ── Load config.xml first (works in both demo & live mode) ──
+    // ── 1. Set demo defaults first (synchronously) ──
+    if (isDemoMode) {
+      setProfile({
+        id: 'demo', full_name: 'Admin Demo', role: 'admin',
+        masjid_name: 'MasjidTV',
+        masjid_description: 'Sistem InfoTV Islamik — Khalifah Territory',
+        zone_code: 'WLY01', background_image_url: null, icon_url: null, is_active: true,
+      });
+    }
+
+    // ── 2. Load config.xml and OVERRIDE with its values ──
     loadXmlConfig().then((cfg) => {
       if (!cfg) return;
-      // Merge profile fields
+
+      // Build merged profile object — start from current store state
+      const currentProfile = useStore.getState().profile || {};
+      const xmlProfile = {};
       if (cfg.profile) {
-        setProfile((prev) => ({
-          ...prev,
-          ...Object.fromEntries(
-            Object.entries(cfg.profile).filter(([, v]) => v !== null && v !== '')
-          ),
-        }));
-        if (cfg.profile.zone_code) setZone(cfg.profile.zone_code);
+        Object.entries(cfg.profile).forEach(([k, v]) => {
+          if (v !== null && v !== '' && v !== undefined) xmlProfile[k] = v;
+        });
       }
-      if (cfg.sliderItems?.length)   setSliderItems(cfg.sliderItems);
+      // XML values always win over demo defaults
+      setProfile({ ...currentProfile, ...xmlProfile });
+
+      if (cfg.profile?.zone_code) setZone(cfg.profile.zone_code);
+      if (cfg.sliderItems?.length)    setSliderItems(cfg.sliderItems);
       if (cfg.tickerMessages?.length) setTickerMessages(cfg.tickerMessages);
-      if (cfg.hadithItems?.length)   setHadithItems(cfg.hadithItems);
-      if (cfg.featureSettings)       setFeatureSettings(cfg.featureSettings);
+      if (cfg.hadithItems?.length)    setHadithItems(cfg.hadithItems);
+      if (cfg.featureSettings)        setFeatureSettings(cfg.featureSettings);
     });
 
-    if (isDemoMode) {
-      setProfile((prev) => ({
-        id: 'demo', full_name: 'Admin Demo', role: 'admin',
-        masjid_name: 'Masjid Demo — MasjidTV',
-        masjid_description: 'Sistem InfoTV Islamik oleh Khalifah Territory',
-        zone_code: 'WLY01', background_image_url: null, is_active: true,
-        ...prev, // xml values override demo defaults
-      }));
-      return;
-    }
+    if (isDemoMode) return;
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);

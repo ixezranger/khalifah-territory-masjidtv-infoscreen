@@ -103,10 +103,14 @@ export default function InfoTVScreen() {
 
   // Derive slides: use real slider items if available, else defaults
   const slides = sliderItems?.length ? sliderItems.map(s => ({
-    pill: '▣ ' + (s.title || 'Tazkirah'),
+    pill: s.title || 'Tazkirah Hari Ini',
     title: s.title || '',
     accent: '',
-    text: s.description || '',
+    text: s.description || s.text || '',
+    media_url: s.media_url || '',
+    media_type: s.media_type || 'image',
+    youtube_id: s.youtube_id || '',
+    duration: s.duration || 8,
   })) : DEFAULT_SLIDES;
 
   // Derive hadith
