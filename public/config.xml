@@ -1,25 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+<?xml version="1.0" encoding="UTF-8"?><!--
   ╔══════════════════════════════════════════════════════════════════╗
   ║          MasjidTV — Fail Konfigurasi (config.xml)               ║
   ║  Edit fail ini untuk menukar paparan tanpa perlu database.      ║
   ║  Muat semula pelayar selepas simpan untuk lihat perubahan.      ║
   ╚══════════════════════════════════════════════════════════════════╝
--->
-<masjidtv>
+--><masjidtv>
 
   <!-- ══════════════════════════════════════════════
        PROFIL MASJID
        ══════════════════════════════════════════════ -->
   <profile>
     <!-- Nama masjid yang akan terpapar di skrin -->
-    <masjid_name>Masjid Demo — MasjidTV</masjid_name>
+    <masjid_name>Surau Al-Hijrah 1120 Park Avenue</masjid_name>
 
     <!-- Penerangan ringkas -->
     <masjid_description>Sistem InfoTV Islamik oleh Khalifah Territory</masjid_description>
 
     <!-- Kod zon waktu solat (contoh: WLY01, SGR01, KTN01, KTN02 …) -->
-    <zone_code>WLY01</zone_code>
+    <zone_code>SGR01</zone_code>
   </profile>
 
   <!-- ══════════════════════════════════════════════
@@ -32,7 +30,7 @@
       Kosongkan untuk guna latar lalai (gradient orbs).
       Contoh: https://yourdomain.com/images/masjid-bg.jpg
     -->
-    <background_image_url></background_image_url>
+    <background_image_url/>
 
     <!--
       Kegelapan overlay di atas imej latar (0–90).
@@ -46,7 +44,7 @@
       Kosongkan untuk guna ikon lalai (🕌).
       Contoh: https://yourdomain.com/images/logo-masjid.png
     -->
-    <icon_url></icon_url>
+    <icon_url/>
   </appearance>
 
   <!-- ══════════════════════════════════════════════
@@ -67,7 +65,7 @@
 
     <item type="image" duration="8">
       <title>Program Masjid</title>
-      <url></url>
+      <url/>
     </item>
 
     <!--
