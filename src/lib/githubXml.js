@@ -17,6 +17,21 @@ export const setPat  = (token)  => localStorage.setItem('mtvGhPat', token.trim()
 export const clearPat= ()       => localStorage.removeItem('mtvGhPat');
 export const hasPat  = ()       => !!getPat();
 
+/* ── Safe UTF-8 base64 helpers ──────────────────────────────── */
+function b64DecodeUtf8(b64) {
+  const clean = b64.replace(/\s/g, '');
+  const binary = atob(clean);
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function b64EncodeUtf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => { binary += String.fromCharCode(b); });
+  return btoa(binary);
+}
+
 /* ── Fetch current file (returns { content, sha }) ──────────── */
 export async function fetchXmlFile() {
   const pat = getPat();
@@ -27,7 +42,7 @@ export async function fetchXmlFile() {
   if (!res.ok) throw new Error(`GitHub API ${res.status}: ${await res.text()}`);
 
   const json = await res.json();
-  const content = atob(json.content.replace(/\n/g, ''));
+  const content = b64DecodeUtf8(json.content);
   return { content, sha: json.sha };
 }
 
@@ -36,7 +51,7 @@ export async function commitXml(newXmlContent, sha, message = 'chore: update con
   const pat = getPat();
   if (!pat) throw new Error('PAT tidak ditetapkan. Sila tetapkan token GitHub di tetapan.');
 
-  const encoded = btoa(unescape(encodeURIComponent(newXmlContent)));
+  const encoded = b64EncodeUtf8(newXmlContent);
   const res = await fetch(API_BASE, {
     method: 'PUT',
     headers: {
@@ -61,9 +76,15 @@ export async function commitXml(newXmlContent, sha, message = 'chore: update con
 
 /* ── Parse XML string → DOM ─────────────────────────────────── */
 export function parseXml(xmlStr) {
+  // Strip BOM if present
+  const clean = xmlStr.replace(/^\uFEFF/, '');
   const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlStr, 'application/xml');
-  if (doc.querySelector('parsererror')) throw new Error('XML parse error');
+  const doc = parser.parseFromString(clean, 'application/xml');
+  const err = doc.querySelector('parsererror');
+  if (err) {
+    const detail = err.textContent?.split('\n')[0] || 'XML parse error';
+    throw new Error(`XML parse error: ${detail}`);
+  }
   return doc;
 }
 
@@ -156,10 +177,14 @@ export async function saveToXml(patchFn, commitMsg) {
   const doc = parseXml(content);
   patchFn(doc);
 
-  // Rebuild clean XML with proper formatting
-  const raw = serialiseXml(doc);
-  // Ensure XML declaration present
-  const final = raw.startsWith('<?xml') ? raw : `<?xml version="1.0" encoding="UTF-8"?>\n${raw}`;
+  // Serialise — strip any xmlns="" artefacts added by XMLSerializer
+  let raw = new XMLSerializer().serializeToString(doc);
+  raw = raw.replace(/ xmlns=""/g, '');
+
+  // Ensure UTF-8 XML declaration
+  const final = raw.startsWith('<?xml')
+    ? raw
+    : `<?xml version="1.0" encoding="UTF-8"?>\n${raw}`;
 
   await commitXml(final, sha, commitMsg);
 }
