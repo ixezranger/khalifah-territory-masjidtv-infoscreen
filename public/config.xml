@@ -58,15 +58,9 @@
         duration — berapa saat papar slaid ini (lalai: 8)
       Contoh YouTube: https://www.youtube.com/watch?v=XXXXXXXXXXX
     -->
-    <item type="image" duration="8">
-      <title>Selamat Datang</title>
-      <url>https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=1280&amp;q=80</url>
-    </item>
+    
 
-    <item type="image" duration="8">
-      <title>Program Masjid</title>
-      <url/>
-    </item>
+    
 
     <!--
     <item type="youtube" duration="30">
@@ -74,7 +68,7 @@
       <url>https://www.youtube.com/watch?v=XXXXXXXXXXX</url>
     </item>
     -->
-  </slider>
+  <item type="image" duration="8"><title>Kuliah Ramadan 1447H 1</title><url>https://raw.githubusercontent.com/ixezranger/khalifah-territory-masjidtv-infoscreen/refs/heads/claude/init-masjidtv-infoscreen-LDU7W/src/assets/Kuliah-Individu-2026-02.png</url></item><item type="image" duration="8"><title>Kuliah Ramadan 1447H 2</title><url>github.com/ixezranger/khalifah-territory-masjidtv-infoscreen/blob/claude/init-masjidtv-infoscreen-LDU7W/src/assets/Kuliah-Individu-2026-Ramadan-01.png?raw=true</url></item></slider>
 
   <!-- ══════════════════════════════════════════════
        TEKS TICKER (BERITA / PENGUMUMAN)
