@@ -74,10 +74,27 @@ export async function commitXml(newXmlContent, sha, message = 'chore: update con
   return res.json();
 }
 
+/* ── Escape unsafe XML characters in raw strings ────────────── */
+export function escapeXml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&(?![a-zA-Z#][a-zA-Z0-9#]*;)/g, '&amp;')  // & not already an entity
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ── Pre-sanitise raw XML string before parsing ─────────────── */
+function sanitiseRawXml(xmlStr) {
+  // Fix bare & inside element text/attribute values (not already escaped)
+  // This regex finds & that are NOT followed by valid entity patterns
+  return xmlStr.replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[\da-fA-F]+);)/g, '&amp;');
+}
+
 /* ── Parse XML string → DOM ─────────────────────────────────── */
 export function parseXml(xmlStr) {
   // Strip BOM if present
-  const clean = xmlStr.replace(/^\uFEFF/, '');
+  const clean = sanitiseRawXml(xmlStr.replace(/^\uFEFF/, ''));
   const parser = new DOMParser();
   const doc = parser.parseFromString(clean, 'application/xml');
   const err = doc.querySelector('parsererror');

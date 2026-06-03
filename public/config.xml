@@ -23,7 +23,7 @@
   </profile>
 
   <!-- ══════════════════════════════════════════════
-       PENAMPILAN (BACKGROUND & IKON)
+       PENAMPILAN (BACKGROUND &amp; IKON)
        ══════════════════════════════════════════════ -->
   <appearance>
     <!--
@@ -62,7 +62,7 @@
     -->
     <item type="image" duration="8">
       <title>Selamat Datang</title>
-      <url>https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=1280&q=80</url>
+      <url>https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=1280&amp;q=80</url>
     </item>
 
     <item type="image" duration="8">
