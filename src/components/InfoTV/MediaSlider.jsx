@@ -382,7 +382,7 @@ export default function MediaSlider({ items = [], settings = {} }) {
     const slide = slides[index];
     if (!slide) return 8000;
     if (slide.media_type === 'youtube') return 30000;
-    return (slide.duration_seconds || 8) * 1000;
+    return (slide.duration_seconds || slide.duration || 8) * 1000;
   }, [slides]);
 
   const goToSlide = useCallback((nextIndex) => {

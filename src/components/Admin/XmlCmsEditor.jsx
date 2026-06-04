@@ -243,11 +243,16 @@ function SliderSection() {
               <>
                 <input type="url" value={item.url} onChange={e=>upd(item.id,'url',e.target.value)}
                   placeholder="https://yourdomain.com/slide1.jpg" className="ms-input"
-                  style={{ marginBottom: item.url ? 8 : 0 }}/>
+                  style={{ marginBottom: item.url ? 10 : 0 }}/>
                 {item.url && (
-                  <img src={item.url} alt="" onError={e=>e.target.style.display='none'}
-                    style={{ width:'100%', height:80, objectFit:'cover', borderRadius:8,
-                             border:`1px solid ${C.line}`, display:'block' }}/>
+                  <div style={{
+                    width:'100%', aspectRatio:'16/5', borderRadius:10,
+                    overflow:'hidden', border:`1px solid ${C.line}`,
+                    background:'#0a0a14',
+                  }}>
+                    <img src={item.url} alt="" onError={e=>e.target.style.display='none'}
+                      style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
+                  </div>
                 )}
               </>
             ) : (

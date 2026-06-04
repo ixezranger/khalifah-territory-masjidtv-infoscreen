@@ -5,7 +5,7 @@ function DigitPair({ value, label, isImminent }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
       <div style={{
-        fontSize: 'clamp(2rem, 3.5vw, 4.5rem)',
+        fontSize: 'clamp(1.6rem, 2.8vw, 3.8rem)',
         fontWeight: 800,
         color: isImminent ? '#92400E' : '#0F172A',
         fontVariantNumeric: 'tabular-nums',
@@ -13,6 +13,7 @@ function DigitPair({ value, label, isImminent }) {
         lineHeight: 1,
         textShadow: isImminent ? '0 0 24px rgba(146,64,14,0.25)' : 'none',
         transition: 'color 0.3s, text-shadow 0.3s',
+        whiteSpace: 'nowrap',
       }}>
         {str}
       </div>
@@ -31,10 +32,10 @@ function DigitPair({ value, label, isImminent }) {
 function Sep({ isImminent }) {
   return (
     <div style={{
-      fontSize: 'clamp(1.5rem, 2.5vw, 3.5rem)',
+      fontSize: 'clamp(1.2rem, 2vw, 3rem)',
       fontWeight: 300,
       color: isImminent ? 'rgba(146,64,14,0.4)' : 'rgba(15,23,42,0.2)',
-      paddingBottom: 'clamp(14px, 2vh, 22px)',
+      paddingBottom: 'clamp(12px, 1.8vh, 20px)',
       lineHeight: 1,
     }}>
       :
@@ -53,7 +54,7 @@ export default function CountdownWidget({ nextSolatTime, nextSolatName }) {
       backdropFilter: 'blur(24px)',
       WebkitBackdropFilter: 'blur(24px)',
       borderRadius: 16,
-      padding: 'clamp(12px, 1.5vh, 20px) clamp(14px, 1.5vw, 22px)',
+      padding: 'clamp(10px, 1.2vh, 18px) clamp(10px, 1.2vw, 18px)',
       boxShadow: isImminent
         ? '0 8px 32px rgba(146,64,14,0.15), inset 0 1px 0 rgba(255,255,255,0.9)'
         : '0 8px 32px rgba(79,70,229,0.1), inset 0 1px 0 rgba(255,255,255,0.9)',
@@ -62,6 +63,8 @@ export default function CountdownWidget({ nextSolatTime, nextSolatName }) {
         : '1px solid rgba(255,255,255,0.85)',
       transition: 'background 0.5s, box-shadow 0.5s',
       flexShrink: 0,
+      minWidth: 0,
+      overflow: 'hidden',
     }}>
       {/* Header */}
       <div style={{ marginBottom: 'clamp(6px, 1vh, 12px)' }}>
