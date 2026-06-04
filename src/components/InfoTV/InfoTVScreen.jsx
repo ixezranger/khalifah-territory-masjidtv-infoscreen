@@ -218,7 +218,7 @@ export default function InfoTVScreen() {
         width:'100%', height:'100%',
         padding:'1.4vh 1.4vw 0',
         display:'grid',
-        gridTemplateColumns:'minmax(0,1.38fr) minmax(0,.82fr)',
+        gridTemplateColumns:'minmax(0,1.62fr) minmax(0,.68fr)',
         gridTemplateRows:'auto minmax(0,1fr) auto auto',
         gap:'1vh .9vw',
         boxSizing:'border-box',
@@ -391,7 +391,7 @@ export default function InfoTVScreen() {
         </div>
 
         {/* ── ROW 2 RIGHT: Countdown + Hadith ── */}
-        <div style={{ display:'grid', gridTemplateRows:'1fr auto', gap:'1vh', minHeight:0 }}>
+        <div style={{ display:'grid', gridTemplateRows:'1fr 1.15fr', gap:'1vh', minHeight:0 }}>
 
           {/* Countdown */}
           <div className="tv-glass" style={{ padding:'clamp(14px,1.4vw,26px)', display:'flex', flexDirection:'column', justifyContent:'center', overflow:'hidden' }}>
@@ -403,14 +403,14 @@ export default function InfoTVScreen() {
             </div>
 
             {/* Big digits */}
-            <div style={{ display:'flex', alignItems:'flex-end', gap:'clamp(4px,.5vw,10px)', marginBottom:'clamp(6px,.8vh,12px)' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'clamp(4px,.4vw,8px)', marginBottom:'clamp(8px,1vh,14px)' }}>
               {[{n:pad(hours),l:'JAM'},{n:pad(minutes),l:'MINIT'},{n:pad(seconds),l:'SAAT'}].map((it,i)=>(
-                <div key={i} style={{ display:'flex', alignItems:'flex-end', gap:0 }}>
-                  <div style={{ textAlign:'center', minWidth:'clamp(32px,3vw,58px)' }}>
-                    <div style={{ fontSize:'clamp(38px,4.2vw,80px)', fontWeight:850, color:isImminent?'#e05c00':'#0f1f4a', lineHeight:1, letterSpacing:'-.02em', fontVariantNumeric:'tabular-nums' }}>{it.n}</div>
-                    <div style={{ fontSize:'clamp(9px,.72vw,13px)', fontWeight:700, color:'#7a82ac', textTransform:'uppercase', letterSpacing:'.06em', marginTop:3 }}>{it.l}</div>
+                <div key={i} style={{ display:'flex', alignItems:'center', gap:0, flex: i===1?'0 0 auto':1, justifyContent:'center' }}>
+                  <div style={{ textAlign:'center' }}>
+                    <div style={{ fontSize:'clamp(44px,5vw,96px)', fontWeight:860, color:isImminent?'#e05c00':'#0f1f4a', lineHeight:.92, letterSpacing:'-.04em', fontVariantNumeric:'tabular-nums' }}>{it.n}</div>
+                    <div style={{ fontSize:'clamp(9px,.72vw,12px)', fontWeight:750, color:'#7a82ac', textTransform:'uppercase', letterSpacing:'.08em', marginTop:5 }}>{it.l}</div>
                   </div>
-                  {i<2 && <div style={{ fontSize:'clamp(28px,3vw,58px)', fontWeight:300, color:'rgba(15,31,74,.25)', paddingBottom:'clamp(16px,2vh,28px)', lineHeight:1 }}>:</div>}
+                  {i<2 && <div style={{ fontSize:'clamp(32px,3.6vw,68px)', fontWeight:300, color:'rgba(15,31,74,.22)', lineHeight:1, marginBottom:16, padding:'0 clamp(2px,.3vw,6px)' }}>:</div>}
                 </div>
               ))}
             </div>
@@ -455,26 +455,20 @@ export default function InfoTVScreen() {
         </div>
 
         {/* ── ROW 3: Prayer Times ── */}
-        <div className="tv-glass" style={{
-          gridColumn:'1/3',
-          display:'grid',
-          gridTemplateColumns:'auto repeat(7,minmax(0,1fr))',
-          gap:'.5vw',
-          padding:'.8vh .8vw',
-          alignItems:'stretch',
-        }}>
-          {/* Label pill */}
-          <div style={{ display:'flex', alignItems:'center', paddingRight:'.8vw', borderRight:'1.5px solid rgba(75,94,255,.12)' }}>
-            <div style={{
-              display:'inline-flex', alignItems:'center', gap:6,
-              padding:'6px 12px', borderRadius:20,
-              background:'rgba(75,94,255,.1)', border:'1px solid rgba(75,94,255,.18)',
-              whiteSpace:'nowrap',
-            }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4B5EFF" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span style={{ fontSize:'clamp(9px,.72vw,13px)', fontWeight:750, color:'#4B5EFF', letterSpacing:'.04em', textTransform:'uppercase' }}>WAKTU SOLAT</span>
+        <div style={{ gridColumn:'1/3', display:'flex', flexDirection:'column', gap:'.5vh' }}>
+          {/* WAKTU SOLAT HARI INI pill — sits above the row */}
+          <div style={{ paddingLeft:'.5vw' }}>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'6px 16px', borderRadius:20, background:'rgba(75,94,255,.12)', border:'1px solid rgba(75,94,255,.2)' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B5EFF" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span style={{ fontSize:'clamp(10px,.78vw,14px)', fontWeight:750, color:'#4B5EFF', letterSpacing:'.05em', textTransform:'uppercase' }}>WAKTU SOLAT HARI INI</span>
             </div>
           </div>
+
+          {/* Prayer cards row */}
+          <div className="tv-glass" style={{
+            display:'grid', gridTemplateColumns:'repeat(7,minmax(0,1fr))',
+            gap:'.4vw', padding:'.6vh .6vw', alignItems:'stretch',
+          }}>
 
           {/* Prayer cards */}
           {solatLoading && !times
@@ -490,13 +484,13 @@ export default function InfoTVScreen() {
                 return (
                   <div key={p.key} style={{
                     display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-                    padding:'clamp(8px,.9vh,14px) .4vw',
+                    padding:'clamp(10px,1.1vh,16px) .4vw',
                     borderRadius:16, textAlign:'center',
                     borderRight:'1px solid rgba(75,94,255,.1)',
                     background:     isNext ? 'linear-gradient(145deg,#0d86ff,#8b48ff)' : 'transparent',
                     boxShadow:      isNext ? '0 10px 32px rgba(13,134,255,.32)' : 'none',
                     animation:      isNext ? 'pulse 2.8s ease-in-out infinite' : 'none',
-                    margin:         isNext ? '-0.8vh 0' : '0',
+                    margin:         isNext ? '-1.2vh 0' : '0',
                     transition:     'all .3s',
                   }}>
                     <div style={{ marginBottom:5, color:isNext?'rgba(255,255,255,.9)':'rgba(75,94,255,.65)' }}>
@@ -505,7 +499,7 @@ export default function InfoTVScreen() {
                     <div style={{ fontSize:'clamp(9px,.72vw,13px)', fontWeight:750, textTransform:'uppercase', letterSpacing:'.04em', marginBottom:5, color:isNext?'rgba(255,255,255,.8)':'#7a82ac' }}>
                       {p.name}
                     </div>
-                    <div style={{ fontSize:'clamp(16px,1.7vw,30px)', fontWeight:860, letterSpacing:'-.03em', color:isNext?'white':'#0f1f4a', lineHeight:1, marginBottom:2 }}>
+                    <div style={{ fontSize:'clamp(18px,2vw,36px)', fontWeight:860, letterSpacing:'-.03em', color:isNext?'white':'#0f1f4a', lineHeight:1, marginBottom:2 }}>
                       {fmt12(times?.[p.key])}
                     </div>
                     <div style={{ fontSize:'clamp(8px,.65vw,11px)', fontWeight:600, color:isNext?'rgba(255,255,255,.72)':'#7a82ac' }}>
@@ -516,46 +510,45 @@ export default function InfoTVScreen() {
                 );
               })
           }
+          </div>
         </div>
 
         {/* ── ROW 4: Ticker Footer ── */}
         <div style={{
-          gridColumn:'1/3',
-          margin:'0 -1.4vw',
-          display:'grid',
-          gridTemplateColumns:'repeat(4,1fr) minmax(200px,.5fr)',
-          background:'rgba(240,245,255,.72)',
-          borderTop:'1px solid rgba(255,255,255,.6)',
-          backdropFilter:'blur(24px)',
-          WebkitBackdropFilter:'blur(24px)',
+          gridColumn:'1/3', margin:'0 -1.4vw',
+          display:'grid', gridTemplateColumns:'repeat(4,minmax(0,1fr)) minmax(220px,.52fr)',
+          background:'rgba(235,242,255,.78)',
+          borderTop:'1.5px solid rgba(255,255,255,.7)',
+          backdropFilter:'blur(28px)', WebkitBackdropFilter:'blur(28px)',
         }}>
-          {ticker.slice(0,4).map((t,i)=>(
+          {ticker.slice(0,4).map((t)=>(
             <div key={t.id} style={{
-              padding:'.7vh 1.1vw', borderRight:'1px solid rgba(75,94,255,.1)',
-              display:'flex', alignItems:'center', gap:'.7vw',
-              fontSize:'clamp(11px,.82vw,15px)', minWidth:0,
+              padding:'clamp(10px,1.1vh,18px) clamp(12px,1vw,22px)',
+              borderRight:'1px solid rgba(75,94,255,.1)',
+              display:'flex', alignItems:'center', gap:'clamp(8px,.7vw,16px)',
+              minWidth:0,
             }}>
-              <span style={{ fontSize:'clamp(18px,1.5vw,26px)', flexShrink:0 }}>{t.icon}</span>
+              <span style={{ fontSize:'clamp(22px,1.9vw,34px)', flexShrink:0 }}>{t.icon}</span>
               <span style={{ minWidth:0 }}>
-                {t.title && <strong style={{ display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color:'#0f1f4a' }}>{t.title}</strong>}
-                <span style={{ display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color:'#7a82ac', fontSize:'.88em' }}>{t.text}</span>
+                {t.title && <strong style={{ display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color:'#0f1f4a', fontSize:'clamp(12px,.9vw,17px)' }}>{t.title}</strong>}
+                <span style={{ display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color:'#7a82ac', fontSize:'clamp(10px,.75vw,14px)' }}>{t.text}</span>
               </span>
             </div>
           ))}
-          {/* Quote tile */}
+          {/* Quote tile — rightmost */}
           <div style={{
-            padding:'.7vh 1.2vw',
-            display:'flex', alignItems:'center', gap:10,
+            padding:'clamp(10px,1.1vh,18px) clamp(14px,1.2vw,24px)',
+            display:'flex', alignItems:'center', gap:12,
             background:'linear-gradient(135deg,#6947ff,#147cff)',
-            color:'white',
+            color:'white', borderRadius:'18px 0 0 0',
           }}>
-            <span style={{ fontSize:20, opacity:.85 }}>"</span>
-            <div>
-              <div style={{ fontSize:'clamp(11px,.82vw,15px)', fontWeight:700, fontStyle:'italic' }}>Ingat Mati, Ingat Allah</div>
-              <div style={{ fontSize:'clamp(9px,.68vw,12px)', opacity:.8 }}>Kunci Kebahagiaan Dunia & Akhirat</div>
+            <div style={{ fontSize:'clamp(22px,2vw,36px)', opacity:.75, fontFamily:'Georgia,serif', lineHeight:1, marginTop:-4 }}>"</div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:'clamp(12px,.9vw,17px)', fontWeight:750, fontStyle:'italic', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>Ingat Mati, Ingat Allah</div>
+              <div style={{ fontSize:'clamp(10px,.72vw,13px)', opacity:.82, marginTop:2 }}>Kunci Kebahagiaan Dunia & Akhirat</div>
             </div>
-            <div style={{ marginLeft:'auto', width:32, height:32, borderRadius:10, background:'rgba(255,255,255,.18)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <div style={{ width:34, height:34, borderRadius:11, background:'rgba(255,255,255,.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             </div>
           </div>
         </div>
