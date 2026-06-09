@@ -207,7 +207,9 @@ export default function InfoTVScreen() {
           -webkit-backdrop-filter: blur(28px) saturate(1.5);
           border-radius: 22px;
           box-shadow: 0 4px 32px rgba(75,94,255,0.09), 0 1px 0 rgba(255,255,255,0.9) inset;
+          overflow: hidden;
         }
+        .tv-glass.prayer-row { overflow: visible; }
       `}</style>
 
       {/* Zone selector */}
@@ -224,6 +226,7 @@ export default function InfoTVScreen() {
         gridTemplateRows:'auto minmax(0,1fr) auto auto',
         gap:'1vh .9vw',
         boxSizing:'border-box',
+        overflow:'visible',
       }}>
 
         {/* ── ROW 1 LEFT: Header ── */}
@@ -457,7 +460,7 @@ export default function InfoTVScreen() {
         </div>
 
         {/* ── ROW 3: Prayer Times ── */}
-        <div style={{ gridColumn:'1/3', display:'flex', flexDirection:'column', gap:'.5vh' }}>
+        <div style={{ gridColumn:'1/3', display:'flex', flexDirection:'column', gap:'.5vh', overflow:'visible' }}>
           {/* WAKTU SOLAT HARI INI pill — sits above the row */}
           <div style={{ paddingLeft:'.5vw' }}>
             <div style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'6px 16px', borderRadius:20, background:'rgba(75,94,255,.12)', border:'1px solid rgba(75,94,255,.2)' }}>
@@ -467,9 +470,10 @@ export default function InfoTVScreen() {
           </div>
 
           {/* Prayer cards row */}
-          <div className="tv-glass" style={{
+          <div className="tv-glass prayer-row" style={{
             display:'grid', gridTemplateColumns:'repeat(7,minmax(0,1fr))',
-            gap:'.4vw', padding:'.6vh .6vw', alignItems:'stretch',
+            gap:'.4vw', padding:'.8vh .6vw', alignItems:'center',
+            overflow:'visible',
           }}>
 
           {/* Prayer cards */}
@@ -524,12 +528,16 @@ export default function InfoTVScreen() {
 
         {/* ── ROW 4: Ticker Footer ── */}
         <div style={{
-          gridColumn:'1/3', margin:'0 -1.4vw',
-          display:'grid', gridTemplateColumns:'repeat(4,minmax(0,1fr)) minmax(240px,0.46fr)',
+          gridColumn:'1/3',
+          /* Extend left AND right past the grid padding to true screen edge */
+          margin:'0 -1.4vw',
+          display:'grid',
+          gridTemplateColumns:'repeat(4,minmax(0,1fr)) minmax(260px,22%)',
           background:'rgba(235,242,255,.78)',
           borderTop:'1.5px solid rgba(255,255,255,.7)',
           backdropFilter:'blur(28px)', WebkitBackdropFilter:'blur(28px)',
           overflow:'hidden',
+          position:'relative',
         }}>
           {ticker.slice(0,4).map((t)=>(
             <div key={t.id} style={{
@@ -545,13 +553,12 @@ export default function InfoTVScreen() {
               </span>
             </div>
           ))}
-          {/* Quote tile — rightmost */}
+          {/* Quote tile — rightmost, flush to right edge */}
           <div style={{
-            padding:'clamp(10px,1.1vh,18px) clamp(14px,1.2vw,24px)',
+            padding:'clamp(10px,1.1vh,18px) clamp(16px,1.4vw,28px)',
             display:'flex', alignItems:'center', gap:12,
-            background:'linear-gradient(135deg,#6947ff,#147cff)',
-            color:'white', borderRadius:'20px 0 0 0',
-            margin:'0 0 0 0',
+            background:'linear-gradient(135deg,#6947ff 0%,#147cff 100%)',
+            color:'white',
           }}>
             <div style={{ fontSize:'clamp(22px,2vw,36px)', opacity:.75, fontFamily:'Georgia,serif', lineHeight:1, marginTop:-4 }}>"</div>
             <div style={{ flex:1, minWidth:0 }}>
