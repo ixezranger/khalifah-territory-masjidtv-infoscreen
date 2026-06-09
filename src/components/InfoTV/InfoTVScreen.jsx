@@ -190,7 +190,7 @@ export default function InfoTVScreen() {
       background: bgImage
         ? `url(${bgImage}) center/cover no-repeat`
         : 'linear-gradient(160deg,#dce8ff 0%,#e8e4ff 35%,#cfd9ff 65%,#dce8ff 100%)',
-      position:'relative', overflow:'hidden',
+      position:'relative', overflow:'clip',
       fontFamily:"'Plus Jakarta Sans','Segoe UI',sans-serif",
     }}>
       {/* Background overlay if bgImage */}
@@ -209,7 +209,7 @@ export default function InfoTVScreen() {
           box-shadow: 0 4px 32px rgba(75,94,255,0.09), 0 1px 0 rgba(255,255,255,0.9) inset;
           overflow: hidden;
         }
-        .tv-glass.prayer-row { overflow: visible; }
+        .tv-glass.prayer-row { overflow: visible !important; }
       `}</style>
 
       {/* Zone selector */}
@@ -497,9 +497,10 @@ export default function InfoTVScreen() {
                     background:  isNext ? 'linear-gradient(155deg,#1a8fff 0%,#8b48ff 100%)' : 'transparent',
                     boxShadow:   isNext ? '0 16px 48px rgba(13,134,255,.45),0 4px 16px rgba(139,72,255,.3),inset 0 1px 0 rgba(255,255,255,.25)' : 'none',
                     animation:   isNext ? 'pulse 2.8s ease-in-out infinite' : 'none',
-                    margin:      isNext ? 'clamp(-12px,-1.8vh,-8px) 0' : '0',
+                    transform:   isNext ? 'scaleY(1.08)' : 'scaleY(1)',
                     zIndex:      isNext ? 2 : 0,
                     position:    'relative',
+                    transformOrigin: 'center',
                     transition:  'all .3s',
                   }}>
                     <div style={{ marginBottom: isNext?8:5, color:isNext?'rgba(255,255,255,.92)':'rgba(75,94,255,.65)' }}>
@@ -556,9 +557,11 @@ export default function InfoTVScreen() {
           {/* Quote tile — rightmost, flush to right edge */}
           <div style={{
             padding:'clamp(10px,1.1vh,18px) clamp(16px,1.4vw,28px)',
+            paddingRight:'calc(clamp(16px,1.4vw,28px) + 1.4vw)',
             display:'flex', alignItems:'center', gap:12,
             background:'linear-gradient(135deg,#6947ff 0%,#147cff 100%)',
             color:'white',
+            marginRight:'-1.4vw',
           }}>
             <div style={{ fontSize:'clamp(22px,2vw,36px)', opacity:.75, fontFamily:'Georgia,serif', lineHeight:1, marginTop:-4 }}>"</div>
             <div style={{ flex:1, minWidth:0 }}>
