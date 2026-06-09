@@ -102,6 +102,44 @@ const PRAYER_NAMES = {
 // Order used for "next prayer" detection (syuruk excluded — it's not a solat)
 const NEXT_ORDER = ['subuh', 'syuruk', 'zohor', 'asar', 'maghrib', 'isyak'];
 
+// Zones covered by bundled JAKIM XML timetables (public/solat/*.xml)
+const LOCAL_XML_ZONES = new Set(['WLY01','WLY02','SGR01','SGR02','SGR03','KTN01','KTN02']);
+
+const BASE_PATH = import.meta.env.BASE_URL || '/';
+
+/**
+ * Load today's prayer times from the local JAKIM XML timetable.
+ * Returns times object or null if zone not bundled / date not found.
+ */
+async function fetchFromLocalXml(zone) {
+  if (!LOCAL_XML_ZONES.has(zone)) return null;
+  try {
+    const url = `${BASE_PATH}solat/${zone}.xml`.replace('//', '/');
+    const res = await fetch(url, { cache: 'force-cache' });
+    if (!res.ok) return null;
+    const text = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'application/xml');
+    if (doc.querySelector('parsererror')) return null;
+
+    // Find today's entry
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const day = doc.querySelector(`day[date="${dateStr}"]`);
+    if (!day) return null;
+
+    return {
+      imsak:   day.getAttribute('imsak')   || '',
+      subuh:   day.getAttribute('subuh')   || '',
+      syuruk:  day.getAttribute('syuruk')  || '',
+      zohor:   day.getAttribute('zohor')   || '',
+      asar:    day.getAttribute('asar')    || '',
+      maghrib: day.getAttribute('maghrib') || '',
+      isyak:   day.getAttribute('isyak')   || '',
+    };
+  } catch { return null; }
+}
+
 const FALLBACK_TIMES = {
   imsak:   '05:40',
   subuh:   '05:50',
@@ -197,6 +235,18 @@ function getCacheKey(zone) {
 }
 
 async function fetchFromNetwork(zone) {
+  // 1. Try local JAKIM XML timetable first (instant, no CORS)
+  try {
+    const local = await fetchFromLocalXml(zone);
+    if (local) {
+      console.log('[MasjidTV] Loaded from local XML:', zone);
+      return { times: local, apiStatus: 'online' };
+    }
+  } catch (e) {
+    console.warn('[MasjidTV] Local XML failed:', e.message);
+  }
+
+  // 2. Fall back to live API via CORS proxies
   for (let i = 0; i < PROXIES.length; i++) {
     try {
       const res = await fetch(PROXIES[i](zone), { signal: AbortSignal.timeout(8000) });

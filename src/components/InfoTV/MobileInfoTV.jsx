@@ -8,6 +8,7 @@
  */
 import { useState, useEffect, useRef } from 'react';
 import { isHoliday, toHijri } from '../../lib/myHolidays';
+import { ZONES } from '../../hooks/useWaktuSolat';
 
 /* ── Inject global styles once ───────────────────────────────────── */
 const GLOBAL_CSS = `
@@ -671,9 +672,79 @@ function KomunitiTab() {
 /* ══════════════════════════════════════════════════════════════════
    PROFIL TAB
    ══════════════════════════════════════════════════════════════════ */
-function ProfilTab({profile}) {
+
+/* Zone Selector bottom sheet */
+function ZoneModal({ currentZone, onZoneChange, onClose }) {
+  const [expanded, setExpanded] = useState(null);
+  const [search, setSearch] = useState('');
+  useEffect(() => {
+    for (const [state, zones] of Object.entries(ZONES)) {
+      if (Object.keys(zones).includes(currentZone)) { setExpanded(state); break; }
+    }
+  }, [currentZone]);
+  const filtered = Object.entries(ZONES).reduce((acc, [state, zones]) => {
+    const q = search.toLowerCase();
+    const matched = Object.entries(zones).filter(([code, label]) =>
+      !q || code.toLowerCase().includes(q) || label.toLowerCase().includes(q) || state.toLowerCase().includes(q));
+    if (matched.length) acc[state] = Object.fromEntries(matched);
+    return acc;
+  }, {});
+  return (
+    <div style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(7,20,60,0.52)',backdropFilter:'blur(8px)',display:'flex',flexDirection:'column',justifyContent:'flex-end'}}
+      onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{background:'rgba(246,248,255,0.99)',borderRadius:'28px 28px 0 0',maxHeight:'84vh',display:'flex',flexDirection:'column',boxShadow:'0 -8px 40px rgba(75,94,255,0.20)'}}>
+        <div style={{display:'flex',justifyContent:'center',padding:'12px 0 0'}}>
+          <div style={{width:42,height:4,borderRadius:2,background:'rgba(75,94,255,0.18)'}}/>
+        </div>
+        <div style={{padding:'14px 20px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(75,94,255,0.09)'}}>
+          <div>
+            <h3 style={{margin:0,fontSize:17,fontWeight:800,color:C.ink}}>Zon Waktu Solat</h3>
+            <p style={{margin:'3px 0 0',fontSize:12,color:C.muted}}>Zon semasa: <strong style={{color:C.blue}}>{currentZone}</strong></p>
+          </div>
+          <button onClick={onClose} style={{width:34,height:34,borderRadius:10,border:'none',background:'rgba(75,94,255,0.08)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:C.muted}}>×</button>
+        </div>
+        <div style={{padding:'10px 16px',borderBottom:'1px solid rgba(75,94,255,0.07)'}}>
+          <div style={{position:'relative'}}>
+            <svg style={{position:'absolute',left:11,top:'50%',transform:'translateY(-50%)'}} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
+              placeholder="Cari zon atau negeri…"
+              style={{width:'100%',padding:'9px 12px 9px 32px',borderRadius:12,border:'1.5px solid rgba(75,94,255,0.15)',background:'white',fontSize:13,color:C.ink,boxSizing:'border-box',outline:'none',fontFamily:'inherit'}}/>
+          </div>
+        </div>
+        <div style={{overflowY:'auto',flex:1,paddingBottom:'env(safe-area-inset-bottom,16px)'}}>
+          {Object.entries(filtered).map(([state, zones]) => (
+            <div key={state}>
+              <button onClick={()=>setExpanded(e=>e===state?null:state)} style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 20px',border:'none',background:'transparent',cursor:'pointer',textAlign:'left'}}>
+                <span style={{fontSize:13,fontWeight:750,color:C.sub}}>{state}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.faint} strokeWidth="2.5" strokeLinecap="round"
+                  style={{transform:expanded===state||search?'rotate(180deg)':' none',transition:'transform 0.2s'}}>
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+              {(expanded===state||!!search)&&Object.entries(zones).map(([code,label])=>{
+                const isActive=code===currentZone;
+                return (
+                  <button key={code} onClick={()=>{onZoneChange(code);onClose();}} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'10px 20px 10px 32px',border:'none',cursor:'pointer',textAlign:'left',background:isActive?`${C.blue}0d`:'transparent',borderLeft:isActive?`3px solid ${C.blue}`:"3px solid transparent",transition:'background 0.15s'}}>
+                    <span style={{fontSize:11,fontWeight:800,color:isActive?C.blue:C.faint,minWidth:50,flexShrink:0}}>{code}</span>
+                    <span style={{fontSize:13,color:isActive?C.ink:C.sub,flex:1,lineHeight:1.4}}>{label}</span>
+                    {isActive&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProfilTab({profile, currentZone, onZoneChange}) {
+  const [showZone, setShowZone] = useState(false);
+  const zoneLabel = Object.values(ZONES).flatMap(z=>Object.entries(z)).find(([k])=>k===currentZone)?.[1]||'Kuala Lumpur & Putrajaya';
   return (
     <div style={{padding:'24px 16px 110px'}}>
+      {showZone&&<ZoneModal currentZone={currentZone||'WLY01'} onZoneChange={onZoneChange} onClose={()=>setShowZone(false)}/>}
       <div className="card" style={{padding:'22px 18px',marginBottom:16,textAlign:'center'}}>
         <div style={{width:74,height:74,borderRadius:21,margin:'0 auto 13px',background:'linear-gradient(145deg,#4B5EFF,#7B5CFF)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 10px 26px rgba(75,94,255,0.33)'}}>
           <MosqueSVG size={32}/>
@@ -681,19 +752,24 @@ function ProfilTab({profile}) {
         <h3 style={{fontSize:17,fontWeight:850,color:C.ink,margin:'0 0 4px'}}>{profile?.masjid_name||'MasjidTV'}</h3>
         <p style={{fontSize:11,color:C.muted,margin:0}}>{profile?.masjid_description||'Sistem InfoTV Islamik'}</p>
       </div>
+      {/* Zon Solat — interactive */}
+      <button onClick={()=>setShowZone(true)} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'14px 17px',marginBottom:9,background:'rgba(255,255,255,0.92)',border:`1.5px solid ${C.blue}30`,borderRadius:18,cursor:'pointer',textAlign:'left',boxShadow:`0 2px 14px ${C.blue}0d`}}>
+        <span style={{fontSize:21,flexShrink:0}}>🌐</span>
+        <div style={{flex:1}}>
+          <div style={{fontSize:13,fontWeight:650,color:C.ink}}>Zon Solat</div>
+          <div style={{fontSize:11,color:C.blue,marginTop:2,fontWeight:700}}>{currentZone||'WLY01'} — {zoneLabel}</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
       {[
-        {icon:'⚙️', l:'Tetapan',        s:'Konfigurasi masjid'},
-        {icon:'🔔', l:'Notifikasi',     s:'Urus pemberitahuan'},
-        {icon:'🌐', l:'Zon Solat',      s:profile?.zone_code||'WLY01'},
-        {icon:'ℹ️', l:'Tentang MasjidTV',s:'Versi 1.0 — Khalifah Territory'},
+        {icon:'⚙️',l:'Tetapan',s:'Konfigurasi masjid'},
+        {icon:'🔔',l:'Notifikasi',s:'Urus pemberitahuan'},
+        {icon:'ℹ️',l:'Tentang MasjidTV',s:'Versi 1.0 — Khalifah Territory'},
       ].map(item=>(
         <div key={item.l} className="card" style={{padding:'13px 17px',marginBottom:9,cursor:'pointer'}}>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
             <span style={{fontSize:21,flexShrink:0}}>{item.icon}</span>
-            <div style={{flex:1}}>
-              <div style={{fontSize:13,fontWeight:650,color:C.ink}}>{item.l}</div>
-              <div style={{fontSize:11,color:C.muted,marginTop:2}}>{item.s}</div>
-            </div>
+            <div style={{flex:1}}><div style={{fontSize:13,fontWeight:650,color:C.ink}}>{item.l}</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>{item.s}</div></div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
         </div>
@@ -860,7 +936,7 @@ export default function MobileInfoTV(props) {
         {tab==='home'    &&<HomeTab    {...props}/>}
         {tab==='jadual'  &&<JadualTab  times={props.times} nextSolatName={props.nextSolatName}/>}
         {tab==='komuniti'&&<KomunitiTab/>}
-        {tab==='profil'  &&<ProfilTab  profile={props.profile}/>}
+        {tab==='profil'  &&<ProfilTab  profile={props.profile} currentZone={props.currentZone} onZoneChange={props.onZoneChange}/>}
         {tab==='paparan' &&<PaparanTab profile={props.profile} viewportMode={props.viewportMode} onViewChange={props.onViewChange}/>}
         <BottomNav active={tab} onChange={setTab}/>
       </div>

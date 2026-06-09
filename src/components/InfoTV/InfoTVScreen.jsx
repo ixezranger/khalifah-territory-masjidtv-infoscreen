@@ -168,6 +168,8 @@ export default function InfoTVScreen() {
     profile, masjidIcon,
     viewportMode,
     onViewChange: mode => setViewportMode(mode),
+    currentZone: zone,
+    onZoneChange: (code) => { setManualZone(code); setZone(code); },
   };
 
   if (isMobileView) {
