@@ -486,28 +486,35 @@ export default function InfoTVScreen() {
                 return (
                   <div key={p.key} style={{
                     display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-                    padding:'clamp(10px,1.1vh,16px) .4vw',
-                    borderRadius:16, textAlign:'center',
-                    borderRight:'1px solid rgba(75,94,255,.1)',
-                    background:     isNext ? 'linear-gradient(145deg,#0d86ff,#8b48ff)' : 'transparent',
-                    boxShadow:      isNext ? '0 10px 32px rgba(13,134,255,.32)' : 'none',
-                    animation:      isNext ? 'pulse 2.8s ease-in-out infinite' : 'none',
-                    margin:         isNext ? '-1.2vh 0' : '0',
-                    transition:     'all .3s',
+                    padding: isNext ? 'clamp(12px,1.4vh,20px) .6vw' : 'clamp(10px,1.1vh,16px) .4vw',
+                    borderRadius: isNext ? 20 : 16,
+                    textAlign:'center',
+                    borderRight: isNext ? 'none' : '1px solid rgba(75,94,255,.1)',
+                    background:  isNext ? 'linear-gradient(155deg,#1a8fff 0%,#8b48ff 100%)' : 'transparent',
+                    boxShadow:   isNext ? '0 16px 48px rgba(13,134,255,.45),0 4px 16px rgba(139,72,255,.3),inset 0 1px 0 rgba(255,255,255,.25)' : 'none',
+                    animation:   isNext ? 'pulse 2.8s ease-in-out infinite' : 'none',
+                    margin:      isNext ? 'clamp(-12px,-1.8vh,-8px) 0' : '0',
+                    zIndex:      isNext ? 2 : 0,
+                    position:    'relative',
+                    transition:  'all .3s',
                   }}>
-                    <div style={{ marginBottom:5, color:isNext?'rgba(255,255,255,.9)':'rgba(75,94,255,.65)' }}>
-                      <PrayerIcon d={p.svg} color={isNext?'rgba(255,255,255,.9)':'rgba(75,94,255,.65)'} size={22}/>
+                    <div style={{ marginBottom: isNext?8:5, color:isNext?'rgba(255,255,255,.92)':'rgba(75,94,255,.65)' }}>
+                      <PrayerIcon d={p.svg} color={isNext?'rgba(255,255,255,.92)':'rgba(75,94,255,.65)'} size={isNext?28:22}/>
                     </div>
-                    <div style={{ fontSize:'clamp(9px,.72vw,13px)', fontWeight:750, textTransform:'uppercase', letterSpacing:'.04em', marginBottom:5, color:isNext?'rgba(255,255,255,.8)':'#7a82ac' }}>
+                    <div style={{ fontSize:isNext?'clamp(10px,.82vw,15px)':'clamp(9px,.72vw,13px)', fontWeight:750, textTransform:'uppercase', letterSpacing:'.05em', marginBottom:isNext?7:5, color:isNext?'rgba(255,255,255,.82)':'#7a82ac' }}>
                       {p.name}
                     </div>
-                    <div style={{ fontSize:'clamp(18px,2vw,36px)', fontWeight:860, letterSpacing:'-.03em', color:isNext?'white':'#0f1f4a', lineHeight:1, marginBottom:2 }}>
+                    <div style={{ fontSize:isNext?'clamp(22px,2.5vw,44px)':'clamp(18px,2vw,36px)', fontWeight:860, letterSpacing:'-.04em', color:isNext?'white':'#0f1f4a', lineHeight:1, marginBottom:2 }}>
                       {fmt12(times?.[p.key])}
                     </div>
-                    <div style={{ fontSize:'clamp(8px,.65vw,11px)', fontWeight:600, color:isNext?'rgba(255,255,255,.72)':'#7a82ac' }}>
+                    <div style={{ fontSize:isNext?'clamp(10px,.78vw,13px)':'clamp(8px,.65vw,11px)', fontWeight:700, color:isNext?'rgba(255,255,255,.75)':'#7a82ac', letterSpacing:'.04em' }}>
                       {ampmOf(times?.[p.key])}
                     </div>
-                    {isNext && <div style={{ fontSize:'clamp(7px,.6vw,10px)', fontWeight:750, color:'rgba(255,255,255,.85)', marginTop:3, letterSpacing:'.06em' }}>SETERUSNYA</div>}
+                    {isNext && (
+                      <div style={{ marginTop:8, padding:'3px 10px', borderRadius:20, background:'rgba(255,255,255,.22)', fontSize:'clamp(8px,.62vw,11px)', fontWeight:750, color:'white', letterSpacing:'.07em' }}>
+                        SETERUSNYA
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -518,10 +525,11 @@ export default function InfoTVScreen() {
         {/* ── ROW 4: Ticker Footer ── */}
         <div style={{
           gridColumn:'1/3', margin:'0 -1.4vw',
-          display:'grid', gridTemplateColumns:'repeat(4,minmax(0,1fr)) minmax(220px,.52fr)',
+          display:'grid', gridTemplateColumns:'repeat(4,minmax(0,1fr)) minmax(240px,0.46fr)',
           background:'rgba(235,242,255,.78)',
           borderTop:'1.5px solid rgba(255,255,255,.7)',
           backdropFilter:'blur(28px)', WebkitBackdropFilter:'blur(28px)',
+          overflow:'hidden',
         }}>
           {ticker.slice(0,4).map((t)=>(
             <div key={t.id} style={{
@@ -542,7 +550,8 @@ export default function InfoTVScreen() {
             padding:'clamp(10px,1.1vh,18px) clamp(14px,1.2vw,24px)',
             display:'flex', alignItems:'center', gap:12,
             background:'linear-gradient(135deg,#6947ff,#147cff)',
-            color:'white', borderRadius:'18px 0 0 0',
+            color:'white', borderRadius:'20px 0 0 0',
+            margin:'0 0 0 0',
           }}>
             <div style={{ fontSize:'clamp(22px,2vw,36px)', opacity:.75, fontFamily:'Georgia,serif', lineHeight:1, marginTop:-4 }}>"</div>
             <div style={{ flex:1, minWidth:0 }}>

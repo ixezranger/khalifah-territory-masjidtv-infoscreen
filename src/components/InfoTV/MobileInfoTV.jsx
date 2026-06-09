@@ -376,20 +376,23 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
               }
               return (
                 <div key={p.key} className={isNext?'prayer-active':''} style={{
-                  display:'flex',flexDirection:'column',alignItems:'center',
-                  padding:'10px 6px 10px',borderRadius:16,flexShrink:0,
-                  minWidth:52,
-                  background:isNext?'linear-gradient(135deg,#0d86ff,#8b48ff)':'rgba(75,94,255,0.05)',
+                  display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+                  padding:isNext?'12px 8px':' 10px 6px',borderRadius:isNext?18:16,flexShrink:0,
+                  minWidth:isNext?58:52,
+                  background:isNext?'linear-gradient(155deg,#1a8fff 0%,#8b48ff 100%)':'rgba(75,94,255,0.05)',
                   border:isNext?'none':'1px solid rgba(75,94,255,0.08)',
-                  boxShadow:isNext?'0 8px 24px rgba(13,134,255,0.38)':'none',
-                  transition:'transform 0.15s',
+                  boxShadow:isNext?'0 10px 28px rgba(13,134,255,0.42),0 3px 10px rgba(139,72,255,0.28),inset 0 1px 0 rgba(255,255,255,0.22)':'none',
+                  marginTop:isNext?-4:0, marginBottom:isNext?-4:0,
+                  zIndex:isNext?2:0, position:'relative',
+                  transition:'all 0.2s',
                 }}>
-                  <div style={{width:18,height:18,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:5,color:isNext?'rgba(255,255,255,0.88)':'rgba(107,115,172,0.65)'}}>
+                  <div style={{width:isNext?22:18,height:isNext?22:18,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:isNext?7:5,color:isNext?'rgba(255,255,255,0.92)':'rgba(107,115,172,0.65)'}}>
                     {p.icon}
                   </div>
-                  <div style={{fontSize:7,fontWeight:750,letterSpacing:'0.03em',textTransform:'uppercase',color:isNext?'rgba(255,255,255,0.78)':C.muted,marginBottom:5,textAlign:'center',lineHeight:1.2,whiteSpace:'nowrap'}}>{p.lbl}</div>
-                  <div style={{fontSize:11,fontWeight:850,lineHeight:1,color:isNext?'white':C.ink,marginBottom:2,textAlign:'center',whiteSpace:'nowrap'}}>{fmt12(displayTime)}</div>
-                  <div style={{fontSize:8,fontWeight:650,color:isNext?'rgba(255,255,255,0.70)':C.muted,textAlign:'center'}}>{ampm(displayTime)}</div>
+                  <div style={{fontSize:isNext?7.5:7,fontWeight:750,letterSpacing:'0.04em',textTransform:'uppercase',color:isNext?'rgba(255,255,255,0.80)':C.muted,marginBottom:isNext?6:5,textAlign:'center',lineHeight:1.2,whiteSpace:'nowrap'}}>{p.lbl}</div>
+                  <div style={{fontSize:isNext?13:11,fontWeight:860,lineHeight:1,color:isNext?'white':C.ink,marginBottom:2,textAlign:'center',whiteSpace:'nowrap'}}>{fmt12(displayTime)}</div>
+                  <div style={{fontSize:isNext?9:8,fontWeight:700,color:isNext?'rgba(255,255,255,0.75)':C.muted,textAlign:'center',letterSpacing:'0.03em'}}>{ampm(displayTime)}</div>
+                  {isNext&&<div style={{marginTop:5,padding:'2px 7px',borderRadius:20,background:'rgba(255,255,255,0.20)',fontSize:7,fontWeight:750,color:'white',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>SETERUSNYA</div>}
                 </div>
               );
             })}
