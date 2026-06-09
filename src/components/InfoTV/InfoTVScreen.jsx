@@ -486,7 +486,7 @@ export default function InfoTVScreen() {
                 </div>
               ))
             : PRAYER_KEYS.map(p=>{
-                const isNext = nextSolatName === p.name;
+                const isNext = nextSolatName?.toLowerCase() === p.name?.toLowerCase();
                 return (
                   <div key={p.key} style={{
                     display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
@@ -530,15 +530,13 @@ export default function InfoTVScreen() {
         {/* ── ROW 4: Ticker Footer ── */}
         <div style={{
           gridColumn:'1/3',
-          /* Extend left AND right past the grid padding to true screen edge */
           margin:'0 -1.4vw',
           display:'grid',
-          gridTemplateColumns:'repeat(4,minmax(0,1fr)) minmax(260px,22%)',
+          gridTemplateColumns:'repeat(4,minmax(0,1fr))',
           background:'rgba(235,242,255,.78)',
           borderTop:'1.5px solid rgba(255,255,255,.7)',
           backdropFilter:'blur(28px)', WebkitBackdropFilter:'blur(28px)',
           overflow:'hidden',
-          position:'relative',
         }}>
           {ticker.slice(0,4).map((t)=>(
             <div key={t.id} style={{
@@ -554,23 +552,27 @@ export default function InfoTVScreen() {
               </span>
             </div>
           ))}
-          {/* Quote tile — rightmost, flush to right edge */}
-          <div style={{
-            padding:'clamp(10px,1.1vh,18px) clamp(16px,1.4vw,28px)',
-            paddingRight:'calc(clamp(16px,1.4vw,28px) + 1.4vw)',
-            display:'flex', alignItems:'center', gap:12,
-            background:'linear-gradient(135deg,#6947ff 0%,#147cff 100%)',
-            color:'white',
-            marginRight:'-1.4vw',
-          }}>
-            <div style={{ fontSize:'clamp(22px,2vw,36px)', opacity:.75, fontFamily:'Georgia,serif', lineHeight:1, marginTop:-4 }}>"</div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:'clamp(12px,.9vw,17px)', fontWeight:750, fontStyle:'italic', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>Ingat Mati, Ingat Allah</div>
-              <div style={{ fontSize:'clamp(10px,.72vw,13px)', opacity:.82, marginTop:2 }}>Kunci Kebahagiaan Dunia & Akhirat</div>
-            </div>
-            <div style={{ width:34, height:34, borderRadius:11, background:'rgba(255,255,255,.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            </div>
+        </div>
+
+        {/* Quote tile — position:fixed bottom-right, always visible at screen edge */}
+        <div style={{
+          position:'fixed', bottom:0, right:0, zIndex:50,
+          padding:'clamp(10px,1.1vh,18px) clamp(18px,1.6vw,32px)',
+          display:'flex', alignItems:'center', gap:12,
+          background:'linear-gradient(135deg,#6947ff 0%,#147cff 100%)',
+          color:'white',
+          borderRadius:'18px 0 0 0',
+          boxShadow:'-4px -4px 24px rgba(105,71,255,.3)',
+          minWidth:'clamp(240px,22vw,380px)',
+          maxWidth:'28vw',
+        }}>
+          <div style={{ fontSize:'clamp(22px,2vw,36px)', opacity:.75, fontFamily:'Georgia,serif', lineHeight:1, marginTop:-4 }}>"</div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:'clamp(12px,.9vw,17px)', fontWeight:750, fontStyle:'italic', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>Ingat Mati, Ingat Allah</div>
+            <div style={{ fontSize:'clamp(10px,.72vw,13px)', opacity:.82, marginTop:2 }}>Kunci Kebahagiaan Dunia & Akhirat</div>
+          </div>
+          <div style={{ width:34, height:34, borderRadius:11, background:'rgba(255,255,255,.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           </div>
         </div>
 
