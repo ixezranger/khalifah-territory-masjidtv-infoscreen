@@ -4,6 +4,7 @@ import useCountdown from '../../hooks/useCountdown';
 import useDateTime from '../../hooks/useDateTime';
 import useStore from '../../store/useStore';
 import { isDemoMode, getActiveBlastNotifications } from '../../lib/supabase';
+import { hasPat, saveToXml, patchProfile } from '../../lib/githubXml';
 import ViewportSwitcher from '../shared/ViewportSwitcher';
 import DemoBanner from '../shared/DemoBanner';
 import ZoneSelectorPanel from './ZoneSelectorPanel';
@@ -75,6 +76,17 @@ export default function InfoTVScreen() {
     return currentZone && currentZone !== pz ? currentZone : null;
   });
   const zone = manualZone || currentZone || profile?.zone_code || 'WLY01';
+
+  /* Auto-save zone to config.xml silently when changed */
+  const autoSaveZone = (code) => {
+    setManualZone(code);
+    setZone(code);
+    if (!hasPat()) return; // skip if no GitHub token configured
+    saveToXml(
+      doc => patchProfile(doc, { zone_code: code }),
+      `cms: auto-save zone → ${code}`
+    ).catch(err => console.warn('[MasjidTV] Auto-save zone failed:', err.message));
+  };
 
   const { times, nextSolat, nextSolatName, prevSolat, loading: solatLoading, apiStatus } = useWaktuSolat(zone);
   const { hours, minutes, seconds, isImminent, progressPct } = useCountdown(nextSolat, nextSolatName, prevSolat);
@@ -169,7 +181,7 @@ export default function InfoTVScreen() {
     viewportMode,
     onViewChange: mode => setViewportMode(mode),
     currentZone: zone,
-    onZoneChange: (code) => { setManualZone(code); setZone(code); },
+    onZoneChange: autoSaveZone,
   };
 
   if (isMobileView) {
@@ -213,7 +225,7 @@ export default function InfoTVScreen() {
       `}</style>
 
       {/* Zone selector */}
-      <ZoneSelectorPanel currentZone={zone} onZoneChange={code => { setManualZone(code); setZone(code); }} />
+      <ZoneSelectorPanel currentZone={zone} onZoneChange={autoSaveZone} />
       <DemoBanner />
 
       {/* ── MAIN GRID ── */}
