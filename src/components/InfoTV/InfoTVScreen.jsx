@@ -107,9 +107,9 @@ export default function InfoTVScreen() {
     pill:       s.title || 'Tazkirah Hari Ini',
     title:      s.title || '',
     accent:     '',
-    text:       s.description || s.text || '',
+    text:       s.body || s.description || s.text || '',
     media_url:  s.media_url  || '',
-    media_type: s.media_type || 'image',
+    media_type: s.media_type || (s.media_url ? 'image' : 'text'),
     youtube_id: s.youtube_id || '',
     duration:   s.duration   || 8,
   })) : DEFAULT_SLIDES;
@@ -324,76 +324,63 @@ export default function InfoTVScreen() {
           display:'flex', flexDirection:'column', justifyContent:'flex-end',
           minHeight:0,
         }}>
-          {/* Background: image OR gradient */}
-          {hasImage ? (
+          {/* IMAGE slide — pure image, zero gradient, zero text */}
+          {hasImage && (
             <img src={cur.media_url} alt={cur.title||'Slide'} style={{
               position:'absolute', inset:0, width:'100%', height:'100%',
               objectFit:'cover', display:'block',
             }} onError={e=>e.target.style.opacity='0'}/>
-          ) : (
+          )}
+
+          {/* TEXT slide — dark gradient bg with title + body */}
+          {!hasImage && (<>
             <div style={{
               position:'absolute', inset:0,
               background:'linear-gradient(135deg,rgba(10,18,80,.94),rgba(55,35,190,.88))',
             }}/>
-          )}
+            <div style={{ position:'relative', zIndex:3, padding:'clamp(18px,2vw,36px)', paddingTop:0 }}>
+              <div style={{
+                display:'inline-flex', alignItems:'center', gap:8,
+                padding:'7px 14px', borderRadius:12, marginBottom:'clamp(12px,1.4vh,22px)',
+                background:'linear-gradient(90deg,#147dff,#514dff)',
+                fontSize:'clamp(11px,.88vw,16px)', fontWeight:700, color:'white',
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                {cur.pill || 'Tazkirah Hari Ini'}
+              </div>
+              <h2 style={{
+                margin:'0 0 clamp(10px,1.2vh,18px)',
+                fontSize:'clamp(22px,2.8vw,52px)', fontWeight:860,
+                lineHeight:1.08, letterSpacing:'-.035em', color:'white', whiteSpace:'pre-line',
+              }}>
+                {(cur.title||'').split('\n').map((line,i)=>{
+                  const accents = cur.accent?.split('\n')||[];
+                  return accents.includes(line)
+                    ? <span key={i} style={{ background:'linear-gradient(90deg,#7fdcff,#ba83ff)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', display:'block' }}>{line}</span>
+                    : <span key={i} style={{ display:'block' }}>{line}</span>;
+                })}
+              </h2>
+              {cur.text && (
+                <p style={{ maxWidth:560, fontSize:'clamp(13px,.95vw,18px)', lineHeight:1.5, color:'rgba(255,255,255,.85)', margin:0, whiteSpace:'pre-line' }}>
+                  {cur.text}
+                </p>
+              )}
+            </div>
+          </>)}
 
-          {/* Dark gradient scrim over image for text readability */}
-          <div style={{
-            position:'absolute', inset:0,
-            background: hasImage
-              ? 'linear-gradient(to top, rgba(5,10,50,.88) 0%, rgba(5,10,50,.45) 45%, rgba(0,0,0,.12) 100%)'
-              : 'none',
-            pointerEvents:'none',
-          }}/>
-
-          {/* Left prev arrow */}
+          {/* Prev / Next arrows — always shown, style adapts to image vs text */}
           <button onClick={prevSlide} style={{
             position:'absolute', left:14, top:'50%', transform:'translateY(-50%)',
             width:38, height:38, borderRadius:'50%', border:'none', cursor:'pointer', zIndex:5,
-            background:'rgba(255,255,255,.18)', color:'white', fontSize:22, display:'flex', alignItems:'center', justifyContent:'center',
+            background: hasImage ? 'rgba(0,0,0,.32)' : 'rgba(255,255,255,.18)',
+            color:'white', fontSize:22, display:'flex', alignItems:'center', justifyContent:'center',
           }}>‹</button>
-          {/* Right next arrow */}
           <button onClick={nextSlide} style={{
             position:'absolute', right:14, top:'50%', transform:'translateY(-50%)',
             width:38, height:38, borderRadius:'50%', border:'none', cursor:'pointer', zIndex:5,
-            background:'rgba(255,255,255,.18)', color:'white', fontSize:22, display:'flex', alignItems:'center', justifyContent:'center',
+            background: hasImage ? 'rgba(0,0,0,.32)' : 'rgba(255,255,255,.18)',
+            color:'white', fontSize:22, display:'flex', alignItems:'center', justifyContent:'center',
           }}>›</button>
-
-          {/* Content overlay */}
-          <div style={{ position:'relative', zIndex:3, padding:'clamp(18px,2vw,36px)', paddingTop:0 }}>
-            {/* Pill */}
-            <div style={{
-              display:'inline-flex', alignItems:'center', gap:8,
-              padding:'7px 14px', borderRadius:12, marginBottom:'clamp(12px,1.4vh,22px)',
-              background:'linear-gradient(90deg,#147dff,#514dff)',
-              fontSize:'clamp(11px,.88vw,16px)', fontWeight:700, color:'white',
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-              {cur.pill || 'Tazkirah Hari Ini'}
-            </div>
-
-            {/* Title */}
-            <h2 style={{
-              margin:'0 0 clamp(10px,1.2vh,18px)',
-              fontSize:'clamp(22px,2.8vw,52px)', fontWeight:860,
-              lineHeight:1.08, letterSpacing:'-.035em', color:'white',
-              whiteSpace:'pre-line',
-            }}>
-              {cur.title.split('\n').map((line,i)=>{
-                const accents = cur.accent?.split('\n')||[];
-                return accents.includes(line)
-                  ? <span key={i} style={{ background:'linear-gradient(90deg,#7fdcff,#ba83ff)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', display:'block' }}>{line}</span>
-                  : <span key={i} style={{ display:'block' }}>{line}</span>;
-              })}
-            </h2>
-
-            {/* Body text — only if no image */}
-            {!hasImage && cur.text && (
-              <p style={{ maxWidth:560, fontSize:'clamp(13px,.95vw,18px)', lineHeight:1.5, color:'rgba(255,255,255,.85)', margin:0, whiteSpace:'pre-line' }}>
-                {cur.text}
-              </p>
-            )}
-          </div>
 
           {/* Dots */}
           <div style={{ position:'absolute', bottom:16, left:'50%', transform:'translateX(-50%)', display:'flex', gap:8, zIndex:4 }}>

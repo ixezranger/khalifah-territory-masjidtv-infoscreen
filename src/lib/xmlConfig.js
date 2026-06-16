@@ -54,6 +54,7 @@ export async function loadXmlConfig() {
         return {
           id:         'xml-slide-' + i,
           title:      el.querySelector('title')?.textContent.trim() || '',
+          body:       el.querySelector('body')?.textContent.trim()  || '',
           media_url:  url,
           media_type: type,
           duration:   Number(el.getAttribute('duration')) || 8,

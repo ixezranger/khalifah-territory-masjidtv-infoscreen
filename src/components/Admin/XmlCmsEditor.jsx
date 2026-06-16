@@ -200,16 +200,31 @@ function SliderSection() {
         duration: Number(el.getAttribute('duration'))||8,
         title: el.querySelector('title')?.textContent||'',
         url:   el.querySelector('url')?.textContent||'',
+        body:  el.querySelector('body')?.textContent||'',
+        /* mode: 'image' if url exists, 'text' if no url */
+        mode: el.querySelector('url')?.textContent?.trim() ? 'image' : 'text',
       }));
-      setItems(parsed.length ? parsed : [{ id:0, type:'image', duration:8, title:'', url:'' }]);
+      setItems(parsed.length ? parsed : [{ id:0, type:'image', duration:8, title:'', url:'', body:'', mode:'image' }]);
       setLoaded(true);
-    }).catch(() => { setItems([{ id:0, type:'image', duration:8, title:'', url:'' }]); setLoaded(true); });
+    }).catch(() => { setItems([{ id:0, type:'image', duration:8, title:'', url:'', body:'', mode:'image' }]); setLoaded(true); });
   }, []);
 
-  const add = () => setItems(p => [...p, { id:Date.now(), type:'image', duration:8, title:'', url:'' }]);
-  const del = id => setItems(p => p.filter(x=>x.id!==id));
-  const upd = (id, k, v) => setItems(p => p.map(x => x.id===id ? {...x,[k]:v} : x));
-  const save = () => run(doc => patchSlider(doc, items.filter(x=>x.url.trim())), 'cms: update slider');
+  const add  = () => setItems(p => [...p, { id:Date.now(), type:'image', duration:8, title:'', url:'', body:'', mode:'image' }]);
+  const del  = id => setItems(p => p.filter(x=>x.id!==id));
+  const upd  = (id, k, v) => setItems(p => p.map(x => x.id===id ? {...x,[k]:v} : x));
+
+  /* When switching mode, clear the irrelevant field */
+  const setMode = (id, mode) => setItems(p => p.map(x =>
+    x.id===id ? { ...x, mode, type: mode==='image' ? 'image' : 'text', url: mode==='text' ? '' : x.url } : x
+  ));
+
+  const save = () => run(doc => patchSlider(doc, items.map(x => ({
+    type:     x.url?.trim() ? 'image' : 'text',
+    duration: x.duration,
+    title:    x.title,
+    url:      x.url,
+    body:     x.body,
+  }))), 'cms: update slider');
 
   if (!loaded) return <div style={{ color: C.muted, fontSize:'0.85rem' }}>Memuatkan...</div>;
 
@@ -217,50 +232,101 @@ function SliderSection() {
     <div style={{ maxWidth:720 }}>
       <Card title="Slider Tazkirah / Media" icon={Images} accent={C.cyan}
         action={<Btn variant="secondary" size="sm" onClick={add}><Plus size={13}/> Tambah Slaid</Btn>}>
+
         {items.map((item, i) => (
           <div key={item.id} style={{
-            padding:'16px', marginBottom:12, borderRadius:14,
+            padding:'16px', marginBottom:14, borderRadius:14,
             background:`${C.blue}05`, border:`1px solid ${C.line}`,
           }}>
-            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+            {/* Slaid header */}
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
               <span style={{ fontSize:'0.75rem', fontWeight:800, color:C.faint }}>SLAID {i+1}</span>
               <div style={{ flex:1 }}/>
-              <select value={item.type} onChange={e=>upd(item.id,'type',e.target.value)}
-                className="ms-input" style={{ width:100, padding:'5px 8px' }}>
-                <option value="image">Imej</option>
-                <option value="youtube">YouTube</option>
-              </select>
-              <input type="number" value={item.duration} min={3} max={60}
-                onChange={e=>upd(item.id,'duration',Number(e.target.value))}
-                className="ms-input" style={{ width:70, padding:'5px 8px' }}
-                title="Tempoh (saat)"/>
-              <span style={{ fontSize:'0.72rem', color:C.faint }}>saat</span>
+              {/* Duration */}
+              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <input type="number" value={item.duration} min={3} max={60}
+                  onChange={e=>upd(item.id,'duration',Number(e.target.value))}
+                  className="ms-input" style={{ width:60, padding:'5px 8px', textAlign:'center' }}/>
+                <span style={{ fontSize:'0.72rem', color:C.faint }}>saat</span>
+              </div>
               <Btn variant="danger" size="sm" onClick={()=>del(item.id)}><Trash2 size={12}/></Btn>
             </div>
-            <input type="text" value={item.title} onChange={e=>upd(item.id,'title',e.target.value)}
-              placeholder="Tajuk slaid (pilihan)" className="ms-input" style={{ marginBottom:10 }}/>
-            {item.type === 'image' ? (
-              <>
+
+            {/* Mode toggle — IMAGE or TEXT */}
+            <div style={{
+              display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:14,
+              background:`${C.blue}07`, borderRadius:10, padding:4,
+            }}>
+              {[
+                { id:'image', label:'🖼️ Imej / Banner', hint:'Guna URL gambar' },
+                { id:'text',  label:'✍️ Teks / Tazkirah', hint:'Tulis kandungan' },
+              ].map(opt => {
+                const active = item.mode === opt.id;
+                return (
+                  <button key={opt.id} onClick={() => setMode(item.id, opt.id)} style={{
+                    padding:'8px 10px', borderRadius:8, border:'none', cursor:'pointer', textAlign:'center',
+                    background: active ? 'white' : 'transparent',
+                    color: active ? C.blue : C.muted,
+                    fontWeight: active ? 700 : 400,
+                    fontSize:'0.82rem',
+                    boxShadow: active ? `0 2px 8px ${C.blue}20` : 'none',
+                    transition:'all 0.15s',
+                  }}>
+                    <div>{opt.label}</div>
+                    <div style={{ fontSize:'0.7rem', opacity:0.7, marginTop:2 }}>{opt.hint}</div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Title (always shown) */}
+            <Field label="Tajuk Slaid">
+              <input type="text" value={item.title} onChange={e=>upd(item.id,'title',e.target.value)}
+                placeholder={item.mode==='image' ? 'Nama slaid (untuk rujukan)' : 'Tajuk tazkirah / pesanan'}
+                className="ms-input"/>
+            </Field>
+
+            {/* IMAGE mode */}
+            {item.mode === 'image' && (
+              <Field label="URL Imej / Banner" hint="Salin URL terus dari hosting imej anda">
                 <input type="url" value={item.url} onChange={e=>upd(item.id,'url',e.target.value)}
-                  placeholder="https://yourdomain.com/slide1.jpg" className="ms-input"
-                  style={{ marginBottom: item.url ? 10 : 0 }}/>
+                  placeholder="https://yourdomain.com/banner.jpg"
+                  className="ms-input" style={{ marginBottom: item.url ? 10 : 0 }}/>
                 {item.url && (
                   <div style={{
-                    width:'100%', aspectRatio:'16/5', borderRadius:10,
-                    overflow:'hidden', border:`1px solid ${C.line}`,
-                    background:'#0a0a14',
+                    width:'100%', aspectRatio:'16/5', borderRadius:10, overflow:'hidden',
+                    border:`1px solid ${C.line}`, background:'#0a0a14',
                   }}>
                     <img src={item.url} alt="" onError={e=>e.target.style.display='none'}
                       style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
                   </div>
                 )}
-              </>
-            ) : (
-              <input type="url" value={item.url} onChange={e=>upd(item.id,'url',e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=..." className="ms-input"/>
+              </Field>
+            )}
+
+            {/* TEXT mode */}
+            {item.mode === 'text' && (
+              <Field label="Kandungan Tazkirah / Pesanan" hint="Sokongan baris baru (Enter untuk baris baru)">
+                <textarea value={item.body} onChange={e=>upd(item.id,'body',e.target.value)}
+                  rows={4} placeholder={"Jangan lupa, Allah sentiasa bersama kita.\n\nIngatlah, dengan mengingati Allah hati akan menjadi tenang.\n– Surah Ar-Ra'd (13:28)"}
+                  className="ms-input" style={{ resize:'vertical', width:'100%', lineHeight:1.6 }}/>
+                {/* Live preview */}
+                {(item.title || item.body) && (
+                  <div style={{
+                    marginTop:10, borderRadius:10, overflow:'hidden',
+                    background:'linear-gradient(135deg,rgba(10,18,80,.94),rgba(55,35,190,.88))',
+                    padding:'14px 16px',
+                  }}>
+                    <div style={{ fontSize:'0.7rem', fontWeight:700, color:'rgba(255,255,255,.6)', marginBottom:6, letterSpacing:'0.06em' }}>PRATONTON</div>
+                    {item.title && <div style={{ fontSize:'0.95rem', fontWeight:800, color:'white', marginBottom:6, lineHeight:1.2 }}>{item.title}</div>}
+                    {item.body  && <div style={{ fontSize:'0.8rem', color:'rgba(255,255,255,.8)', lineHeight:1.5, whiteSpace:'pre-line' }}>{item.body}</div>}
+                  </div>
+                )}
+              </Field>
             )}
           </div>
         ))}
+
         <SaveBar saving={saving} result={result} msg={msg} onSave={save}/>
       </Card>
     </div>

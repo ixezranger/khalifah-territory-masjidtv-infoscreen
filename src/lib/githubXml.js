@@ -163,13 +163,17 @@ export function patchHadith(doc, items) {
 export function patchSlider(doc, items) {
   const sl = getOrCreate(doc, doc.documentElement, 'slider');
   [...sl.querySelectorAll('item')].forEach(n => n.remove());
-  items.forEach(({ type = 'image', duration = 8, title, url }) => {
+  items.forEach(({ type = 'image', duration = 8, title, url, body }) => {
     const item = doc.createElement('item');
     item.setAttribute('type', type);
     item.setAttribute('duration', String(duration));
     const t = doc.createElement('title'); t.textContent = title || '';
     const u = doc.createElement('url');   u.textContent = url   || '';
     item.appendChild(t); item.appendChild(u);
+    if (body) {
+      const b = doc.createElement('body'); b.textContent = body;
+      item.appendChild(b);
+    }
     sl.appendChild(item);
   });
 }
