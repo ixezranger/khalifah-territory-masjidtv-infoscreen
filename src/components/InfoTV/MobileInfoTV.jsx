@@ -289,28 +289,40 @@ function HomeTab({ times, nextSolatName, hours, minutes, seconds, isImminent,
       {/* ── Tazkirah Slider ── */}
       <div style={{padding:'0 16px 12px',position:'relative'}} className="sec-fade">
         {/* Prev arrow */}
-        <button onClick={()=>setSlideIndex(i=>(i-1+slides.length)%slides.length)} style={{position:'absolute',left:-2,top:'50%',transform:'translateY(-50%)',width:30,height:30,borderRadius:'50%',border:'none',cursor:'pointer',zIndex:10,background:'rgba(255,255,255,0.95)',boxShadow:'0 2px 10px rgba(75,94,255,0.18)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <button onClick={()=>setSlideIndex(i=>(i-1+slides.length)%slides.length)} style={{position:'absolute',left:-2,top:'50%',transform:'translateY(-50%)',width:30,height:30,borderRadius:'50%',border:'none',cursor:'pointer',zIndex:10,background:cur.media_url?'rgba(0,0,0,0.35)':'rgba(255,255,255,0.95)',boxShadow:'0 2px 10px rgba(0,0,0,0.2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={cur.media_url?'white':C.blue} strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         {/* Next arrow */}
-        <button onClick={()=>setSlideIndex(i=>(i+1)%slides.length)} style={{position:'absolute',right:-2,top:'50%',transform:'translateY(-50%)',width:30,height:30,borderRadius:'50%',border:'none',cursor:'pointer',zIndex:10,background:'rgba(255,255,255,0.95)',boxShadow:'0 2px 10px rgba(75,94,255,0.18)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <button onClick={()=>setSlideIndex(i=>(i+1)%slides.length)} style={{position:'absolute',right:-2,top:'50%',transform:'translateY(-50%)',width:30,height:30,borderRadius:'50%',border:'none',cursor:'pointer',zIndex:10,background:cur.media_url?'rgba(0,0,0,0.35)':'rgba(255,255,255,0.95)',boxShadow:'0 2px 10px rgba(0,0,0,0.2)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={cur.media_url?'white':C.blue} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
 
-        <div style={{borderRadius:22,overflow:'hidden',position:'relative',minHeight:210,background:'linear-gradient(135deg,rgba(10,16,80,0.95),rgba(55,35,190,0.90))'}}>
-          {cur.media_url&&<img src={cur.media_url} alt="" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:0.32}}/>}
-          <div style={{position:'absolute',inset:0,background:'linear-gradient(100deg,rgba(8,14,70,0.80) 50%,transparent)'}}/>
-          <div style={{position:'relative',padding:'20px 22px 36px',zIndex:1}}>
-            <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:20,marginBottom:12,background:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.22)'}}>
-              <span style={{fontSize:12}}>📖</span>
-              <span style={{fontSize:10,fontWeight:700,color:'white',letterSpacing:'0.03em'}}>{cur.pill||'Tazkirah Hari Ini'}</span>
+        <div style={{borderRadius:22,overflow:'hidden',position:'relative',minHeight:210,
+          background: cur.media_url ? 'transparent' : 'linear-gradient(135deg,rgba(10,16,80,0.95),rgba(55,35,190,0.90))'}}>
+
+          {/* IMAGE slide — pure, no overlay, no gradient */}
+          {cur.media_url && (
+            <img src={cur.media_url} alt="" style={{
+              position:'absolute',inset:0,width:'100%',height:'100%',
+              objectFit:'cover',display:'block',opacity:1,
+            }} onError={e=>e.target.style.display='none'}/>
+          )}
+
+          {/* TEXT slide — dark gradient bg + content */}
+          {!cur.media_url && (
+            <div style={{position:'relative',padding:'20px 22px 36px',zIndex:1}}>
+              <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:20,marginBottom:12,background:'rgba(255,255,255,0.15)',border:'1px solid rgba(255,255,255,0.22)'}}>
+                <span style={{fontSize:12}}>📖</span>
+                <span style={{fontSize:10,fontWeight:700,color:'white',letterSpacing:'0.03em'}}>{cur.pill||'Tazkirah Hari Ini'}</span>
+              </div>
+              <h2 style={{fontSize:22,fontWeight:850,color:'white',lineHeight:1.2,margin:'0 0 10px',whiteSpace:'pre-line'}}>
+                {cur.title||'Jangan Lupa,\nAllah Sentiasa\nBersama Kita'}
+              </h2>
+              {cur.text&&<p style={{fontSize:13,color:'rgba(255,255,255,0.80)',lineHeight:1.5,margin:0}}>{cur.text}</p>}
             </div>
-            <h2 style={{fontSize:22,fontWeight:850,color:'white',lineHeight:1.2,margin:'0 0 10px',whiteSpace:'pre-line'}}>
-              {cur.title||'Jangan Lupa,\nAllah Sentiasa\nBersama Kita'}
-            </h2>
-            {cur.text&&<p style={{fontSize:13,color:'rgba(255,255,255,0.80)',lineHeight:1.5,margin:0}}>{cur.text}</p>}
-          </div>
-          {/* Dots */}
+          )}
+
+          {/* Dots — always shown */}
           <div style={{position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',display:'flex',gap:6,zIndex:2}}>
             {(slides||[]).map((_,i)=>(
               <div key={i} onClick={()=>setSlideIndex(i)} style={{width:i===slideIndex?20:7,height:7,borderRadius:4,cursor:'pointer',background:i===slideIndex?'white':'rgba(255,255,255,0.38)',transition:'width 0.3s'}}/>
