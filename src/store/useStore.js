@@ -53,7 +53,11 @@ const useStore = create(
 
       // Zone (persisted)
       currentZone: 'WLY01',
-      setZone: (currentZone) => set({ currentZone }),
+      hasManualZone: false,
+      setZone: (currentZone, manual = false) => set(state => ({
+        currentZone,
+        hasManualZone: manual ? true : state.hasManualZone,
+      })),
 
       // UI state
       viewportMode: 'tv',
@@ -66,6 +70,7 @@ const useStore = create(
       name: 'masjidtv-store',
       partialize: (state) => ({
         currentZone: state.currentZone,
+        hasManualZone: state.hasManualZone,
         viewportMode: state.viewportMode,
       }),
     }

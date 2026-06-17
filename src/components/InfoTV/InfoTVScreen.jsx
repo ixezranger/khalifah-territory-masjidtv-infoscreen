@@ -71,16 +71,30 @@ export default function InfoTVScreen() {
     viewportMode, setViewportMode,
   } = useStore();
 
-  const [manualZone, setManualZone] = useState(() => {
-    const pz = profile?.zone_code || 'WLY01';
-    return currentZone && currentZone !== pz ? currentZone : null;
-  });
-  const zone = manualZone || currentZone || profile?.zone_code || 'WLY01';
+  /* Zone priority: persisted currentZone (from localStorage, survives reload)
+     > profile.zone_code (from config.xml, only used if user never picked manually)
+     > WLY01 default.
+     currentZone is set via Zustand persist middleware — once a user selects a
+     zone, it's saved to localStorage under 'masjidtv-store' and will be
+     restored on every future page load automatically. */
+  const zone = currentZone || profile?.zone_code || 'WLY01';
 
-  /* Auto-save zone to config.xml silently when changed */
+  /* Track whether the user has ever manually picked a zone (persisted flag) */
+  const hasManualZone = useStore(state => state.hasManualZone);
+
+  /* When profile.zone_code arrives from XML and user has NOT manually picked
+     a zone yet, adopt it as the current zone (one-time sync). */
+  useEffect(() => {
+    if (profile?.zone_code && !hasManualZone && profile.zone_code !== currentZone) {
+      setZone(profile.zone_code);
+    }
+  }, [profile?.zone_code, hasManualZone]);
+
+  /* Auto-save zone to config.xml silently when changed, and remember that
+     the user has manually selected a zone (so XML profile.zone_code won't
+     override it on next load). */
   const autoSaveZone = (code) => {
-    setManualZone(code);
-    setZone(code);
+    setZone(code, true);
     if (!hasPat()) return; // skip if no GitHub token configured
     saveToXml(
       doc => patchProfile(doc, { zone_code: code }),
